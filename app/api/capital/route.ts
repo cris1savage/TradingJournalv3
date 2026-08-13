@@ -11,13 +11,13 @@ const DEFAULT: CapitalData = { initial: 0, aportaciones: [] };
 
 export async function GET() {
   if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  return NextResponse.json(readData<CapitalData>('capital.json', DEFAULT));
+  return NextResponse.json(await readData<CapitalData>('capital', DEFAULT));
 }
 
 export async function POST(req: NextRequest) {
   if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await req.json();
-  const data = readData<CapitalData>('capital.json', DEFAULT);
+  const data = await readData<CapitalData>('capital', DEFAULT);
 
   if (body.action === 'setInitial') {
     data.initial = body.amount;
@@ -28,6 +28,6 @@ export async function POST(req: NextRequest) {
     data.aportaciones = data.aportaciones.filter(a => a.id !== body.id);
   }
 
-  writeData('capital.json', data);
+  await writeData('capital', data);
   return NextResponse.json({ ok: true });
 }

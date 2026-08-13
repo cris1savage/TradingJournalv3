@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#060d1f"/>
+  <rect x="40" y="40" width="432" height="432" rx="60" fill="#07102a"/>
+  <polyline points="80,380 160,280 240,320 340,160 440,200" stroke="#3b82f6" stroke-width="24" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="80" cy="380" r="16" fill="#3b82f6"/>
+  <circle cx="160" cy="280" r="16" fill="#3b82f6"/>
+  <circle cx="240" cy="320" r="16" fill="#3b82f6"/>
+  <circle cx="340" cy="160" r="16" fill="#34d399"/>
+  <circle cx="440" cy="200" r="16" fill="#34d399"/>
+  <text x="256" y="460" text-anchor="middle" font-family="monospace" font-size="48" font-weight="bold" fill="#1d4ed8">TJ</text>
+</svg>

@@ -283,7 +283,7 @@ export default function DashboardClient() {
       `}</style>
 
       {/* SIDEBAR */}
-      <div style={{ width: 220, background: '#07102a', borderRight: '1px solid #0d1b3e', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100 }}>
+      <div className="sidebar-desktop" style={{ width: 220, background: '#07102a', borderRight: '1px solid #0d1b3e', display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100 }}>
         <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid #0d1b3e' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #1d4ed8, #3b82f6)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>📈</div>
@@ -314,7 +314,7 @@ export default function DashboardClient() {
       </div>
 
       {/* MAIN */}
-      <div style={{ marginLeft: 220, flex: 1, padding: '24px', minHeight: '100vh' }}>
+      <div className="main-mobile" style={{ marginLeft: 220, flex: 1, padding: '24px', minHeight: '100vh' }}>
 
         {/* DASHBOARD */}
         {page === 'dashboard' && (
@@ -860,6 +860,18 @@ export default function DashboardClient() {
           </div>
         </div>
       )}
+
+      {/* MOBILE BOTTOM NAV */}
+      <div className="bottom-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#07102a', borderTop: '1px solid #0d1b3e', padding: '8px 0', zIndex: 200, display: 'none' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+          {([['dashboard','◈','Inicio'], ['nuevo','➕','Trade'], ['historial','≡','Historial'], ['capital','◎','Capital'], ['noticias','📰','Noticias']] as [Page,string,string][]).map(([p,icon,label]) => (
+            <button key={p} onClick={() => setPage(p)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '6px 12px', background: 'none', border: 'none', cursor: 'pointer', color: page === p ? '#3b82f6' : '#4a6fa5', transition: 'color 0.15s' }}>
+              <span style={{ fontSize: 18 }}>{icon}</span>
+              <span style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: '0.05em' }}>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
