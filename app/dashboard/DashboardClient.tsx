@@ -440,8 +440,10 @@ export default function DashboardClient() {
               </div>
               <div style={{height:180}}>
                 {curve.data.length>1?
-                  <Line data={{labels:curve.labels,datasets:[{data:curve.data,borderColor:G.accent,backgroundColor:`${G.accent}12`,borderWidth:2.5,pointRadius:curve.data.length<15?4:0,pointBackgroundColor:G.accent,pointBorderColor:G.bg,pointBorderWidth:2,fill:true,tension:0.4}]}}
-                    options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:G.card2,titleColor:G.accent,bodyColor:G.text,borderColor:G.border,borderWidth:1}},scales:{x:{ticks:{color:G.muted,font:{family:'monospace',size:9},maxTicksLimit:6},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:G.muted,font:{family:'monospace',size:9},callback:(v:string|number)=>v+'€'},grid:{color:'rgba(255,255,255,0.03)'}}}}} as object/>
+                  <Line
+                    data={{labels:curve.labels,datasets:[{data:curve.data,borderColor:G.accent,backgroundColor:`${G.accent}12`,borderWidth:2.5,pointRadius:curve.data.length<15?4:0,pointBackgroundColor:G.accent,pointBorderColor:G.bg,pointBorderWidth:2,fill:true,tension:0.4}]}}
+                    options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:G.card2,titleColor:G.accent,bodyColor:G.text,borderColor:G.border,borderWidth:1}},scales:{x:{ticks:{color:G.muted,font:{family:'monospace' as const,size:9},maxTicksLimit:6},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:G.muted,font:{family:'monospace' as const,size:9},callback:(v:unknown)=>String(v)+'€'},grid:{color:'rgba(255,255,255,0.03)'}}}}}
+                  />
                 :<div style={{height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:G.muted,fontSize:12,flexDirection:'column',gap:8}}><span style={{fontSize:28}}>📊</span>Añade tu primer trade</div>}
               </div>
             </div>
