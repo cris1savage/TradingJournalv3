@@ -31,19 +31,44 @@ function useCounter(target: number, dur = 1000) {
 }
 
 const Logo = () => (
-  <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-    <rect width="44" height="44" rx="13" fill="#0a1628"/>
-    <rect x="0.75" y="0.75" width="42.5" height="42.5" rx="12.25" stroke="url(#lb)" strokeWidth="1.5"/>
-    <text x="22" y="20" textAnchor="middle" fontFamily="'Arial Black', sans-serif" fontSize="10" fontWeight="900" fill="url(#lt)" letterSpacing="1">ST</text>
-    <line x1="8" y1="26" x2="36" y2="26" stroke="rgba(77,159,255,0.2)" strokeWidth="0.5"/>
-    <path d="M8,34 L14,26 L19,29 L26,18 L33,22 L36,34 Z" fill="url(#cf)" opacity="0.3"/>
-    <polyline points="8,34 14,26 19,29 26,18 33,22" stroke="url(#cl)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-    <circle cx="26" cy="18" r="2.5" fill="#00e5ff" style={{filter:'drop-shadow(0 0 4px #00e5ff)'}}/>
+  <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
+    {/* Background with subtle inner glow */}
+    <rect width="46" height="46" rx="13" fill="#060f1e"/>
+    <rect width="46" height="46" rx="13" fill="url(#lgInner)" opacity="0.6"/>
+    {/* Glowing border */}
+    <rect x="0.75" y="0.75" width="44.5" height="44.5" rx="12.25" stroke="url(#lgBorder)" strokeWidth="1.5" fill="none"/>
+    {/* S letter - bold, left */}
+    <text x="11" y="30" fontFamily="'Arial Black',Impact,'Helvetica Neue',sans-serif" fontSize="20" fontWeight="900" fill="url(#lgS)">S</text>
+    {/* T letter - bold, right, slightly offset */}
+    <text x="26" y="30" fontFamily="'Arial Black',Impact,'Helvetica Neue',sans-serif" fontSize="20" fontWeight="900" fill="url(#lgT)">T</text>
+    {/* Thin accent line below */}
+    <rect x="8" y="33.5" width="30" height="1.5" rx="0.75" fill="url(#lgLine)"/>
+    {/* Top right glow dot */}
+    <circle cx="40" cy="9" r="2.5" fill="#00e5ff" opacity="0.9" style={{filter:'blur(0.5px)'}}/>
+    <circle cx="40" cy="9" r="5" fill="#00e5ff" opacity="0.15"/>
     <defs>
-      <linearGradient id="lb" x1="0" y1="0" x2="44" y2="44"><stop offset="0%" stopColor="#4d9fff" stopOpacity="0.8"/><stop offset="100%" stopColor="#00e5ff" stopOpacity="0.2"/></linearGradient>
-      <linearGradient id="lt" x1="0" y1="0" x2="44" y2="0"><stop offset="0%" stopColor="#4d9fff"/><stop offset="100%" stopColor="#00e5ff"/></linearGradient>
-      <linearGradient id="cl" x1="8" y1="0" x2="36" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#4d9fff"/><stop offset="100%" stopColor="#00e5ff"/></linearGradient>
-      <linearGradient id="cf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#4d9fff"/><stop offset="100%" stopColor="#4d9fff" stopOpacity="0"/></linearGradient>
+      <linearGradient id="lgInner" x1="0" y1="0" x2="46" y2="46">
+        <stop offset="0%" stopColor="#1a3a6e" stopOpacity="0.4"/>
+        <stop offset="100%" stopColor="#00e5ff" stopOpacity="0.05"/>
+      </linearGradient>
+      <linearGradient id="lgBorder" x1="0" y1="0" x2="46" y2="46">
+        <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.9"/>
+        <stop offset="40%" stopColor="#4d9fff" stopOpacity="0.6"/>
+        <stop offset="100%" stopColor="#4d9fff" stopOpacity="0.1"/>
+      </linearGradient>
+      <linearGradient id="lgS" x1="0" y1="10" x2="0" y2="30" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#ffffff"/>
+        <stop offset="100%" stopColor="#4d9fff"/>
+      </linearGradient>
+      <linearGradient id="lgT" x1="0" y1="10" x2="0" y2="30" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#00e5ff"/>
+        <stop offset="100%" stopColor="#4d9fff"/>
+      </linearGradient>
+      <linearGradient id="lgLine" x1="8" y1="0" x2="38" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#4d9fff" stopOpacity="0.2"/>
+        <stop offset="40%" stopColor="#00e5ff"/>
+        <stop offset="100%" stopColor="#4d9fff" stopOpacity="0.2"/>
+      </linearGradient>
     </defs>
   </svg>
 );
@@ -670,64 +695,63 @@ export default function DashboardClient() {
           </div>
         )}
 
-        {/* ─── NOTICIAS — TradingView ─── */}
+        {/* ─── NOTICIAS ─── */}
         {page==='noticias'&&(
           <div className="pe">
-            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Noticias & Calendario</div><div style={{fontSize:12,color:G.muted}}>Tiempo real via TradingView</div></div>
+            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Noticias & Calendario</div><div style={{fontSize:12,color:G.muted}}>Datos en tiempo real · Investing.com + TradingView</div></div>
+
+            {/* Calendario Investing.com — full width */}
+            <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden',marginBottom:12}}>
+              <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📅 Calendario Económico — Tiempo Real</div><div style={{fontSize:11,color:G.muted}}>USD · EUR · GBP · Alto y medio impacto · Horario España</div></div>
+                <a href="https://es.investing.com/economic-calendar/" target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:G.accent,fontFamily:'monospace',textDecoration:'none'}}>ABRIR EN INVESTING →</a>
+              </div>
+              <div style={{height:600,background:'#fff'}}>
+                <iframe
+                  src="https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&category=_employment,_economicActivity,_inflation,_credit,_centralBanks,_confidenceIndex,_balance,_Bonds&importance=2,3&features=datepicker,timezone,timeselector,filters&countries=5,22,6,25,32&calType=week&timeZone=18&lang=3"
+                  style={{width:'100%',height:'100%',border:'none'}}
+                  title="Calendario económico Investing.com"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:12,marginBottom:12}}>
-              {/* Calendario económico TradingView */}
+              {/* TradingView News */}
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden'}}>
-                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📅 Calendario Económico</div><div style={{fontSize:11,color:G.muted}}>Eventos en tiempo real</div></div>
-                <div style={{height:500}}>
+                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📰 Noticias Forex & Mercados</div><div style={{fontSize:11,color:G.muted}}>TradingView · Actualización continua</div></div>
+                <div style={{height:440}}>
                   <iframe
-                    src="https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&category=_employment,_economicActivity,_inflation,_credit,_centralBanks,_confidenceIndex,_balance,_Bonds&importance=2,3&features=datepicker,timezone,timeselector,filters&countries=5,22,6&calType=week&timeZone=18&lang=12"
-                    style={{width:'100%',height:'100%',border:'none',background:G.card}}
-                    title="Calendario económico"
+                    src="https://www.tradingview.com/embed-widget/timeline/?feedMode=market&market=forex&isTransparent=true&displayMode=regular&width=100%25&height=100%25&colorTheme=dark&locale=es"
+                    style={{width:'100%',height:'100%',border:'none'}}
+                    title="Noticias TradingView"
+                    loading="lazy"
                   />
                 </div>
               </div>
-              {/* Noticias TradingView */}
+              {/* TradingView Market Overview */}
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden'}}>
-                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📰 Noticias del Mercado</div><div style={{fontSize:11,color:G.muted}}>Actualización en tiempo real</div></div>
-                <div style={{height:500}}>
-                  <div id="tv-news-widget" style={{height:'100%'}}>
-                    <script
-                      type="text/javascript"
-                      src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js"
-                      dangerouslySetInnerHTML={{__html: JSON.stringify({
-                        feedMode: "market",
-                        market: "forex",
-                        isTransparent: true,
-                        displayMode: "regular",
-                        width: "100%",
-                        height: "100%",
-                        colorTheme: "dark",
-                        locale: "es"
-                      })}}
-                    />
-                  </div>
+                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📊 Resumen de Mercado</div><div style={{fontSize:11,color:G.muted}}>Oro · Nasdaq · Crypto · Forex</div></div>
+                <div style={{height:440}}>
+                  <iframe
+                    src="https://www.tradingview.com/embed-widget/market-overview/?colorTheme=dark&dateRange=12M&showSymbolLogo=true&isTransparent=true&width=100%25&height=100%25&locale=es&tabs=%5B%7B%22title%22%3A%22%C3%8Dndices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22NASDAQ%3ANDX%22%7D%2C%7B%22s%22%3A%22OANDA%3AXAUUSD%22%7D%2C%7B%22s%22%3A%22TVC%3ADXY%22%7D%5D%7D%2C%7B%22title%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22BITSTAMP%3ABTCUSD%22%7D%2C%7B%22s%22%3A%22BINANCE%3AETHUSD%22%7D%5D%7D%5D"
+                    style={{width:'100%',height:'100%',border:'none'}}
+                    title="Market Overview TradingView"
+                    loading="lazy"
+                  />
                 </div>
               </div>
             </div>
             {/* Ticker tape */}
             <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden',marginBottom:12}}>
-              <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📊 Precios en Tiempo Real</div></div>
-              <div className="tradingview-widget-container" style={{height:74}}>
-                <div className="tradingview-widget-container__widget"></div>
-                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" dangerouslySetInnerHTML={{__html: JSON.stringify({
-                  symbols: [
-                    {proName:"OANDA:XAUUSD",title:"Oro"},
-                    {proName:"NASDAQ:NDX",title:"Nasdaq"},
-                    {proName:"FX:EURUSD",title:"EUR/USD"},
-                    {proName:"BITSTAMP:BTCUSD",title:"Bitcoin"},
-                    {proName:"TVC:DXY",title:"DXY"}
-                  ],
-                  showSymbolLogo: true,
-                  isTransparent: true,
-                  displayMode: "adaptive",
-                  colorTheme: "dark",
-                  locale: "es"
-                })}}/>
+              <div style={{padding:'12px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📊 Precios en Tiempo Real</div></div>
+              <div style={{height:70}}>
+                <iframe
+                  src="https://www.tradingview.com/embed-widget/ticker-tape/?symbols=%5B%7B%22proName%22%3A%22OANDA%3AXAUUSD%22%2C%22title%22%3A%22Oro%22%7D%2C%7B%22proName%22%3A%22NASDAQ%3ANDX%22%2C%22title%22%3A%22Nasdaq%22%7D%2C%7B%22proName%22%3A%22FX%3AEURUSD%22%2C%22title%22%3A%22EUR%2FUSD%22%7D%2C%7B%22proName%22%3A%22BITSTAMP%3ABTCUSD%22%2C%22title%22%3A%22Bitcoin%22%7D%2C%7B%22proName%22%3A%22TVC%3ADXY%22%2C%22title%22%3A%22DXY%22%7D%5D&showSymbolLogo=true&isTransparent=true&displayMode=adaptive&colorTheme=dark&locale=es"
+                  style={{width:'100%',height:'100%',border:'none'}}
+                  title="Ticker precios"
+                  loading="lazy"
+                />
               </div>
             </div>
             <div style={{background:`${G.gold}07`,border:`1px solid ${G.gold}28`,borderRadius:12,padding:16}}>
