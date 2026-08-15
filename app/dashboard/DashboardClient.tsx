@@ -1,14 +1,13 @@
 'use client';
-import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler);
-
-const AnalisisClient = lazy(() => import('./AnalisisClient'));
-const AICoachClient = lazy(() => import('./AICoachClient'));
-const ChartAnalyzer = lazy(() => import('./ChartAnalyzer'));
-const ReportGenerator = lazy(() => import('./ReportGenerator'));
-const AlertasClient = lazy(() => import('./AlertasClient'));
+import AnalisisClient from './AnalisisClient';
+import AICoachClient from './AICoachClient';
+import ChartAnalyzer from './ChartAnalyzer';
+import ReportGenerator from './ReportGenerator';
+import AlertasClient from './AlertasClient';
 
 type Trade = { id: number; date: string; time: string; pair: string; tf: string; dir: string; res: string; plan: string | null; entry: number; sl: number; tp: number; risk: number; lot: number; rr: string; pnl: number; rreal: string; conf: string[]; emo: string; notes: string; };
 type Capital = { initial: number; aportaciones: { id: number; date: string; amount: number; desc: string }[]; };
@@ -993,9 +992,7 @@ export default function DashboardClient() {
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🖼️ Analizador de Gráficos IA</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Sube una captura y Claude analiza tu gráfico en segundos</div>
             </div>
-            <Suspense fallback={<div style={{textAlign:'center',padding:'40px',color:G.muted}}>Cargando...</div>}>
-              <ChartAnalyzer />
-            </Suspense>
+            <ChartAnalyzer />
           </div>
         )}
 
@@ -1006,9 +1003,7 @@ export default function DashboardClient() {
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>📄 Informes Descargables</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Genera y descarga tu informe de trading en PDF</div>
             </div>
-            <Suspense fallback={<div style={{textAlign:'center',padding:'40px',color:G.muted}}>Cargando...</div>}>
-              <ReportGenerator trades={trades} capital={capital} />
-            </Suspense>
+            <ReportGenerator trades={trades} capital={capital} />
           </div>
         )}
 
@@ -1019,9 +1014,7 @@ export default function DashboardClient() {
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔔 Alertas Inteligentes</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Avisos automáticos basados en tus datos reales</div>
             </div>
-            <Suspense fallback={<div style={{textAlign:'center',padding:'40px',color:G.muted}}>Cargando...</div>}>
-              <AlertasClient trades={trades} />
-            </Suspense>
+            <AlertasClient trades={trades} />
           </div>
         )}
 
