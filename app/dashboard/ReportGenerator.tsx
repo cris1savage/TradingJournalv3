@@ -208,7 +208,7 @@ export default function ReportGenerator({ trades, capital }: { trades: Trade[]; 
       }
 
       // Footer
-      const pageCount = (doc as jsPDF & { internal: { getNumberOfPages: () => number } }).internal.getNumberOfPages();
+      const pageCount = (doc as unknown as { internal: { getNumberOfPages: () => number } }).internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         doc.setFillColor(13, 31, 56);
