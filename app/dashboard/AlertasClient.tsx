@@ -151,7 +151,7 @@ export default function AlertasClient({ trades }: { trades: Trade[] }) {
             { l: 'Operaciones', v: String(todayTrades.length) + '/' + config.maxDailyTrades, c: todayTrades.length >= config.maxDailyTrades ? G.red : G.green },
             { l: 'P&L hoy', v: (todayPnl >= 0 ? '+' : '') + todayPnl.toFixed(2) + '€', c: todayPnl >= 0 ? G.green : G.red },
             { l: 'Pérdidas hoy', v: String(todayLosses), c: todayLosses >= 2 ? G.red : G.muted2 },
-            { l: 'Racha actual', v: streak > 0 ? `-${streak}` : wins > 0 ? `+${[...trades].reverse().findIndex(t => t.res !== 'win')}` : '—', c: streak > 0 ? G.red : G.green },
+            { l: 'Racha actual', v: streak > 0 ? `-${streak}` : streak === 0 && todayTrades.filter(t=>t.res==='win').length > 0 ? `+${[...trades].reverse().findIndex(t => t.res !== 'win')}` : '—', c: streak > 0 ? G.red : G.green },
           ].map(s => (
             <div key={s.l} style={{ background: G.card2, borderRadius: 9, padding: '10px 12px', border: `1px solid ${G.border}` }}>
               <div style={{ fontFamily: 'monospace', fontSize: 8, color: G.muted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s.l}</div>
