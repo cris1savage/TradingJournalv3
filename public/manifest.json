@@ -1,19 +1,19 @@
 {
-  "name": "Trading Journal Pro",
-  "short_name": "TradeLog",
-  "description": "Diario de trading personal — XAU/USD & NAS100",
+  "name": "Savage Trading Journal",
+  "short_name": "ST Journal",
+  "description": "Tu diario de trading profesional — XAU/USD & NAS100",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#060d1f",
-  "theme_color": "#1d4ed8",
+  "background_color": "#060f1e",
+  "theme_color": "#0d1f38",
   "orientation": "portrait-primary",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
   ],
   "categories": ["finance", "productivity"],
   "shortcuts": [
-    { "name": "Nuevo Trade", "url": "/dashboard?page=nuevo", "description": "Registrar operación rápida" },
+    { "name": "Nuevo Trade", "url": "/dashboard", "description": "Registrar operación rápida" },
     { "name": "Dashboard", "url": "/dashboard", "description": "Ver estadísticas" }
   ]
 }

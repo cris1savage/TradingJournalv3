@@ -9,26 +9,29 @@ export interface Trade {
   rr: string; pnl: number; rreal: string; conf: string[]; emo: string; notes: string;
 }
 
-export async function GET() {
+function key(accountId: string) { return `trades_${accountId}`; }
+
+export async function GET(req: NextRequest) {
   if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const trades = await readData<Trade[]>('trades', []);
+  const accountId = req.nextUrl.searchParams.get('account') || 'propia';
+  const trades = await readData<Trade[]>(key(accountId), []);
   return NextResponse.json(trades);
 }
 
 export async function POST(req: NextRequest) {
   if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const trade: Trade = await req.json();
-  const trades = await readData<Trade[]>('trades', []);
-  trades.push(trade);
+  const { account = 'propia', ...trade } = await req.json();
+  const trades = await readData<Trade[]>(key(account), []);
+  trades.push(trade as Trade);
   trades.sort((a, b) => new Date(a.date + ' ' + a.time).getTime() - new Date(b.date + ' ' + b.time).getTime());
-  await writeData('trades', trades);
+  await writeData(key(account), trades);
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: NextRequest) {
   if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { id } = await req.json();
-  const trades = await readData<Trade[]>('trades', []);
-  await writeData('trades', trades.filter(t => t.id !== id));
+  const { id, account = 'propia' } = await req.json();
+  const trades = await readData<Trade[]>(key(account), []);
+  await writeData(key(account), trades.filter(t => t.id !== id));
   return NextResponse.json({ ok: true });
 }

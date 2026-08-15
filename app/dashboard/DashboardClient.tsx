@@ -1,13 +1,26 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler);
 
+const AnalisisClient = lazy(() => import('./AnalisisClient'));
+const AICoachClient = lazy(() => import('./AICoachClient'));
+const ChartAnalyzer = lazy(() => import('./ChartAnalyzer'));
+const ReportGenerator = lazy(() => import('./ReportGenerator'));
+const AlertasClient = lazy(() => import('./AlertasClient'));
+
 type Trade = { id: number; date: string; time: string; pair: string; tf: string; dir: string; res: string; plan: string | null; entry: number; sl: number; tp: number; risk: number; lot: number; rr: string; pnl: number; rreal: string; conf: string[]; emo: string; notes: string; };
 type Capital = { initial: number; aportaciones: { id: number; date: string; amount: number; desc: string }[]; };
 type Objetivo = { id: number; label: string; target: number; current: number; color: string; };
-type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos';
+type Account = { id: string; name: string; icon: string; color: string; };
+type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas';
+
+const DEFAULT_ACCOUNTS: Account[] = [
+  { id: 'propia', name: 'Cuenta Propia', icon: '💼', color: '#00e5ff' },
+  { id: 'inversiones', name: 'Inversiones', icon: '📈', color: '#00e676' },
+  { id: 'cripto', name: 'Cripto', icon: '₿', color: '#ffb300' },
+];
 
 const fmt = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2) + '€';
 const fmtA = (n: number) => n.toFixed(2) + '€';
@@ -144,6 +157,13 @@ export default function DashboardClient() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [capital, setCapital] = useState<Capital>({ initial: 0, aportaciones: [] });
   const [loading, setLoading] = useState(true);
+  const [accounts, setAccounts] = useState<Account[]>(DEFAULT_ACCOUNTS);
+  const [activeAccount, setActiveAccount] = useState<Account>(DEFAULT_ACCOUNTS[0]);
+  const [showAccountPicker, setShowAccountPicker] = useState(false);
+  const [showAddAccount, setShowAddAccount] = useState(false);
+  const [newAccName, setNewAccName] = useState('');
+  const [newAccIcon, setNewAccIcon] = useState('💼');
+  const [newAccColor, setNewAccColor] = useState('#4d9fff');
   const [histFilter, setHistFilter] = useState('all');
   const [modalTrade, setModalTrade] = useState<Trade | null>(null);
   const [calMonth, setCalMonth] = useState(new Date());
@@ -169,13 +189,19 @@ export default function DashboardClient() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (accountId?: string) => {
     setLoading(true);
-    const [tR,cR] = await Promise.all([fetch('/api/trades'),fetch('/api/capital')]);
+    const aid = accountId || activeAccount.id;
+    const [tR,cR,aR] = await Promise.all([
+      fetch(`/api/trades?account=${aid}`),
+      fetch(`/api/capital?account=${aid}`),
+      fetch('/api/accounts'),
+    ]);
     if (tR.ok) setTrades(await tR.json());
     if (cR.ok) { const c = await cR.json(); setCapital(c); setCapInitial(c.initial?.toString()||''); }
+    if (aR.ok) { const accs = await aR.json(); setAccounts(accs); }
     setLoading(false);
-  }, []);
+  }, [activeAccount.id]);
 
   useEffect(() => {
     loadData();
@@ -235,14 +261,37 @@ export default function DashboardClient() {
     const pnl=parseFloat(fPnl); if(isNaN(pnl)){alert('Introduce el P&L real.');return;}
     setSaving(true);
     const t:Trade={id:Date.now(),date:fDate,time:fTime,pair:fPair,tf:fTf,dir:fDir,res:fRes,plan:fPlan,entry:parseFloat(fEntry)||0,sl:parseFloat(fSl)||0,tp:parseFloat(fTp)||0,risk:parseFloat(fRisk)||0,lot:parseFloat(fLot)||0,rr:fRR,pnl,rreal:fRreal,conf:fConf,emo:fEmo,notes:fNotes};
-    await fetch('/api/trades',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(t)});
+    await fetch('/api/trades',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...t,account:activeAccount.id})});
     await loadData(); resetForm(); setSaving(false); setPage('dashboard');
   }
   function resetForm(){const n=new Date();setFDate(n.toISOString().split('T')[0]);setFTime(n.toTimeString().slice(0,5));setFPair('XAU/USD');setFTf('15M');setFDir(null);setFRes(null);setFPlan(null);setFEntry('');setFSl('');setFTp('');setFRisk('');setFLot('');setFRR('—');setFPnl('');setFRreal('');setFConf([]);setFEmo('');setFNotes('');}
-  async function deleteTrade(id:number){if(!confirm('¿Eliminar?'))return;await fetch('/api/trades',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});setModalTrade(null);await loadData();}
-  async function setIC(){const v=parseFloat(capInitial);if(isNaN(v)||v<=0){alert('Capital inválido.');return;}await fetch('/api/capital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'setInitial',amount:v})});await loadData();alert('✓ Capital guardado');}
-  async function addAp(){const a=parseFloat(apAmount);if(!apDate||isNaN(a)||a<=0){alert('Rellena fecha e importe.');return;}await fetch('/api/capital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'addAport',date:apDate,amount:a,desc:apDesc||'Aportación'})});setApAmount('');setApDesc('');await loadData();}
-  async function delAp(id:number){await fetch('/api/capital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'deleteAport',id})});await loadData();}
+  async function deleteTrade(id:number){if(!confirm('¿Eliminar?'))return;await fetch('/api/trades',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,account:activeAccount.id})});setModalTrade(null);await loadData();}
+  async function setIC(){const v=parseFloat(capInitial);if(isNaN(v)||v<=0){alert('Capital inválido.');return;}await fetch('/api/capital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'setInitial',amount:v,account:activeAccount.id})});await loadData();alert('✓ Capital guardado');}
+  async function addAp(){const a=parseFloat(apAmount);if(!apDate||isNaN(a)||a<=0){alert('Rellena fecha e importe.');return;}await fetch('/api/capital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'addAport',date:apDate,amount:a,desc:apDesc||'Aportación',account:activeAccount.id})});setApAmount('');setApDesc('');await loadData();}
+  async function delAp(id:number){await fetch('/api/capital',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'deleteAport',id,account:activeAccount.id})});await loadData();}
+
+  async function switchAccount(acc: Account) {
+    setActiveAccount(acc);
+    setShowAccountPicker(false);
+    setPage('dashboard');
+    await loadData(acc.id);
+  }
+
+  async function addAccount() {
+    if (!newAccName.trim()) return;
+    await fetch('/api/accounts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add', name: newAccName, icon: newAccIcon, color: newAccColor }) });
+    setNewAccName(''); setShowAddAccount(false);
+    await loadData();
+  }
+
+  async function deleteAccount(id: string) {
+    if (accounts.length <= 1) { alert('Debes tener al menos una cuenta.'); return; }
+    if (!confirm('¿Eliminar esta cuenta y todos sus datos?')) return;
+    await fetch('/api/accounts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete', id }) });
+    const remaining = accounts.filter(a => a.id !== id);
+    if (activeAccount.id === id) await switchAccount(remaining[0]);
+    else await loadData();
+  }
   async function logout(){await fetch('/api/auth',{method:'DELETE'});window.location.href='/login';}
   function toggleConf(c:string){setFConf(p=>p.includes(c)?p.filter(x=>x!==c):[...p,c]);}
   function openObjModal(obj?: Objetivo){if(obj){setEditObj(obj);setObjLabel(obj.label);setObjTarget(String(obj.target));setObjCurrent(String(obj.current));setObjColor(obj.color);}else{setEditObj(null);setObjLabel('');setObjTarget('');setObjCurrent('');setObjColor(G.cyan);}setShowObjModal(true);}
@@ -264,8 +313,8 @@ export default function DashboardClient() {
   );
 
   const navItems: [Page,string,string][] = mobile
-    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['noticias','⚡','Noticias']]
-    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['objetivos','🎯','Objetivos']];
+    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['alertas','🔔','Alertas'],['coach','🤖','IA Coach']]
+    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos']];
 
   if(loading) return(
     <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
@@ -302,12 +351,44 @@ export default function DashboardClient() {
       {!mobile && (
         <div style={{width:sidebarW,background:G.sb,borderRight:`1px solid ${G.border}`,display:'flex',flexDirection:'column',position:'fixed',top:0,left:0,bottom:0,zIndex:100,overflowY:'auto'}}>
           <div style={{padding:'18px 16px 14px',borderBottom:`1px solid ${G.border}`,flexShrink:0}}>
-            <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
               <Logo/>
               <div>
                 <div style={{fontFamily:'Outfit',fontSize:14,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',letterSpacing:'0.02em'}}>SAVAGE TRADING</div>
                 <div style={{fontSize:9,color:G.muted,letterSpacing:'0.14em',fontFamily:'monospace',marginTop:1}}>JOURNAL PRO</div>
               </div>
+            </div>
+            {/* Account switcher */}
+            <div style={{position:'relative'}}>
+              <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{width:'100%',display:'flex',alignItems:'center',gap:8,padding:'8px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:9,cursor:'pointer',color:G.text,fontFamily:'Outfit',fontSize:12,fontWeight:600,transition:'all 0.15s'}}>
+                <span style={{fontSize:16}}>{activeAccount.icon}</span>
+                <span style={{flex:1,textAlign:'left',color:activeAccount.color}}>{activeAccount.name}</span>
+                <span style={{fontSize:10,color:G.muted}}>▾</span>
+              </button>
+              {showAccountPicker && (
+                <div style={{position:'absolute',top:'100%',left:0,right:0,background:G.card2,border:`1px solid ${G.border2}`,borderRadius:10,zIndex:200,marginTop:4,boxShadow:'0 8px 32px rgba(0,0,0,0.5)',overflow:'hidden'}}>
+                  {accounts.map(acc=>(
+                    <div key={acc.id} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 12px',cursor:'pointer',background:activeAccount.id===acc.id?`${acc.color}15`:'transparent',borderBottom:`1px solid ${G.border}`,transition:'background 0.1s'}}
+                      onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.background=`${acc.color}10`}
+                      onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.background=activeAccount.id===acc.id?`${acc.color}15`:'transparent'}
+                      onClick={()=>switchAccount(acc)}>
+                      <span style={{fontSize:18}}>{acc.icon}</span>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:12,fontWeight:600,color:acc.color,fontFamily:'Outfit'}}>{acc.name}</div>
+                      </div>
+                      {activeAccount.id===acc.id&&<span style={{fontSize:10,color:acc.color}}>✓</span>}
+                      {accounts.length>1&&activeAccount.id!==acc.id&&(
+                        <button onClick={e=>{e.stopPropagation();deleteAccount(acc.id);}} style={{fontSize:10,color:G.muted,background:'none',border:'none',cursor:'pointer',padding:'2px 6px'}}>✕</button>
+                      )}
+                    </div>
+                  ))}
+                  <div onClick={()=>{setShowAddAccount(true);setShowAccountPicker(false);}} style={{display:'flex',alignItems:'center',gap:8,padding:'9px 12px',cursor:'pointer',color:G.accent,fontSize:12,fontFamily:'Outfit',fontWeight:600}}
+                    onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.background=`${G.accent}10`}
+                    onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.background='transparent'}>
+                    <span>⊕</span><span>Nueva cuenta</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <nav style={{padding:'10px 10px',flexShrink:0}}>
@@ -378,7 +459,26 @@ export default function DashboardClient() {
             {mobile&&(
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}><Logo/><div style={{fontFamily:'Outfit',fontSize:13,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAVAGE TRADING</div></div>
-                <div style={{fontFamily:'Outfit',fontSize:16,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(balance)}</div>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:20,cursor:'pointer',fontFamily:'Outfit',fontSize:11,fontWeight:600,color:activeAccount.color}}>
+                    <span>{activeAccount.icon}</span><span>{activeAccount.name}</span><span style={{fontSize:9,color:G.muted}}>▾</span>
+                  </button>
+                  <div style={{fontFamily:'Outfit',fontSize:16,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(balance)}</div>
+                </div>
+                {showAccountPicker&&(
+                  <div style={{position:'absolute',top:60,right:14,background:G.card2,border:`1px solid ${G.border2}`,borderRadius:10,zIndex:200,boxShadow:'0 8px 32px rgba(0,0,0,0.5)',overflow:'hidden',minWidth:180}}>
+                    {accounts.map(acc=>(
+                      <div key={acc.id} onClick={()=>switchAccount(acc)} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',cursor:'pointer',borderBottom:`1px solid ${G.border}`}}>
+                        <span style={{fontSize:16}}>{acc.icon}</span>
+                        <span style={{fontSize:12,fontWeight:600,color:acc.color,fontFamily:'Outfit'}}>{acc.name}</span>
+                        {activeAccount.id===acc.id&&<span style={{marginLeft:'auto',color:acc.color,fontSize:12}}>✓</span>}
+                      </div>
+                    ))}
+                    <div onClick={()=>{setShowAddAccount(true);setShowAccountPicker(false);}} style={{display:'flex',alignItems:'center',gap:8,padding:'9px 14px',cursor:'pointer',color:G.accent,fontSize:12,fontFamily:'Outfit',fontWeight:600}}>
+                      <span>⊕</span><span>Nueva cuenta</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {!mobile&&(
@@ -882,6 +982,47 @@ export default function DashboardClient() {
         )}
       </div>
 
+        {/* ─── GRÁFICO IA ─── */}
+        {page==='grafico'&&(
+          <div className="pe">
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🖼️ Analizador de Gráficos IA</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Sube una captura y Claude analiza tu gráfico en segundos</div>
+            </div>
+            <Suspense fallback={<div style={{textAlign:'center',padding:'40px',color:G.muted}}>Cargando...</div>}>
+              <ChartAnalyzer />
+            </Suspense>
+          </div>
+        )}
+
+        {/* ─── INFORMES ─── */}
+        {page==='informes'&&(
+          <div className="pe">
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>📄 Informes Descargables</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Genera y descarga tu informe de trading en PDF</div>
+            </div>
+            <Suspense fallback={<div style={{textAlign:'center',padding:'40px',color:G.muted}}>Cargando...</div>}>
+              <ReportGenerator trades={trades} capital={capital} />
+            </Suspense>
+          </div>
+        )}
+
+        {/* ─── ALERTAS ─── */}
+        {page==='alertas'&&(
+          <div className="pe">
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔔 Alertas Inteligentes</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Avisos automáticos basados en tus datos reales</div>
+            </div>
+            <Suspense fallback={<div style={{textAlign:'center',padding:'40px',color:G.muted}}>Cargando...</div>}>
+              <AlertasClient trades={trades} />
+            </Suspense>
+          </div>
+        )}
+
+      {/* ══ MOBILE BOTTOM NAV ══ */}
+
       {/* ══ MOBILE BOTTOM NAV ══ */}
       {mobile&&(
         <div style={{position:'fixed',bottom:0,left:0,right:0,background:G.sb,borderTop:`1px solid ${G.border}`,zIndex:200,display:'flex',paddingBottom:'env(safe-area-inset-bottom)'}}>
@@ -891,6 +1032,33 @@ export default function DashboardClient() {
               <span style={{fontSize:8,fontFamily:'monospace',letterSpacing:'0.05em'}}>{label.slice(0,8)}</span>
             </button>
           ))}
+        </div>
+      )}
+
+      {/* ══ ADD ACCOUNT MODAL ══ */}
+      {showAddAccount&&(
+        <div onClick={e=>e.target===e.currentTarget&&setShowAddAccount(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:400,display:'flex',alignItems:'center',justifyContent:'center',padding:20,backdropFilter:'blur(4px)'}}>
+          <div style={{background:G.card,border:`1px solid ${G.border2}`,borderRadius:16,padding:24,width:'100%',maxWidth:360}}>
+            <div style={{fontSize:16,fontWeight:700,fontFamily:'Outfit',marginBottom:18}}>Nueva cuenta</div>
+            <label style={{fontFamily:'monospace',fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5}}>NOMBRE</label>
+            <input value={newAccName} onChange={e=>setNewAccName(e.target.value)} placeholder="Ej: Fondeo FTMO" style={{width:'100%',background:G.card2,border:`1px solid ${G.border}`,borderRadius:8,padding:'9px 12px',color:G.text,fontFamily:'Outfit',fontSize:13,outline:'none',marginBottom:12}}/>
+            <label style={{fontFamily:'monospace',fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5}}>ICONO</label>
+            <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
+              {['💼','📈','₿','🏦','🎯','💰','📊','🔥'].map(icon=>(
+                <button key={icon} onClick={()=>setNewAccIcon(icon)} style={{width:36,height:36,borderRadius:8,border:`2px solid ${newAccIcon===icon?G.accent:G.border}`,background:newAccIcon===icon?`${G.accent}20`:G.card2,fontSize:18,cursor:'pointer',transition:'all 0.15s'}}>{icon}</button>
+              ))}
+            </div>
+            <label style={{fontFamily:'monospace',fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5}}>COLOR</label>
+            <div style={{display:'flex',gap:8,marginBottom:18}}>
+              {[G.cyan,G.green,G.gold,G.red,G.purple,G.accent].map(c=>(
+                <button key={c} onClick={()=>setNewAccColor(c)} style={{width:28,height:28,borderRadius:'50%',background:c,border:`3px solid ${newAccColor===c?'white':'transparent'}`,cursor:'pointer',boxShadow:newAccColor===c?`0 0 10px ${c}`:'none'}}/>
+              ))}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+              <button onClick={()=>setShowAddAccount(false)} style={{padding:11,background:'transparent',border:`1px solid ${G.border}`,borderRadius:9,color:G.muted,fontSize:13,cursor:'pointer',fontFamily:'Outfit'}}>Cancelar</button>
+              <button onClick={addAccount} disabled={!newAccName.trim()} style={{padding:11,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Outfit',opacity:!newAccName.trim()?0.5:1}}>Crear</button>
+            </div>
+          </div>
         </div>
       )}
 
