@@ -806,11 +806,15 @@ export default function DashboardClient() {
                 <div><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📅 Calendario Económico — Tiempo Real</div><div style={{fontSize:11,color:G.muted}}>USD · EUR · GBP · Alto y medio impacto · Horario España</div></div>
                 <a href="https://es.investing.com/economic-calendar/" target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:G.accent,fontFamily:'monospace',textDecoration:'none'}}>ABRIR EN INVESTING →</a>
               </div>
-              <div style={{height:600,background:'#fff'}}>
+              <div style={{height:600}}>
                 <iframe
-                  src="https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&category=_employment,_economicActivity,_inflation,_credit,_centralBanks,_confidenceIndex,_balance,_Bonds&importance=2,3&features=datepicker,timezone,timeselector,filters&countries=5,22,6,25,32&calType=week&timeZone=18&lang=3"
-                  style={{width:'100%',height:'100%',border:'none'}}
-                  title="Calendario económico Investing.com"
+                  src="https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&category=_employment,_economicActivity,_inflation,_credit,_centralBanks,_confidenceIndex,_balance,_Bonds&importance=2,3&features=datepicker,timezone,timeselector,filters&countries=5,22,6,25,32&calType=week&timeZone=18&lang=12"
+                  width="100%"
+                  height="600"
+                  frameBorder={0}
+                  dir="ltr"
+                  style={{border:'none',display:'block',direction:'ltr'}}
+                  title="Calendario económico español"
                   loading="lazy"
                 />
               </div>
