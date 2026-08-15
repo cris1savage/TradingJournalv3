@@ -107,7 +107,7 @@ MEDIA DIARIA DE OPERACIONES: ${(trades.length / Math.max(Object.keys(byDate).len
 
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return NextResponse.json({ answer: 'API key no configurada. Ve a Vercel → Settings → Environment Variables y añade ANTHROPIC_API_KEY.' });
+    if (!apiKey) return NextResponse.json({ answer: '❌ ANTHROPIC_API_KEY no está configurada en Vercel Environment Variables.' });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -130,11 +130,17 @@ Menciona números concretos de los datos cuando sea relevante.`,
       })
     });
 
-    if (!response.ok) throw new Error('API error');
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('Anthropic error:', response.status, errText);
+      return NextResponse.json({ answer: `❌ Error API ${response.status}: ${errText.slice(0, 200)}` });
+    }
     const data = await response.json();
     const answer = data.content?.[0]?.text || 'No pude procesar la respuesta.';
     return NextResponse.json({ answer });
-  } catch {
-    return NextResponse.json({ answer: 'Error conectando con la IA. Inténtalo de nuevo.' });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('Coach error:', msg);
+    return NextResponse.json({ answer: `❌ Error: ${msg}` });
   }
 }
