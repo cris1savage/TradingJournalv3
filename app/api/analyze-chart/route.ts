@@ -10,9 +10,16 @@ export async function POST(req: NextRequest) {
   const prompt = question || 'Analiza este gráfico de trading. Identifica: tendencia principal, zonas de liquidez/soporte/resistencia clave, niveles Fibonacci relevantes, y si hay un setup válido ahora mismo. Sé directo y específico. Indica claramente si operarías o esperarías.';
 
   try {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return NextResponse.json({ error: 'API key no configurada en Vercel.' }, { status: 500 });
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 800,

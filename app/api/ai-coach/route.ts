@@ -106,9 +106,16 @@ MEDIA DIARIA DE OPERACIONES: ${(trades.length / Math.max(Object.keys(byDate).len
 `;
 
   try {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return NextResponse.json({ answer: 'API key no configurada. Ve a Vercel → Settings → Environment Variables y añade ANTHROPIC_API_KEY.' });
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 600,
