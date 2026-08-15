@@ -985,6 +985,33 @@ export default function DashboardClient() {
         )}
       </div>
 
+        {/* ─── ANÁLISIS ─── */}
+        {page==='analisis'&&(
+          <div className="pe">
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔬 Análisis de Rendimiento</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Descubre tu ventaja real basada en tus datos</div>
+            </div>
+            <AnalisisClient trades={trades} />
+          </div>
+        )}
+
+        {/* ─── AI COACH ─── */}
+        {page==='coach'&&(
+          <div className="pe">
+            <div style={{marginBottom:18}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{width:38,height:38,borderRadius:'50%',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🤖</div>
+                <div>
+                  <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>IA Coach Personal</div>
+                  <div style={{fontSize:12,color:G.muted,marginTop:1}}>Analiza tus datos reales · Powered by Claude AI</div>
+                </div>
+              </div>
+            </div>
+            <AICoachClient trades={trades} capital={capital} />
+          </div>
+        )}
+
         {/* ─── GRÁFICO IA ─── */}
         {page==='grafico'&&(
           <div className="pe">
