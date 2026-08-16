@@ -450,13 +450,13 @@ export default function DashboardClient() {
       )}
 
       {/* ══ MAIN ══ */}
-      <div style={{marginLeft:mobile?0:sidebarW,flex:1,padding:mobile?'0 0 80px':'22px 24px',minHeight:'100vh',width:mobile?'100%':`calc(100% - ${sidebarW}px)`,overflowX:'hidden',boxSizing:'border-box'}}>
+      <div style={{marginLeft:mobile?0:sidebarW,flex:1,padding:mobile?`0 0 calc(80px + env(safe-area-inset-bottom))`:'22px 24px',minHeight:'100vh',width:mobile?'100%':`calc(100% - ${sidebarW}px)`,overflowX:'hidden',boxSizing:'border-box'}}>
 
         {/* ─── DASHBOARD ─── */}
         {page==='dashboard'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             {mobile&&(
-              <div className="mobile-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0}}>
+              <div className="mobile-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0,paddingTop:'calc(12px + env(safe-area-inset-top))',paddingBottom:12,paddingLeft:16,paddingRight:16}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}><Logo/><div style={{fontFamily:'Outfit',fontSize:13,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAVAGE TRADING</div></div>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
                   <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:20,cursor:'pointer',fontFamily:'Outfit',fontSize:11,fontWeight:600,color:activeAccount.color}}>
@@ -799,24 +799,18 @@ export default function DashboardClient() {
         {/* ─── NOTICIAS ─── */}
         {page==='noticias'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
-            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Noticias & Calendario</div><div style={{fontSize:12,color:G.muted}}>Datos en tiempo real · TradingView en español</div></div>
+            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Noticias & Mercados</div><div style={{fontSize:12,color:G.muted}}>TradingView en tiempo real · En español</div></div>
 
-            {/* TradingView Economic Calendar — forzado en español */}
-            <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden',marginBottom:12}}>
-              <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <div><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📅 Calendario Económico — Tiempo Real</div><div style={{fontSize:11,color:G.muted}}>USD · EUR · GBP · Eventos de impacto · Horario España</div></div>
-                <a href="https://es.tradingview.com/economic-calendar/" target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:G.accent,fontFamily:'monospace',textDecoration:'none'}}>ABRIR →</a>
+            {/* Link directo al calendario en español */}
+            <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:'16px 18px',marginBottom:12,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>
+                <div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit',marginBottom:4}}>📅 Calendario Económico</div>
+                <div style={{fontSize:12,color:G.muted}}>Abre el calendario completo en español con todos los eventos</div>
               </div>
-              <div style={{height:600}}>
-                <iframe
-                  src="https://www.tradingview.com/embed-widget/economic-calendar/?locale=es#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22locale%22%3A%22es%22%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22countryFilter%22%3A%22us%2Ceu%2Cgb%22%7D"
-                  width="100%"
-                  height="600"
-                  style={{border:'none',display:'block'}}
-                  title="Calendario económico TradingView español"
-                  loading="lazy"
-                />
-              </div>
+              <a href="https://es.investing.com/economic-calendar/" target="_blank" rel="noopener noreferrer"
+                style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,color:'#05111e',fontSize:12,fontWeight:700,borderRadius:9,textDecoration:'none',fontFamily:'Outfit',whiteSpace:'nowrap',flexShrink:0,marginLeft:16}}>
+                ABRIR CALENDARIO →
+              </a>
             </div>
 
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:12,marginBottom:12}}>
