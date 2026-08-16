@@ -2,25 +2,30 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Trading Journal Pro',
-  description: 'Diario de trading personal — XAU/USD & NAS100',
+  title: 'Savage Trading Journal',
+  description: 'Tu diario de trading profesional — XAU/USD & NAS100',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'TradeLog',
+    title: 'ST Journal',
   },
   icons: {
-    icon: '/icon.svg',
-    apple: '/icon-192.png',
+    icon: '/icon-192.png',
+    apple: [
+      { url: '/icon-192.png', sizes: '192x192' },
+      { url: '/icon-512.png', sizes: '512x512' },
+    ],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#1d4ed8',
+  themeColor: '#0b1a2e',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -30,10 +35,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="TradeLog" />
+        <meta name="apple-mobile-web-app-title" content="ST Journal" />
+        <meta name="format-detection" content="telephone=no" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-startup-image" href="/icon-512.png" />
       </head>
-      <body style={{ margin: 0, padding: 0 }}>
+      <body>
         {children}
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {

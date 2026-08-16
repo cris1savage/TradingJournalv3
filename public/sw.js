@@ -1,8 +1,8 @@
-const CACHE = 'tradelog-v1';
-const OFFLINE = ['/login', '/dashboard'];
+const CACHE = 'st-journal-v2';
+const STATIC = ['/login', '/dashboard', '/icon-192.png', '/icon-512.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(OFFLINE)));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)));
   self.skipWaiting();
 });
 
@@ -15,12 +15,16 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  if (e.request.url.includes('/api/')) return; // Always fetch API fresh
+  if (e.request.url.includes('/api/')) return; // Always fresh for API
   e.respondWith(
-    fetch(e.request).then(res => {
-      const clone = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, clone));
-      return res;
-    }).catch(() => caches.match(e.request))
+    fetch(e.request)
+      .then(res => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });

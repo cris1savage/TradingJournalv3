@@ -450,13 +450,13 @@ export default function DashboardClient() {
       )}
 
       {/* ══ MAIN ══ */}
-      <div style={{marginLeft:mobile?0:sidebarW,flex:1,padding:mobile?'16px 14px 80px':'22px 24px',minHeight:'100vh'}}>
+      <div style={{marginLeft:mobile?0:sidebarW,flex:1,padding:mobile?'0 0 80px':'22px 24px',minHeight:'100vh'}}>
 
         {/* ─── DASHBOARD ─── */}
         {page==='dashboard'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             {mobile&&(
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+              <div className="mobile-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}><Logo/><div style={{fontFamily:'Outfit',fontSize:13,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAVAGE TRADING</div></div>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
                   <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:20,cursor:'pointer',fontFamily:'Outfit',fontSize:11,fontWeight:600,color:activeAccount.color}}>
@@ -626,7 +626,7 @@ export default function DashboardClient() {
 
         {/* ─── NUEVO TRADE ─── */}
         {page==='nuevo'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             {mobile&&<div style={{fontSize:18,fontWeight:700,fontFamily:'Outfit',marginBottom:16}}>⊕ Nuevo Trade</div>}
             {!mobile&&<div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Nuevo Trade</div><div style={{fontSize:12,color:G.muted}}>Registra tu operación</div></div>}
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 260px',gap:12,alignItems:'start'}}>
@@ -705,7 +705,7 @@ export default function DashboardClient() {
 
         {/* ─── HISTORIAL ─── */}
         {page==='historial'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18,flexWrap:'wrap',gap:8}}>
               <div><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Historial</div><div style={{fontSize:12,color:G.muted}}>{filteredTrades.length} operaciones</div></div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
@@ -746,7 +746,7 @@ export default function DashboardClient() {
 
         {/* ─── CAPITAL ─── */}
         {page==='capital'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Capital</div><div style={{fontSize:12,color:G.muted}}>Gestión de capital y aportaciones</div></div>
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:12,alignItems:'start'}}>
               <div>
@@ -796,7 +796,7 @@ export default function DashboardClient() {
 
         {/* ─── NOTICIAS ─── */}
         {page==='noticias'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Noticias & Calendario</div><div style={{fontSize:12,color:G.muted}}>Datos en tiempo real · Investing.com + TradingView</div></div>
 
             {/* Calendario Investing.com — full width */}
@@ -870,7 +870,7 @@ export default function DashboardClient() {
 
         {/* ─── RENDIMIENTO ─── */}
         {page==='rendimiento'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Rendimiento Histórico</div><div style={{fontSize:12,color:G.muted}}>Análisis completo de tu performance</div></div>
             {/* Resumen anual */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
@@ -945,7 +945,7 @@ export default function DashboardClient() {
 
         {/* ─── OBJETIVOS ─── */}
         {page==='objetivos'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
               <div><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🎯 Mis Objetivos</div><div style={{fontSize:12,color:G.muted}}>Define y sigue tu progreso</div></div>
               <button onClick={()=>openObjModal()} style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Outfit'}}>+ Nuevo objetivo</button>
@@ -987,7 +987,7 @@ export default function DashboardClient() {
 
         {/* ─── ANÁLISIS ─── */}
         {page==='analisis'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{marginBottom:18}}>
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔬 Análisis de Rendimiento</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Descubre tu ventaja real basada en tus datos</div>
@@ -998,7 +998,7 @@ export default function DashboardClient() {
 
         {/* ─── AI COACH ─── */}
         {page==='coach'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{marginBottom:18}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <div style={{width:38,height:38,borderRadius:'50%',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🤖</div>
@@ -1014,7 +1014,7 @@ export default function DashboardClient() {
 
         {/* ─── GRÁFICO IA ─── */}
         {page==='grafico'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{marginBottom:18}}>
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🖼️ Analizador de Gráficos IA</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Sube una captura y Claude analiza tu gráfico en segundos</div>
@@ -1025,7 +1025,7 @@ export default function DashboardClient() {
 
         {/* ─── INFORMES ─── */}
         {page==='informes'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{marginBottom:18}}>
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>📄 Informes Descargables</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Genera y descarga tu informe de trading en PDF</div>
@@ -1036,7 +1036,7 @@ export default function DashboardClient() {
 
         {/* ─── ALERTAS ─── */}
         {page==='alertas'&&(
-          <div className="pe">
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
             <div style={{marginBottom:18}}>
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔔 Alertas Inteligentes</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Avisos automáticos basados en tus datos reales</div>
@@ -1048,16 +1048,14 @@ export default function DashboardClient() {
       {/* ══ MOBILE BOTTOM NAV ══ */}
 
       {/* ══ MOBILE BOTTOM NAV ══ */}
-      {mobile&&(
-        <div style={{position:'fixed',bottom:0,left:0,right:0,background:G.sb,borderTop:`1px solid ${G.border}`,zIndex:200,display:'flex',paddingBottom:'env(safe-area-inset-bottom)'}}>
-          {navItems.map(([p,icon,label])=>(
-            <button key={p} onClick={()=>setPage(p)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,padding:'8px 4px',background:'none',border:'none',cursor:'pointer',color:page===p?G.accent:G.muted,transition:'color 0.15s',filter:page===p?`drop-shadow(0 0 5px ${G.accent})`:'none'}}>
-              <span style={{fontSize:17}}>{icon}</span>
-              <span style={{fontSize:8,fontFamily:'monospace',letterSpacing:'0.05em'}}>{label.slice(0,8)}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="bottom-nav bottom-nav-safe">
+        {navItems.map(([p,icon,label])=>(
+          <button key={p} onClick={()=>setPage(p)} className={`bottom-nav-item${page===p?' active':''}`} style={{position:'relative'}}>
+            <span className="nav-icon">{icon}</span>
+            <span className="nav-label">{label.slice(0,7)}</span>
+          </button>
+        ))}
+      </div>
 
       {/* ══ ADD ACCOUNT MODAL ══ */}
       {showAddAccount&&(
