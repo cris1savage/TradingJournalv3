@@ -478,13 +478,15 @@ export default function DashboardClient() {
         {page==='dashboard'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             {mobile&&(
-              <div className="mobile-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0,paddingTop:'calc(12px + env(safe-area-inset-top))',paddingBottom:12,paddingLeft:16,paddingRight:16}}>
+              <div className="mobile-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0,paddingTop:'env(safe-area-inset-top)',paddingBottom:0,paddingLeft:0,paddingRight:0}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%',padding:'12px 16px'}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}><Logo/><div style={{fontFamily:'Outfit',fontSize:13,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAVAGE TRADING</div></div>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
                   <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:20,cursor:'pointer',fontFamily:'Outfit',fontSize:11,fontWeight:600,color:activeAccount.color}}>
                     <span>{activeAccount.icon}</span><span>{activeAccount.name}</span><span style={{fontSize:9,color:G.muted}}>▾</span>
                   </button>
                   <div style={{fontFamily:'Outfit',fontSize:16,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(balance)}</div>
+                </div>
                 </div>
                 {showAccountPicker&&(
                   <div style={{position:'absolute',top:60,right:14,background:G.card2,border:`1px solid ${G.border2}`,borderRadius:10,zIndex:200,boxShadow:'0 8px 32px rgba(0,0,0,0.5)',overflow:'hidden',minWidth:180}}>

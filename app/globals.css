@@ -284,11 +284,18 @@ html, body {
 }
 
 /* ══ IPHONE PRO MAX FIXES ════════════════════════════════ */
-/* Dynamic island / status bar safe area */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .mobile-header {
-    padding-top: max(14px, env(safe-area-inset-top)) !important;
-  }
+
+/* Force safe area on mobile header - works for all iPhones including 17 Pro Max */
+.mobile-header {
+  /* Fallback for older iPhones */
+  padding-top: 50px;
+  /* Modern iPhones with Dynamic Island */
+  padding-top: max(50px, env(safe-area-inset-top, 50px));
+}
+
+/* Inner content of mobile header */
+.mobile-header > div {
+  padding: 12px 16px;
 }
 
 /* iPhone Pro Max wider screen adjustments */
@@ -308,12 +315,17 @@ html, body {
 /* Ensure content doesn't touch screen edges on iPhone */
 @media (max-width: 768px) {
   .pe {
-    padding-left: max(14px, env(safe-area-inset-left));
-    padding-right: max(14px, env(safe-area-inset-right));
+    padding-left: 14px;
+    padding-right: 14px;
   }
 }
 
 /* Hide bottom nav scrollbar */
 .bottom-nav div::-webkit-scrollbar {
   display: none;
+}
+
+/* Bottom safe area for home indicator */
+.bottom-nav {
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 8px)) !important;
 }
