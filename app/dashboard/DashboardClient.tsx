@@ -329,7 +329,7 @@ export default function DashboardClient() {
   const sidebarW = mobile ? 0 : 250;
 
   return (
-    <div style={{display:'flex',minHeight:'100vh',background:G.bg,fontFamily:"'Outfit','Inter',sans-serif",color:G.text}}>
+    <div style={{display:'flex',minHeight:'100vh',background:G.bg,fontFamily:"'Outfit','Inter',sans-serif",color:G.text,overflowX:'hidden',width:'100%',position:'relative'}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
@@ -450,7 +450,7 @@ export default function DashboardClient() {
       )}
 
       {/* ══ MAIN ══ */}
-      <div style={{marginLeft:mobile?0:sidebarW,flex:1,padding:mobile?'0 0 80px':'22px 24px',minHeight:'100vh'}}>
+      <div style={{marginLeft:mobile?0:sidebarW,flex:1,padding:mobile?'0 0 80px':'22px 24px',minHeight:'100vh',width:mobile?'100%':`calc(100% - ${sidebarW}px)`,overflowX:'hidden',boxSizing:'border-box'}}>
 
         {/* ─── DASHBOARD ─── */}
         {page==='dashboard'&&(
@@ -495,7 +495,7 @@ export default function DashboardClient() {
             )}
 
             {/* STAT CARDS */}
-            <div style={{display:'grid',gridTemplateColumns:mobile?'1fr 1fr':'repeat(3,1fr)',gap:10,marginBottom:12}}>
+            <div style={{display:'grid',gridTemplateColumns:mobile?'1fr 1fr':'repeat(3,1fr)',gap:10,marginBottom:12,minWidth:0}}>
               {[
                 {label:'BALANCE',val:fmtA(animBalance),sub:'Capital total',color:G.accent},
                 {label:'P&L TOTAL',val:fmt(totalPnl),sub:`${trades.length} operaciones`,color:totalPnl>=0?G.green:G.red},
@@ -511,7 +511,7 @@ export default function DashboardClient() {
             </div>
 
             {/* GAUGES */}
-            <div style={{display:'grid',gridTemplateColumns:mobile?'repeat(2,1fr)':'repeat(4,1fr)',gap:10,marginBottom:12}}>
+            <div style={{display:'grid',gridTemplateColumns:mobile?'repeat(2,1fr)':'repeat(4,1fr)',gap:10,marginBottom:12,minWidth:0}}>
               {[
                 <CircleGauge key="wr" value={wr} max={100} label={Math.round(animWr)+'%'} sublabel="WIN RATE" color={wr>=50?G.green:G.red} size={mobile?90:100}/>,
                 <SemiGauge key="wins" value={wins} max={Math.max(trades.length,1)} label={String(wins)} sublabel="WINS TOTALES" color={G.green}/>,
@@ -714,7 +714,8 @@ export default function DashboardClient() {
                 ))}
               </div>
             </div>
-            <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden'}}>
+            <div className="table-scroll">
+            <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden',minWidth:mobile?'auto':'600px'}}>
               {!mobile&&<div style={{display:'grid',gridTemplateColumns:'100px 90px 55px 80px 1fr 90px',padding:'9px 16px',background:G.bg,borderBottom:`1px solid ${G.border}`,gap:8}}>
                 {['Fecha','Activo','Dir','Resultado','Notas','P&L'].map(h=><span key={h} style={{fontFamily:'monospace',fontSize:9,letterSpacing:'0.12em',textTransform:'uppercase',color:G.muted}}>{h}</span>)}
               </div>}
@@ -740,6 +741,7 @@ export default function DashboardClient() {
                       <span style={{fontFamily:'Outfit',fontSize:13,fontWeight:700,textAlign:'right',color:t.pnl>0?G.green:t.pnl<0?G.red:G.purple}}>{fmt(t.pnl)}</span>
                     </div>
               ))}
+            </div>
             </div>
           </div>
         )}
@@ -797,23 +799,21 @@ export default function DashboardClient() {
         {/* ─── NOTICIAS ─── */}
         {page==='noticias'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
-            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Noticias & Calendario</div><div style={{fontSize:12,color:G.muted}}>Datos en tiempo real · Investing.com + TradingView</div></div>
+            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Noticias & Calendario</div><div style={{fontSize:12,color:G.muted}}>Datos en tiempo real · TradingView en español</div></div>
 
-            {/* Calendario Investing.com — full width */}
+            {/* TradingView Economic Calendar — forzado en español */}
             <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden',marginBottom:12}}>
               <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <div><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📅 Calendario Económico — Tiempo Real</div><div style={{fontSize:11,color:G.muted}}>USD · EUR · GBP · Alto y medio impacto · Horario España</div></div>
-                <a href="https://es.investing.com/economic-calendar/" target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:G.accent,fontFamily:'monospace',textDecoration:'none'}}>ABRIR EN INVESTING →</a>
+                <div><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📅 Calendario Económico — Tiempo Real</div><div style={{fontSize:11,color:G.muted}}>USD · EUR · GBP · Eventos de impacto · Horario España</div></div>
+                <a href="https://es.tradingview.com/economic-calendar/" target="_blank" rel="noopener noreferrer" style={{fontSize:10,color:G.accent,fontFamily:'monospace',textDecoration:'none'}}>ABRIR →</a>
               </div>
               <div style={{height:600}}>
                 <iframe
-                  src="https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&category=_employment,_economicActivity,_inflation,_credit,_centralBanks,_confidenceIndex,_balance,_Bonds&importance=2,3&features=datepicker,timezone,timeselector,filters&countries=5,22,6,25,32&calType=week&timeZone=18&lang=12"
+                  src="https://www.tradingview.com/embed-widget/economic-calendar/?locale=es#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22locale%22%3A%22es%22%2C%22importanceFilter%22%3A%22-1%2C0%2C1%22%2C%22countryFilter%22%3A%22us%2Ceu%2Cgb%22%7D"
                   width="100%"
                   height="600"
-                  frameBorder={0}
-                  dir="ltr"
-                  style={{border:'none',display:'block',direction:'ltr'}}
-                  title="Calendario económico español"
+                  style={{border:'none',display:'block'}}
+                  title="Calendario económico TradingView español"
                   loading="lazy"
                 />
               </div>
@@ -822,7 +822,7 @@ export default function DashboardClient() {
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:12,marginBottom:12}}>
               {/* TradingView News */}
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden'}}>
-                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📰 Noticias Forex & Mercados</div><div style={{fontSize:11,color:G.muted}}>TradingView · Actualización continua</div></div>
+                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📰 Noticias Forex & Mercados</div><div style={{fontSize:11,color:G.muted}}>TradingView · En español · Tiempo real</div></div>
                 <div style={{height:440}}>
                   <iframe
                     src="https://www.tradingview.com/embed-widget/timeline/?feedMode=market&market=forex&isTransparent=true&displayMode=regular&width=100%25&height=100%25&colorTheme=dark&locale=es"
@@ -847,7 +847,7 @@ export default function DashboardClient() {
             </div>
             {/* Ticker tape */}
             <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden',marginBottom:12}}>
-              <div style={{padding:'12px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📊 Precios en Tiempo Real</div></div>
+              <div style={{padding:'12px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>💹 Precios en Tiempo Real</div></div>
               <div style={{height:70}}>
                 <iframe
                   src="https://www.tradingview.com/embed-widget/ticker-tape/?symbols=%5B%7B%22proName%22%3A%22OANDA%3AXAUUSD%22%2C%22title%22%3A%22Oro%22%7D%2C%7B%22proName%22%3A%22NASDAQ%3ANDX%22%2C%22title%22%3A%22Nasdaq%22%7D%2C%7B%22proName%22%3A%22FX%3AEURUSD%22%2C%22title%22%3A%22EUR%2FUSD%22%7D%2C%7B%22proName%22%3A%22BITSTAMP%3ABTCUSD%22%2C%22title%22%3A%22Bitcoin%22%7D%2C%7B%22proName%22%3A%22TVC%3ADXY%22%2C%22title%22%3A%22DXY%22%7D%5D&showSymbolLogo=true&isTransparent=true&displayMode=adaptive&colorTheme=dark&locale=es"
@@ -987,7 +987,7 @@ export default function DashboardClient() {
 
         {/* ─── ANÁLISIS ─── */}
         {page==='analisis'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',maxWidth:'100%',overflowX:'hidden'}}>
             <div style={{marginBottom:18}}>
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔬 Análisis de Rendimiento</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Descubre tu ventaja real basada en tus datos</div>

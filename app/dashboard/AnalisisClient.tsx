@@ -19,11 +19,11 @@ function StatRow({ label, trades, color }: { label: string; trades: Trade[]; col
   const maxPnl = 200;
   const barW = Math.min(Math.abs(pnl) / maxPnl * 100, 100);
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr 70px 55px 80px', gap: 10, alignItems: 'center', padding: '10px 14px', borderBottom: `1px solid ${G.border}`, transition: 'background 0.1s' }}
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(80px,140px) 1fr 72px 48px 60px', gap: 8, alignItems: 'center', padding: '10px 14px', borderBottom: `1px solid ${G.border}`, transition: 'background 0.1s', minWidth: 0 }}
       onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = G.card2}
       onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>
-      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'Outfit, sans-serif', color: color || G.text }}>{label}</span>
-      <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
+      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'Outfit, sans-serif', color: color || G.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden', minWidth: 0 }}>
         <div style={{ height: '100%', width: `${barW}%`, background: pnl >= 0 ? G.green : G.red, borderRadius: 3, transition: 'width 0.8s ease' }} />
       </div>
       <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 11, fontWeight: 700, color: pnl >= 0 ? G.green : G.red, textAlign: 'right' }}>{fmt(pnl)}</span>
@@ -41,7 +41,7 @@ function SectionCard({ title, sub, children }: { title: string; sub?: string; ch
         {sub && <div style={{ fontSize: 11, color: G.muted, marginTop: 2 }}>{sub}</div>}
       </div>
       <div style={{ padding: '6px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr 70px 55px 80px', gap: 10, padding: '6px 14px 8px', borderBottom: `1px solid ${G.border}` }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(80px,140px) 1fr 72px 48px 60px', gap: 8, padding: '6px 14px 8px', borderBottom: `1px solid ${G.border}` }}>
           {['Categoría', 'P&L visual', 'P&L', 'Win%', 'Trades'].map(h => (
             <span key={h} style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: G.muted }}>{h}</span>
           ))}
@@ -162,9 +162,9 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
   ] as const;
 
   return (
-    <div>
+    <div style={{ maxWidth: '100%', overflowX: 'hidden' }}>
       {/* Tab nav */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap', overflowX: 'auto' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '7px 14px', borderRadius: 20, border: `1px solid ${tab === t.id ? G.accent : G.border}`, background: tab === t.id ? `${G.accent}18` : 'transparent', color: tab === t.id ? G.accent : G.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: tab === t.id ? 600 : 400, transition: 'all 0.15s', boxShadow: tab === t.id ? `0 0 10px ${G.accent}30` : 'none' }}>{t.label}</button>
         ))}

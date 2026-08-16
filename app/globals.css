@@ -248,3 +248,38 @@ button:active:not(:disabled) {
     background: linear-gradient(180deg, #0d1f38 0%, #08111e 100%);
   }
 }
+
+/* ══ OVERFLOW FIXES ══════════════════════════════════════ */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Prevent grid blowout */
+.pe > * { min-width: 0; }
+
+/* Analysis tabs scrollable */
+.analysis-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  margin-bottom: 18px;
+}
+.analysis-tabs::-webkit-scrollbar { display: none; }
+.analysis-tabs button { flex-shrink: 0; }
+
+/* Table wrapper for small screens */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+
+/* Fix fixed sidebar not causing overflow */
+@media (min-width: 769px) {
+  body { overflow-x: hidden; }
+}
