@@ -282,3 +282,38 @@ html, body {
 @media (min-width: 769px) {
   body { overflow-x: hidden; }
 }
+
+/* ══ IPHONE PRO MAX FIXES ════════════════════════════════ */
+/* Dynamic island / status bar safe area */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .mobile-header {
+    padding-top: max(14px, env(safe-area-inset-top)) !important;
+  }
+}
+
+/* iPhone Pro Max wider screen adjustments */
+@media (min-width: 390px) and (max-width: 768px) {
+  .bottom-nav-item {
+    min-width: 68px;
+    padding: 8px 6px;
+  }
+  .bottom-nav-item .nav-icon {
+    font-size: 22px;
+  }
+  .bottom-nav-item .nav-label {
+    font-size: 10px;
+  }
+}
+
+/* Ensure content doesn't touch screen edges on iPhone */
+@media (max-width: 768px) {
+  .pe {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+}
+
+/* Hide bottom nav scrollbar */
+.bottom-nav div::-webkit-scrollbar {
+  display: none;
+}

@@ -206,11 +206,23 @@ export default function DashboardClient() {
     loadData();
     const n=new Date(); setFDate(n.toISOString().split('T')[0]); setFTime(n.toTimeString().slice(0,5)); setApDate(n.toISOString().split('T')[0]);
     const saved = localStorage.getItem('st_objetivos'); if (saved) setObjetivos(JSON.parse(saved));
+    // Note: objetivos auto-sync with totalPnl happens in render
   }, [loadData]);
 
   useEffect(() => { const e=parseFloat(fEntry),sl=parseFloat(fSl),tp=parseFloat(fTp); if(e&&sl&&tp){const r=Math.abs(e-sl),p=Math.abs(tp-e);if(r>0){setFRR('1:'+(p/r).toFixed(1));return;}} setFRR('—'); }, [fEntry,fSl,fTp]);
 
   const saveObjetivos = (obs: Objetivo[]) => { setObjetivos(obs); localStorage.setItem('st_objetivos', JSON.stringify(obs)); };
+
+  // Auto-sync objectives with real P&L
+  const syncObjetivosWithPnl = useCallback((obs: Objetivo[], pnl: number) => {
+    const synced = obs.map(o => {
+      if (o.label.toLowerCase().includes('€') || o.label.toLowerCase().includes('beneficio') || o.label.toLowerCase().includes('ganar') || o.label.toLowerCase().includes('generar') || o.label.toLowerCase().includes('%')) {
+        return { ...o, current: Math.max(0, pnl) };
+      }
+      return o;
+    });
+    return synced;
+  }, []);
 
   const totalPnl = trades.reduce((s,t)=>s+t.pnl,0);
   const totalAport = capital.aportaciones.reduce((s,a)=>s+a.amount,0);
@@ -240,6 +252,16 @@ export default function DashboardClient() {
 
   const animBalance = useCounter(balance);
   const animWr = useCounter(wr);
+
+  // Auto-compute synced objetivos - monetary goals auto-update with real P&L
+  const syncedObjetivos = objetivos.map(o => {
+    const lbl = o.label.toLowerCase();
+    const isMonetary = lbl.includes('€') || lbl.includes('ganar') || lbl.includes('generar') || lbl.includes('beneficio') || lbl.includes('profit') || lbl.includes('%') || lbl.includes('objetivo');
+    if (isMonetary && totalPnl > 0) {
+      return { ...o, current: parseFloat(totalPnl.toFixed(2)) };
+    }
+    return o;
+  });
 
   const capitalCurve = () => {
     let run = capital.initial;
@@ -312,7 +334,7 @@ export default function DashboardClient() {
   );
 
   const navItems: [Page,string,string][] = mobile
-    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['alertas','🔔','Alertas'],['coach','🤖','IA Coach']]
+    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['analisis','🔬','Análisis'],['objetivos','🎯','Objetivos']]
     : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos']];
 
   if(loading) return(
@@ -450,11 +472,11 @@ export default function DashboardClient() {
       )}
 
       {/* ══ MAIN ══ */}
-      <div style={{marginLeft:mobile?0:sidebarW,flex:1,padding:mobile?`0 0 calc(80px + env(safe-area-inset-bottom))`:'22px 24px',minHeight:'100vh',width:mobile?'100%':`calc(100% - ${sidebarW}px)`,overflowX:'hidden',boxSizing:'border-box'}}>
+      <div style={{marginLeft:mobile?0:sidebarW,flex:1,padding:mobile?`0 0 calc(80px + env(safe-area-inset-bottom))`:'22px 24px 22px 28px',minHeight:'100vh',width:mobile?'100%':`calc(100% - ${sidebarW}px)`,overflowX:'hidden',boxSizing:'border-box',maxWidth:mobile?'100%':`calc(100% - ${sidebarW}px)`}}>
 
         {/* ─── DASHBOARD ─── */}
         {page==='dashboard'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             {mobile&&(
               <div className="mobile-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0,paddingTop:'calc(12px + env(safe-area-inset-top))',paddingBottom:12,paddingLeft:16,paddingRight:16}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}><Logo/><div style={{fontFamily:'Outfit',fontSize:13,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAVAGE TRADING</div></div>
@@ -615,7 +637,7 @@ export default function DashboardClient() {
                   <button onClick={()=>setPage('objetivos')} style={{fontSize:10,color:G.accent,background:'none',border:'none',cursor:'pointer',fontFamily:'monospace'}}>VER TODOS →</button>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:`repeat(${Math.min(objetivos.length,mobile?2:4)},1fr)`,gap:10}}>
-                  {objetivos.slice(0,mobile?2:4).map(o=>(
+                  {syncedObjetivos.slice(0,mobile?2:4).map(o=>(
                     <ProgressBall key={o.id} objetivo={o} onEdit={()=>openObjModal(o)} onDelete={()=>deleteObj(o.id)}/>
                   ))}
                 </div>
@@ -626,7 +648,7 @@ export default function DashboardClient() {
 
         {/* ─── NUEVO TRADE ─── */}
         {page==='nuevo'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             {mobile&&<div style={{fontSize:18,fontWeight:700,fontFamily:'Outfit',marginBottom:16}}>⊕ Nuevo Trade</div>}
             {!mobile&&<div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Nuevo Trade</div><div style={{fontSize:12,color:G.muted}}>Registra tu operación</div></div>}
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 260px',gap:12,alignItems:'start'}}>
@@ -705,7 +727,7 @@ export default function DashboardClient() {
 
         {/* ─── HISTORIAL ─── */}
         {page==='historial'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18,flexWrap:'wrap',gap:8}}>
               <div><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Historial</div><div style={{fontSize:12,color:G.muted}}>{filteredTrades.length} operaciones</div></div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
@@ -748,7 +770,7 @@ export default function DashboardClient() {
 
         {/* ─── CAPITAL ─── */}
         {page==='capital'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Capital</div><div style={{fontSize:12,color:G.muted}}>Gestión de capital y aportaciones</div></div>
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:12,alignItems:'start'}}>
               <div>
@@ -798,7 +820,7 @@ export default function DashboardClient() {
 
         {/* ─── NOTICIAS ─── */}
         {page==='noticias'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Noticias & Mercados</div><div style={{fontSize:12,color:G.muted}}>TradingView en tiempo real · En español</div></div>
 
             {/* Link directo al calendario en español */}
@@ -864,7 +886,7 @@ export default function DashboardClient() {
 
         {/* ─── RENDIMIENTO ─── */}
         {page==='rendimiento'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Rendimiento Histórico</div><div style={{fontSize:12,color:G.muted}}>Análisis completo de tu performance</div></div>
             {/* Resumen anual */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
@@ -939,7 +961,7 @@ export default function DashboardClient() {
 
         {/* ─── OBJETIVOS ─── */}
         {page==='objetivos'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
               <div><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🎯 Mis Objetivos</div><div style={{fontSize:12,color:G.muted}}>Define y sigue tu progreso</div></div>
               <button onClick={()=>openObjModal()} style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Outfit'}}>+ Nuevo objetivo</button>
@@ -953,7 +975,7 @@ export default function DashboardClient() {
             :(
               <>
                 <div style={{display:'grid',gridTemplateColumns:`repeat(${mobile?2:Math.min(objetivos.length,4)},1fr)`,gap:14,marginBottom:20}}>
-                  {objetivos.map(o=><ProgressBall key={o.id} objetivo={o} onEdit={()=>openObjModal(o)} onDelete={()=>deleteObj(o.id)}/>)}
+                  {syncedObjetivos.map(o=><ProgressBall key={o.id} objetivo={o} onEdit={()=>openObjModal(o)} onDelete={()=>deleteObj(o.id)}/>)}
                 </div>
                 {/* Objectives detail */}
                 <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18}}>
@@ -981,7 +1003,7 @@ export default function DashboardClient() {
 
         {/* ─── ANÁLISIS ─── */}
         {page==='analisis'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',maxWidth:'100%',overflowX:'hidden'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',maxWidth:'100%',overflowX:'hidden',paddingTop:mobile?'16px':'0'}}>
             <div style={{marginBottom:18}}>
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔬 Análisis de Rendimiento</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Descubre tu ventaja real basada en tus datos</div>
@@ -992,7 +1014,7 @@ export default function DashboardClient() {
 
         {/* ─── AI COACH ─── */}
         {page==='coach'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <div style={{width:38,height:38,borderRadius:'50%',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🤖</div>
@@ -1008,7 +1030,7 @@ export default function DashboardClient() {
 
         {/* ─── GRÁFICO IA ─── */}
         {page==='grafico'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🖼️ Analizador de Gráficos IA</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Sube una captura y Claude analiza tu gráfico en segundos</div>
@@ -1019,7 +1041,7 @@ export default function DashboardClient() {
 
         {/* ─── INFORMES ─── */}
         {page==='informes'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>📄 Informes Descargables</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Genera y descarga tu informe de trading en PDF</div>
@@ -1030,7 +1052,7 @@ export default function DashboardClient() {
 
         {/* ─── ALERTAS ─── */}
         {page==='alertas'&&(
-          <div className="pe" style={{padding:mobile?'16px 14px 0':'0'}}>
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
               <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔔 Alertas Inteligentes</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Avisos automáticos basados en tus datos reales</div>
@@ -1042,13 +1064,15 @@ export default function DashboardClient() {
       {/* ══ MOBILE BOTTOM NAV ══ */}
 
       {/* ══ MOBILE BOTTOM NAV ══ */}
-      <div className="bottom-nav bottom-nav-safe">
-        {navItems.map(([p,icon,label])=>(
-          <button key={p} onClick={()=>setPage(p)} className={`bottom-nav-item${page===p?' active':''}`} style={{position:'relative'}}>
-            <span className="nav-icon">{icon}</span>
-            <span className="nav-label">{label.slice(0,7)}</span>
-          </button>
-        ))}
+      <div className="bottom-nav" style={{paddingBottom:'env(safe-area-inset-bottom)'}}>
+        <div style={{display:'flex',overflowX:'auto',scrollbarWidth:'none',WebkitOverflowScrolling:'touch'} as React.CSSProperties}>
+          {navItems.map(([p,icon,label])=>(
+            <button key={p} onClick={()=>setPage(p)} className={`bottom-nav-item${page===p?' active':''}`} style={{position:'relative',flexShrink:0,minWidth:64}}>
+              <span className="nav-icon">{icon}</span>
+              <span className="nav-label">{label.slice(0,7)}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ══ ADD ACCOUNT MODAL ══ */}
