@@ -8,12 +8,13 @@ import AICoachClient from './AICoachClient';
 import ChartAnalyzer from './ChartAnalyzer';
 import ReportGenerator from './ReportGenerator';
 import AlertasClient from './AlertasClient';
+import PatrimonioClient from './PatrimonioClient';
 
 type Trade = { id: number; date: string; time: string; pair: string; tf: string; dir: string; res: string; plan: string | null; entry: number; sl: number; tp: number; risk: number; lot: number; rr: string; pnl: number; rreal: string; conf: string[]; emo: string; notes: string; };
 type Capital = { initial: number; aportaciones: { id: number; date: string; amount: number; desc: string }[]; };
 type Objetivo = { id: number; label: string; target: number; current: number; color: string; };
 type Account = { id: string; name: string; icon: string; color: string; };
-type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas';
+type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio';
 
 const DEFAULT_ACCOUNTS: Account[] = [
   { id: 'propia', name: 'Cuenta Propia', icon: '💼', color: '#00e5ff' },
@@ -334,8 +335,8 @@ export default function DashboardClient() {
   );
 
   const navItems: [Page,string,string][] = mobile
-    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['analisis','🔬','Análisis'],['objetivos','🎯','Objetivos']]
-    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos']];
+    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['analisis','🔬','Análisis'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio']]
+    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio']];
 
   if(loading) return(
     <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
@@ -1063,7 +1064,29 @@ export default function DashboardClient() {
           </div>
         )}
 
+        {/* ─── PATRIMONIO ─── */}
+        {page==='patrimonio'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>💎 Patrimonio & Inversiones</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Carteras · Posiciones · Aportaciones programadas</div>
+            </div>
+            <PatrimonioClient tradingBalance={balance} />
+          </div>
+        )}
+
       {/* ══ MOBILE BOTTOM NAV ══ */}
+
+        {/* ─── PATRIMONIO ─── */}
+        {page==='patrimonio'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>💎 Patrimonio & Inversiones</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Carteras · Posiciones · Aportaciones programadas</div>
+            </div>
+            <PatrimonioClient tradingBalance={balance} />
+          </div>
+        )}
 
       {/* ══ MOBILE BOTTOM NAV ══ */}
       <div className="bottom-nav" style={{paddingBottom:'env(safe-area-inset-bottom)'}}>
