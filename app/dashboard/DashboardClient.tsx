@@ -9,12 +9,13 @@ import ChartAnalyzer from './ChartAnalyzer';
 import ReportGenerator from './ReportGenerator';
 import AlertasClient from './AlertasClient';
 import PatrimonioClient from './PatrimonioClient';
+import DiarioClient from './DiarioClient';
 
 type Trade = { id: number; date: string; time: string; pair: string; tf: string; dir: string; res: string; plan: string | null; entry: number; sl: number; tp: number; risk: number; lot: number; rr: string; pnl: number; rreal: string; conf: string[]; emo: string; notes: string; };
 type Capital = { initial: number; aportaciones: { id: number; date: string; amount: number; desc: string }[]; };
 type Objetivo = { id: number; label: string; target: number; current: number; color: string; };
 type Account = { id: string; name: string; icon: string; color: string; };
-type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio';
+type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio' | 'diario';
 
 const DEFAULT_ACCOUNTS: Account[] = [
   { id: 'propia', name: 'Cuenta Propia', icon: '💼', color: '#00e5ff' },
@@ -335,8 +336,8 @@ export default function DashboardClient() {
   );
 
   const navItems: [Page,string,string][] = mobile
-    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['analisis','🔬','Análisis'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio']]
-    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio']];
+    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Semáforo'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['patrimonio','💎','Patrimonio']]
+    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Diario'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio']];
 
   if(loading) return(
     <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
@@ -550,7 +551,7 @@ export default function DashboardClient() {
             </div>
 
             {/* CAPITAL CURVE */}
-            {!mobile&&(
+            {(
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18,marginBottom:12}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
                   <div><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>Curva de Capital</div><div style={{fontSize:11,color:G.muted}}>Evolución histórica</div></div>
@@ -1064,18 +1065,16 @@ export default function DashboardClient() {
           </div>
         )}
 
-        {/* ─── PATRIMONIO ─── */}
-        {page==='patrimonio'&&(
+        {/* ─── DIARIO ─── */}
+        {page==='diario'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>💎 Patrimonio & Inversiones</div>
-              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Carteras · Posiciones · Aportaciones programadas</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🚦 Diario & Semáforo</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>¿Estás en condiciones de operar hoy?</div>
             </div>
-            <PatrimonioClient tradingBalance={balance} />
+            <DiarioClient />
           </div>
         )}
-
-      {/* ══ MOBILE BOTTOM NAV ══ */}
 
         {/* ─── PATRIMONIO ─── */}
         {page==='patrimonio'&&(
