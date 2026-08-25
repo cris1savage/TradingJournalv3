@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler);
@@ -193,9 +193,12 @@ export default function DashboardClient() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  const activeAccountRef = React.useRef(activeAccount.id);
+  useEffect(() => { activeAccountRef.current = activeAccount.id; }, [activeAccount.id]);
+
   const loadData = useCallback(async (accountId?: string) => {
     setLoading(true);
-    const aid = accountId || activeAccount.id;
+    const aid = accountId || activeAccountRef.current;
     const [tR,cR,aR] = await Promise.all([
       fetch(`/api/trades?account=${aid}`),
       fetch(`/api/capital?account=${aid}`),
@@ -205,7 +208,7 @@ export default function DashboardClient() {
     if (cR.ok) { const c = await cR.json(); setCapital(c); setCapInitial(c.initial?.toString()||''); }
     if (aR.ok) { const accs = await aR.json(); setAccounts(accs); }
     setLoading(false);
-  }, [activeAccount.id]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -303,9 +306,11 @@ export default function DashboardClient() {
     if(!fDate||!fPair||!fDir||!fRes){alert('Rellena fecha, activo, dirección y resultado.');return;}
     const pnl=parseFloat(fPnl); if(isNaN(pnl)){alert('Introduce el P&L real.');return;}
     setSaving(true);
+    const accountId = activeAccountRef.current;
     const t:Trade={id:Date.now(),date:fDate,time:fTime,pair:fPair,tf:fTf,dir:fDir,res:fRes,plan:fPlan,entry:parseFloat(fEntry)||0,sl:parseFloat(fSl)||0,tp:parseFloat(fTp)||0,risk:parseFloat(fRisk)||0,lot:parseFloat(fLot)||0,rr:fRR,pnl,rreal:fRreal,conf:fConf,emo:fEmo,notes:fNotes};
-    await fetch('/api/trades',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...t,account:activeAccount.id})});
-    await loadData(); resetForm(); setSaving(false); setPage('dashboard');
+    const res = await fetch('/api/trades',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...t,account:accountId})});
+    if (!res.ok) { alert('Error al guardar el trade. Inténtalo de nuevo.'); setSaving(false); return; }
+    await loadData(accountId); resetForm(); setSaving(false); setPage('historial');
   }
   function resetForm(){const n=new Date();setFDate(n.toISOString().split('T')[0]);setFTime(n.toTimeString().slice(0,5));setFPair('XAU/USD');setFTf('15M');setFDir(null);setFRes(null);setFPlan(null);setFEntry('');setFSl('');setFTp('');setFRisk('');setFLot('');setFRR('—');setFPnl('');setFRreal('');setFConf([]);setFEmo('');setFNotes('');}
   async function deleteTrade(id:number){if(!confirm('¿Eliminar?'))return;await fetch('/api/trades',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,account:activeAccount.id})});setModalTrade(null);await loadData();}
