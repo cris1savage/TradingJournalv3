@@ -10,12 +10,15 @@ import ReportGenerator from './ReportGenerator';
 import AlertasClient from './AlertasClient';
 import PatrimonioClient from './PatrimonioClient';
 import DiarioClient from './DiarioClient';
+import CalculadoraClient from './CalculadoraClient';
+import ImportadorMT5 from './ImportadorMT5';
+import RevisionSemanal from './RevisionSemanal';
 
 type Trade = { id: number; date: string; time: string; pair: string; tf: string; dir: string; res: string; plan: string | null; entry: number; sl: number; tp: number; risk: number; lot: number; rr: string; pnl: number; rreal: string; conf: string[]; emo: string; notes: string; };
 type Capital = { initial: number; aportaciones: { id: number; date: string; amount: number; desc: string }[]; };
 type Objetivo = { id: number; label: string; target: number; current: number; color: string; };
 type Account = { id: string; name: string; icon: string; color: string; };
-type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio' | 'diario';
+type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio' | 'diario' | 'calculadora' | 'importar' | 'revision';
 
 const DEFAULT_ACCOUNTS: Account[] = [
   { id: 'propia', name: 'Cuenta Propia', icon: '💼', color: '#00e5ff' },
@@ -279,6 +282,23 @@ export default function DashboardClient() {
   const filteredTrades = histFilter==='all'?[...trades].reverse():[...trades].filter(t=>t.res===histFilter||t.pair===histFilter).reverse();
   const last10 = trades.slice(-10);
 
+  async function importarTrades(parsedTrades: {date:string;time:string;pair:string;dir:string;lot:number;entry:number;sl:number;tp:number;pnl:number}[]) {
+    for (const t of parsedTrades) {
+      const trade = {
+        id: Date.now() + Math.random(),
+        date: t.date, time: t.time || '09:00',
+        pair: t.pair, tf: '—', dir: t.dir,
+        res: t.pnl > 0 ? 'win' : t.pnl < 0 ? 'loss' : 'be',
+        plan: null, entry: t.entry, sl: t.sl, tp: t.tp,
+        risk: 0, lot: t.lot, rr: '—',
+        pnl: t.pnl, rreal: '—',
+        conf: [], emo: '', notes: 'Importado de MT5',
+      };
+      await fetch('/api/trades', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({...trade, account: activeAccount.id}) });
+    }
+    await loadData();
+  }
+
   async function saveTrade() {
     if(!fDate||!fPair||!fDir||!fRes){alert('Rellena fecha, activo, dirección y resultado.');return;}
     const pnl=parseFloat(fPnl); if(isNaN(pnl)){alert('Introduce el P&L real.');return;}
@@ -337,7 +357,7 @@ export default function DashboardClient() {
 
   const navItems: [Page,string,string][] = mobile
     ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Semáforo'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['patrimonio','💎','Patrimonio']]
-    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Diario'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio']];
+    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Diario'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio'],['calculadora','🧮','Calculadora'],['importar','📥','Importar MT5'],['revision','📝','Revisión']];
 
   if(loading) return(
     <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
@@ -1062,6 +1082,39 @@ export default function DashboardClient() {
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Avisos automáticos basados en tus datos reales</div>
             </div>
             <AlertasClient trades={trades} />
+          </div>
+        )}
+
+        {/* ─── CALCULADORA ─── */}
+        {page==='calculadora'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🧮 Calculadora de Posición</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Calcula el tamaño exacto según tu riesgo</div>
+            </div>
+            <CalculadoraClient capital={balance} />
+          </div>
+        )}
+
+        {/* ─── IMPORTAR MT5 ─── */}
+        {page==='importar'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>📥 Importar historial MT5</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Importa tus trades de Axi directamente desde el CSV de MT5</div>
+            </div>
+            <ImportadorMT5 onImport={importarTrades} />
+          </div>
+        )}
+
+        {/* ─── REVISIÓN SEMANAL ─── */}
+        {page==='revision'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>📝 Revisión Semanal</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>10 minutos cada domingo · La herramienta más poderosa del trading</div>
+            </div>
+            <RevisionSemanal trades={trades} />
           </div>
         )}
 

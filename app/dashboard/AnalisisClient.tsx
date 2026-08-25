@@ -155,6 +155,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
   const tabs = [
     { id: 'ventaja', label: '⚡ Tu Ventaja' },
     { id: 'puntuacion', label: '🏆 Puntuación' },
+    { id: 'estadisticas', label: '📐 Estadísticas' },
     { id: 'activo', label: '📊 Por Activo' },
     { id: 'horario', label: '🕐 Por Horario' },
     { id: 'dia', label: '📅 Por Día' },
@@ -345,6 +346,72 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
           )}
         </div>
       )}
+
+      {/* ESTADÍSTICAS AVANZADAS */}
+      {tab === 'estadisticas' && (() => {
+        const winsArr = trades.filter(t=>t.res==='win');
+        const lossArr = trades.filter(t=>t.res==='loss');
+        const avgWin = winsArr.length ? winsArr.reduce((s,t)=>s+t.pnl,0)/winsArr.length : 0;
+        const avgLoss = lossArr.length ? Math.abs(lossArr.reduce((s,t)=>s+t.pnl,0)/lossArr.length) : 0;
+        const profitFactor = avgLoss > 0 ? (avgWin * winsArr.length) / (avgLoss * lossArr.length) : 0;
+        const expectativa = (wr/100 * avgWin) - ((1-wr/100) * avgLoss);
+
+        // Max drawdown
+        let peak = 0, maxDD = 0, running = 0;
+        trades.forEach(t => { running += t.pnl; if (running > peak) peak = running; const dd = peak - running; if (dd > maxDD) maxDD = dd; });
+
+        // Max loss streak
+        let maxStreak = 0, curStreak = 0;
+        trades.forEach(t => { if (t.res==='loss') { curStreak++; if (curStreak>maxStreak) maxStreak=curStreak; } else curStreak=0; });
+
+        // Best/worst month
+        const byMonth: Record<string,number> = {};
+        trades.forEach(t => { const m=t.date.slice(0,7); byMonth[m]=(byMonth[m]||0)+t.pnl; });
+        const months = Object.entries(byMonth).sort(([a],[b])=>a.localeCompare(b));
+        const bestMonth = months.reduce((b,m)=>m[1]>b[1]?m:b, ['—',0]);
+        const worstMonth = months.reduce((b,m)=>m[1]<b[1]?m:b, ['—',0]);
+
+        const stats = [
+          { l: 'Profit Factor', v: profitFactor > 0 ? profitFactor.toFixed(2) : '—', c: profitFactor > 1.5 ? G.green : profitFactor > 1 ? G.gold : G.red, info: 'Ratio ganancias/pérdidas. >1.5 es bueno' },
+          { l: 'Expectativa por trade', v: expectativa !== 0 ? (expectativa>=0?'+':'')+expectativa.toFixed(2)+'€' : '—', c: expectativa>=0?G.green:G.red, info: 'Cuánto ganas en promedio por operación' },
+          { l: 'Media de wins', v: avgWin > 0 ? '+'+avgWin.toFixed(2)+'€' : '—', c: G.green, info: 'Promedio de ganancia en trades ganadores' },
+          { l: 'Media de losses', v: avgLoss > 0 ? '-'+avgLoss.toFixed(2)+'€' : '—', c: G.red, info: 'Promedio de pérdida en trades perdedores' },
+          { l: 'Max drawdown', v: maxDD > 0 ? '-'+maxDD.toFixed(2)+'€' : '—', c: G.red, info: 'Máxima caída desde un máximo histórico' },
+          { l: 'Racha pérdidas max', v: maxStreak > 0 ? maxStreak+' seguidas' : '—', c: maxStreak >= 3 ? G.red : G.muted2, info: 'Mayor racha de pérdidas consecutivas' },
+          { l: 'Mejor mes', v: bestMonth[0] !== '—' ? bestMonth[0]+' (+'+bestMonth[1].toFixed(2)+'€)' : '—', c: G.green, info: '' },
+          { l: 'Peor mes', v: worstMonth[0] !== '—' ? worstMonth[0]+' ('+worstMonth[1].toFixed(2)+'€)' : '—', c: G.red, info: '' },
+        ];
+
+        return (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 14 }}>
+              {stats.map(s => (
+                <div key={s.l} style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 12, padding: '14px 16px', borderTop: `2px solid ${s.c}` }}>
+                  <div style={{ fontFamily: 'monospace', fontSize: 8, color: G.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>{s.l}</div>
+                  <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 20, fontWeight: 800, color: s.c }}>{s.v}</div>
+                  {s.info && <div style={{ fontSize: 10, color: G.muted, marginTop: 4 }}>{s.info}</div>}
+                </div>
+              ))}
+            </div>
+            <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 12, padding: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit, sans-serif', marginBottom: 10 }}>💡 Cómo interpretar</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {[
+                  ['Profit Factor >2', 'Sistema muy rentable'],
+                  ['Profit Factor 1-2', 'Rentable pero mejorable'],
+                  ['Expectativa >0', 'Tu sistema tiene edge positivo'],
+                  ['Win Rate + Expectativa', 'Los dos deben ser positivos'],
+                ].map(([k,v]) => (
+                  <div key={k} style={{ background: G.card2, borderRadius: 8, padding: '9px 12px', border: `1px solid ${G.border}` }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: G.text, fontFamily: 'Outfit, sans-serif' }}>{k}</div>
+                    <div style={{ fontSize: 10, color: G.muted, marginTop: 2 }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* PSICOLOGÍA */}
       {tab === 'emocion' && (
