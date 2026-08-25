@@ -53,7 +53,7 @@ function SectionCard({ title, sub, children }: { title: string; sub?: string; ch
 }
 
 export default function AnalisisClient({ trades }: { trades: Trade[] }) {
-  const [tab, setTab] = useState<'ventaja' | 'activo' | 'horario' | 'dia' | 'emocion' | 'puntuacion'>('ventaja');
+  const [tab, setTab] = useState<'ventaja' | 'activo' | 'horario' | 'dia' | 'emocion' | 'puntuacion' | 'estadisticas'>('ventaja');
 
   if (!trades.length) return (
     <div style={{ textAlign: 'center', padding: '60px 20px', color: G.muted }}>
