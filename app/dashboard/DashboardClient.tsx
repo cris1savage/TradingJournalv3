@@ -14,13 +14,15 @@ import CalculadoraClient from './CalculadoraClient';
 import ImportadorMT5 from './ImportadorMT5';
 import RevisionSemanal from './RevisionSemanal';
 import LogrosClient from './LogrosClient';
+import SeguimientoClient from './SeguimientoClient';
+import ObjetivosRiesgo from './ObjetivosRiesgo';
 import NotificacionesPanel from './NotificacionesPanel';
 
 type Trade = { id: number; date: string; time: string; pair: string; tf: string; dir: string; res: string; plan: string | null; entry: number; sl: number; tp: number; risk: number; lot: number; rr: string; pnl: number; rreal: string; conf: string[]; emo: string; notes: string; };
 type Capital = { initial: number; aportaciones: { id: number; date: string; amount: number; desc: string }[]; };
 type Objetivo = { id: number; label: string; target: number; current: number; color: string; };
 type Account = { id: string; name: string; icon: string; color: string; };
-type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio' | 'diario' | 'calculadora' | 'importar' | 'revision' | 'logros';
+type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio' | 'diario' | 'calculadora' | 'importar' | 'revision' | 'logros' | 'seguimiento' | 'riesgo';
 
 const DEFAULT_ACCOUNTS: Account[] = [
   { id: 'propia', name: 'Cuenta Propia', icon: '💼', color: '#00e5ff' },
@@ -364,8 +366,8 @@ export default function DashboardClient() {
   );
 
   const navItems: [Page,string,string][] = mobile
-    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Semáforo'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['patrimonio','💎','Patrimonio']]
-    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Diario'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio'],['logros','🏆','Logros'],['calculadora','🧮','Calculadora'],['importar','📥','Importar MT5'],['revision','📝','Revisión']];
+    ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Semáforo'],['seguimiento','📡','Seguim.'],['riesgo','🛡️','Riesgo'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['patrimonio','💎','Patrimonio']]
+    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Diario'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio'],['seguimiento','📡','Seguimiento'],['riesgo','🛡️','Riesgo'],['logros','🏆','Logros'],['calculadora','🧮','Calculadora'],['importar','📥','Importar MT5'],['revision','📝','Revisión']];
 
   if(loading) return(
     <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
@@ -1094,6 +1096,28 @@ export default function DashboardClient() {
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Avisos automáticos basados en tus datos reales</div>
             </div>
             <AlertasClient trades={trades} />
+          </div>
+        )}
+
+        {/* ─── SEGUIMIENTO ─── */}
+        {page==='seguimiento'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>📡 Seguimiento de Trading</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Resumen · Por instrumento · Heatmap · Calendario P&L</div>
+            </div>
+            <SeguimientoClient trades={trades} />
+          </div>
+        )}
+
+        {/* ─── RIESGO ─── */}
+        {page==='riesgo'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>🛡️ Control de Riesgo</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Límites diarios · semanales · mensuales · Objetivos de beneficio</div>
+            </div>
+            <ObjetivosRiesgo trades={trades} />
           </div>
         )}
 
