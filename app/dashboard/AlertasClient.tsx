@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 type Trade = { id: number; date: string; time: string; pair: string; res: string; plan: string | null; pnl: number; emo: string; };
 
 const G = {
-  card:'#112240',card2:'#162d4a',border:'rgba(100,160,255,0.12)',
-  accent:'#4d9fff',cyan:'#00e5ff',green:'#00e676',red:'#ff4081',gold:'#ffb300',purple:'#7c4dff',
-  text:'#e8f4ff',muted:'#4a7a9b',muted2:'#6b9cc7',
+  card:'#0c1628',card2:'#0f1e38',border:'rgba(0,180,255,0.1)',
+  accent:'#0066dd',cyan:'#00d4ff',green:'#00e676',red:'#ff3366',gold:'#f5a623',purple:'#7c4dff',
+  text:'#e8f0fe',muted:'#4a6a8a',muted2:'#8ba0bf',
 };
 
 type Alert = { id: string; type: 'danger' | 'warning' | 'success' | 'info'; title: string; body: string; action?: string; };
@@ -93,14 +93,14 @@ export default function AlertasClient({ trades }: { trades: Trade[] }) {
     <div>
       {/* Config button */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 13, color: G.muted2, fontFamily: 'Outfit' }}>{visibleAlerts.length} alerta{visibleAlerts.length !== 1 ? 's' : ''} activa{visibleAlerts.length !== 1 ? 's' : ''}</div>
-        <button onClick={() => setShowConfig(!showConfig)} style={{ padding: '7px 14px', background: 'transparent', border: `1px solid ${G.border}`, borderRadius: 8, color: G.muted2, fontSize: 11, cursor: 'pointer', fontFamily: 'Outfit' }}>⚙️ Configurar límites</button>
+        <div style={{ fontSize: 13, color: G.muted2, fontFamily: "'Inter',sans-serif" }}>{visibleAlerts.length} alerta{visibleAlerts.length !== 1 ? 's' : ''} activa{visibleAlerts.length !== 1 ? 's' : ''}</div>
+        <button onClick={() => setShowConfig(!showConfig)} style={{ padding: '7px 14px', background: 'transparent', border: `1px solid ${G.border}`, borderRadius: 8, color: G.muted2, fontSize: 11, cursor: 'pointer', fontFamily: "'Inter',sans-serif" }}>⚙️ Configurar límites</button>
       </div>
 
       {/* Config panel */}
       {showConfig && (
         <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 12, padding: 18, marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit', marginBottom: 14 }}>⚙️ Límites de alerta</div>
+          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Inter',sans-serif", marginBottom: 14 }}>⚙️ Límites de alerta</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
               { label: 'Pérdida máxima diaria (€)', key: 'dailyLossLimit' as keyof AlertConfig },
@@ -108,13 +108,13 @@ export default function AlertasClient({ trades }: { trades: Trade[] }) {
               { label: 'Alerta racha de pérdidas', key: 'maxLossStreak' as keyof AlertConfig },
             ].map(f => (
               <div key={f.key}>
-                <label style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: G.muted, display: 'block', marginBottom: 5 }}>{f.label}</label>
+                <label style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: G.muted, display: 'block', marginBottom: 5 }}>{f.label}</label>
                 <input type="number" value={config[f.key]} onChange={e => setConfig(prev => ({ ...prev, [f.key]: parseFloat(e.target.value) || 0 }))}
-                  style={{ width: '100%', background: G.card2, border: `1px solid ${G.border}`, borderRadius: 8, padding: '8px 12px', color: G.text, fontFamily: 'Outfit', fontSize: 13, outline: 'none' }} />
+                  style={{ width: '100%', background: G.card2, border: `1px solid ${G.border}`, borderRadius: 8, padding: '8px 12px', color: G.text, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: 'none' }} />
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 11, color: G.muted, marginTop: 10, fontFamily: 'Outfit' }}>Los límites se guardan automáticamente en tu dispositivo.</div>
+          <div style={{ fontSize: 11, color: G.muted, marginTop: 10, fontFamily: "'Inter',sans-serif" }}>Los límites se guardan automáticamente en tu dispositivo.</div>
         </div>
       )}
 
@@ -122,8 +122,8 @@ export default function AlertasClient({ trades }: { trades: Trade[] }) {
       {visibleAlerts.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '50px 20px', color: G.muted }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'Outfit', color: G.green, marginBottom: 6 }}>Todo bajo control</div>
-          <div style={{ fontSize: 13, fontFamily: 'Outfit' }}>No hay alertas activas. Sigue el plan.</div>
+          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Inter',sans-serif", color: G.green, marginBottom: 6 }}>Todo bajo control</div>
+          <div style={{ fontSize: 13, fontFamily: "'Inter',sans-serif" }}>No hay alertas activas. Sigue el plan.</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -132,10 +132,10 @@ export default function AlertasClient({ trades }: { trades: Trade[] }) {
             return (
               <div key={a.id} style={{ background: `${c}08`, border: `1px solid ${c}40`, borderRadius: 12, padding: '14px 16px', position: 'relative', boxShadow: a.type === 'danger' ? `0 0 20px ${c}20` : 'none' }}>
                 <button onClick={() => setDismissed(prev => [...prev, a.id])} style={{ position: 'absolute', top: 10, right: 12, background: 'none', border: 'none', color: G.muted, cursor: 'pointer', fontSize: 14 }}>✕</button>
-                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'Outfit', color: c, marginBottom: 6, paddingRight: 20 }}>{a.title}</div>
-                <div style={{ fontSize: 12, color: G.muted2, fontFamily: 'Outfit', lineHeight: 1.6 }}>{a.body}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'Inter',sans-serif", color: c, marginBottom: 6, paddingRight: 20 }}>{a.title}</div>
+                <div style={{ fontSize: 12, color: G.muted2, fontFamily: "'Inter',sans-serif", lineHeight: 1.6 }}>{a.body}</div>
                 {a.action && (
-                  <div style={{ marginTop: 10, padding: '6px 12px', background: `${c}20`, border: `1px solid ${c}50`, borderRadius: 7, display: 'inline-block', fontSize: 11, fontFamily: 'monospace', color: c, letterSpacing: '0.08em', fontWeight: 700 }}>{a.action}</div>
+                  <div style={{ marginTop: 10, padding: '6px 12px', background: `${c}20`, border: `1px solid ${c}50`, borderRadius: 7, display: 'inline-block', fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: c, letterSpacing: '0.08em', fontWeight: 700 }}>{a.action}</div>
                 )}
               </div>
             );
@@ -145,7 +145,7 @@ export default function AlertasClient({ trades }: { trades: Trade[] }) {
 
       {/* Today summary */}
       <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 12, padding: 16, marginTop: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit', marginBottom: 12 }}>📅 Resumen de hoy</div>
+        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Inter',sans-serif", marginBottom: 12 }}>📅 Resumen de hoy</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
           {[
             { l: 'Operaciones', v: String(todayTrades.length) + '/' + config.maxDailyTrades, c: todayTrades.length >= config.maxDailyTrades ? G.red : G.green },
@@ -154,8 +154,8 @@ export default function AlertasClient({ trades }: { trades: Trade[] }) {
             { l: 'Racha actual', v: streak > 0 ? `-${streak}` : streak === 0 && todayTrades.filter(t=>t.res==='win').length > 0 ? `+${[...trades].reverse().findIndex(t => t.res !== 'win')}` : '—', c: streak > 0 ? G.red : G.green },
           ].map(s => (
             <div key={s.l} style={{ background: G.card2, borderRadius: 9, padding: '10px 12px', border: `1px solid ${G.border}` }}>
-              <div style={{ fontFamily: 'monospace', fontSize: 8, color: G.muted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s.l}</div>
-              <div style={{ fontFamily: 'Outfit', fontSize: 16, fontWeight: 700, color: s.c }}>{s.v}</div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: G.muted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{s.l}</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 700, color: s.c }}>{s.v}</div>
             </div>
           ))}
         </div>

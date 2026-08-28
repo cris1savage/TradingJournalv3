@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 
 const G = {
-  bg:'#0b1a2e', card:'#112240', card2:'#162d4a', border:'rgba(100,160,255,0.12)',
-  accent:'#4d9fff', cyan:'#00e5ff', green:'#00e676', red:'#ff4081', gold:'#ffb300',
-  purple:'#7c4dff', text:'#e8f4ff', muted:'#4a7a9b', muted2:'#6b9cc7',
+  bg:'#050a12', card:'#0c1628', card2:'#0f1e38', border:'rgba(0,180,255,0.1)',
+  accent:'#0066dd', cyan:'#00d4ff', green:'#00e676', red:'#ff3366', gold:'#f5a623',
+  purple:'#7c4dff', text:'#e8f0fe', muted:'#4a6a8a', muted2:'#8ba0bf',
 };
 
 type DiarioEntry = {
@@ -96,8 +96,8 @@ export default function DiarioClient() {
   const semaforoColor = semaforo.color === 'green' ? G.green : semaforo.color === 'yellow' ? G.gold : G.red;
   const semaforoGlow = semaforo.color === 'green' ? `0 0 30px ${G.green}30` : semaforo.color === 'yellow' ? `0 0 30px ${G.gold}30` : `0 0 30px ${G.red}30`;
 
-  const inp: React.CSSProperties = { background: G.card2, border: `1px solid ${G.border}`, borderRadius: 8, padding: '9px 12px', color: G.text, fontFamily: 'Outfit, sans-serif', fontSize: 13, width: '100%', outline: 'none' };
-  const lbl: React.CSSProperties = { fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: G.muted, display: 'block', marginBottom: 5 };
+  const inp: React.CSSProperties = { background: G.card2, border: `1px solid ${G.border}`, borderRadius: 8, padding: '9px 12px', color: G.text, fontFamily: "'Inter',sans-serif", fontSize: 13, width: '100%', outline: 'none' };
+  const lbl: React.CSSProperties = { fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: G.muted, display: 'block', marginBottom: 5 };
 
   return (
     <div>
@@ -106,19 +106,19 @@ export default function DiarioClient() {
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: semaforoColor }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <div style={{ fontFamily: 'monospace', fontSize: 9, color: G.muted, letterSpacing: '0.15em', marginBottom: 8, textTransform: 'uppercase' }}>SEMÁFORO DE HOY · {today}</div>
-            <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 22, fontWeight: 800, color: semaforoColor, marginBottom: 8 }}>{semaforo.label}</div>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: G.muted, letterSpacing: '0.15em', marginBottom: 8, textTransform: 'uppercase' }}>SEMÁFORO DE HOY · {today}</div>
+            <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: semaforoColor, marginBottom: 8 }}>{semaforo.label}</div>
             <div style={{ fontSize: 13, color: G.muted2, lineHeight: 1.6, maxWidth: 420 }}>{semaforo.mensaje}</div>
           </div>
           <div style={{ display: 'flex', gap: 16, flexShrink: 0 }}>
             <div style={{ textAlign: 'center', background: G.card, borderRadius: 12, padding: '14px 20px', border: `1px solid ${G.border}` }}>
-              <div style={{ fontFamily: 'monospace', fontSize: 8, color: G.muted, letterSpacing: '0.12em', marginBottom: 6, textTransform: 'uppercase' }}>RIESGO MAX</div>
-              <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 28, fontWeight: 900, color: semaforoColor, lineHeight: 1 }}>{semaforo.riesgo}%</div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: G.muted, letterSpacing: '0.12em', marginBottom: 6, textTransform: 'uppercase' }}>RIESGO MAX</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 28, fontWeight: 900, color: semaforoColor, lineHeight: 1 }}>{semaforo.riesgo}%</div>
               <div style={{ fontSize: 10, color: G.muted, marginTop: 4 }}>del normal</div>
             </div>
             <div style={{ textAlign: 'center', background: G.card, borderRadius: 12, padding: '14px 20px', border: `1px solid ${G.border}` }}>
-              <div style={{ fontFamily: 'monospace', fontSize: 8, color: G.muted, letterSpacing: '0.12em', marginBottom: 6, textTransform: 'uppercase' }}>MAX TRADES</div>
-              <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 28, fontWeight: 900, color: semaforoColor, lineHeight: 1 }}>{semaforo.ops}</div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: G.muted, letterSpacing: '0.12em', marginBottom: 6, textTransform: 'uppercase' }}>MAX TRADES</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 28, fontWeight: 900, color: semaforoColor, lineHeight: 1 }}>{semaforo.ops}</div>
               <div style={{ fontSize: 10, color: G.muted, marginTop: 4 }}>hoy</div>
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function DiarioClient() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
         {/* CHECKLIST */}
         <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 14, padding: 18 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14, fontFamily: 'Outfit, sans-serif' }}>✅ Checklist de Trading</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14, fontFamily: "'Inter',sans-serif" }}>✅ Checklist de Trading</div>
           {[
             { key: 'dormidoBien' as const, label: 'He dormido bien (+6h)', icon: '😴' },
             { key: 'sinEstres' as const, label: 'Sin estrés externo relevante', icon: '🧘' },
@@ -141,23 +141,23 @@ export default function DiarioClient() {
                 {entry[item.key] && <span style={{ color: '#05111e', fontSize: 12, fontWeight: 900 }}>✓</span>}
               </div>
               <span style={{ fontSize: 12 }}>{item.icon}</span>
-              <span style={{ fontSize: 12, color: entry[item.key] ? G.text : G.muted2, fontFamily: 'Outfit, sans-serif' }}>{item.label}</span>
+              <span style={{ fontSize: 12, color: entry[item.key] ? G.text : G.muted2, fontFamily: "'Inter',sans-serif" }}>{item.label}</span>
             </div>
           ))}
-          <div style={{ marginTop: 10, padding: '8px 10px', background: G.card2, borderRadius: 8, fontFamily: 'monospace', fontSize: 11, color: G.muted2 }}>
+          <div style={{ marginTop: 10, padding: '8px 10px', background: G.card2, borderRadius: 8, fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: G.muted2 }}>
             {[entry.dormidoBien, entry.sinEstres, entry.planClaro, entry.mercadoFavorable, entry.emocionNeutral].filter(Boolean).length}/5 criterios ✓
           </div>
         </div>
 
         {/* ESTADO MENTAL */}
         <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 14, padding: 18 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14, fontFamily: 'Outfit, sans-serif' }}>🧠 Estado Mental</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14, fontFamily: "'Inter',sans-serif" }}>🧠 Estado Mental</div>
 
           <div style={{ marginBottom: 14 }}>
             <label style={lbl}>EMOCIÓN DOMINANTE</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
               {EMOCIONES.map(e => (
-                <button key={e} onClick={() => update('emocion', entry.emocion === e ? '' : e)} style={{ padding: '5px 10px', borderRadius: 20, border: `1px solid ${entry.emocion === e ? G.purple : G.border}`, background: entry.emocion === e ? `${G.purple}18` : 'transparent', color: entry.emocion === e ? G.purple : G.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', transition: 'all 0.12s' }}>{e}</button>
+                <button key={e} onClick={() => update('emocion', entry.emocion === e ? '' : e)} style={{ padding: '5px 10px', borderRadius: 20, border: `1px solid ${entry.emocion === e ? G.purple : G.border}`, background: entry.emocion === e ? `${G.purple}18` : 'transparent', color: entry.emocion === e ? G.purple : G.muted, fontSize: 11, cursor: 'pointer', fontFamily: "'Inter',sans-serif", transition: 'all 0.12s' }}>{e}</button>
               ))}
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function DiarioClient() {
             <div key={item.key} style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                 <label style={{ ...lbl, display: 'inline' }}>{item.label}</label>
-                <span style={{ fontFamily: 'monospace', fontSize: 11, color: item.color }}>{entry[item.key]}/5</span>
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: item.color }}>{entry[item.key]}/5</span>
               </div>
               <StarRating value={entry[item.key]} onChange={v => update(item.key, v)} color={item.color} />
             </div>
@@ -187,8 +187,8 @@ export default function DiarioClient() {
       {/* HISTORIAL */}
       <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 14, overflow: 'hidden' }}>
         <div style={{ padding: '13px 18px', borderBottom: `1px solid ${G.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit, sans-serif' }}>📅 Historial del Diario</div>
-          <button onClick={() => setShowHistory(!showHistory)} style={{ fontSize: 11, color: G.accent, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'monospace' }}>{showHistory ? 'Ocultar ↑' : 'Ver historial ↓'}</button>
+          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Inter',sans-serif" }}>📅 Historial del Diario</div>
+          <button onClick={() => setShowHistory(!showHistory)} style={{ fontSize: 11, color: G.accent, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'JetBrains Mono',monospace" }}>{showHistory ? 'Ocultar ↑' : 'Ver historial ↓'}</button>
         </div>
         {showHistory && (
           historyEntries.length === 0 ? (
@@ -200,14 +200,14 @@ export default function DiarioClient() {
               const checks = [e.dormidoBien, e.sinEstres, e.planClaro, e.mercadoFavorable, e.emocionNeutral].filter(Boolean).length;
               return (
                 <div key={e.date} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 80px 80px', gap: 12, padding: '11px 18px', borderBottom: `1px solid ${G.border}`, alignItems: 'center' }}>
-                  <div style={{ fontFamily: 'monospace', fontSize: 11, color: G.muted }}>{e.date}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: G.muted }}>{e.date}</div>
                   <div>
                     <div style={{ fontSize: 11, fontWeight: 600, color: c }}>{sem.label}</div>
                     {e.emocion && <div style={{ fontSize: 10, color: G.muted, marginTop: 2 }}>{e.emocion}</div>}
                     {e.notas && <div style={{ fontSize: 10, color: G.muted2, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>{e.notas}</div>}
                   </div>
-                  <div style={{ fontFamily: 'monospace', fontSize: 10, color: G.muted }}>{checks}/5 checks</div>
-                  <div style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: c }}>{sem.riesgo}% riesgo</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: G.muted }}>{checks}/5 checks</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: c }}>{sem.riesgo}% riesgo</div>
                 </div>
               );
             })

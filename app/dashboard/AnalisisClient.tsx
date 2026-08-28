@@ -4,9 +4,9 @@ import { useState } from 'react';
 type Trade = { id: number; date: string; time: string; pair: string; tf: string; dir: string; res: string; plan: string | null; entry: number; sl: number; tp: number; risk: number; lot: number; rr: string; pnl: number; rreal: string; conf: string[]; emo: string; notes: string; };
 
 const G = {
-  bg:'#0b1a2e',card:'#112240',card2:'#162d4a',border:'rgba(100,160,255,0.12)',border2:'rgba(0,229,255,0.3)',
-  accent:'#4d9fff',cyan:'#00e5ff',green:'#00e676',red:'#ff4081',gold:'#ffb300',purple:'#7c4dff',
-  text:'#e8f4ff',muted:'#4a7a9b',muted2:'#6b9cc7',
+  bg:'#050a12',card:'#0c1628',card2:'#0f1e38',border:'rgba(0,180,255,0.1)',border2:'rgba(0,180,255,0.22)',
+  accent:'#0066dd',cyan:'#00d4ff',green:'#00e676',red:'#ff3366',gold:'#f5a623',purple:'#7c4dff',
+  text:'#e8f0fe',muted:'#4a6a8a',muted2:'#8ba0bf',
 };
 
 const fmt = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2) + '€';
@@ -22,12 +22,12 @@ function StatRow({ label, trades, color }: { label: string; trades: Trade[]; col
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(80px,140px) 1fr 72px 48px 60px', gap: 8, alignItems: 'center', padding: '10px 14px', borderBottom: `1px solid ${G.border}`, transition: 'background 0.1s', minWidth: 0 }}
       onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = G.card2}
       onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}>
-      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: 'Outfit, sans-serif', color: color || G.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: "'Inter',sans-serif", color: color || G.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
       <div style={{ height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden', minWidth: 0 }}>
         <div style={{ height: '100%', width: `${barW}%`, background: pnl >= 0 ? G.green : G.red, borderRadius: 3, transition: 'width 0.8s ease' }} />
       </div>
-      <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 11, fontWeight: 700, color: pnl >= 0 ? G.green : G.red, textAlign: 'right' }}>{fmt(pnl)}</span>
-      <span style={{ fontFamily: 'monospace', fontSize: 11, color: wr >= 50 ? G.green : G.muted, textAlign: 'center' }}>{wr}%</span>
+      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, color: pnl >= 0 ? G.green : G.red, textAlign: 'right' }}>{fmt(pnl)}</span>
+      <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: wr >= 50 ? G.green : G.muted, textAlign: 'center' }}>{wr}%</span>
       <span style={{ fontSize: 10, color: G.muted, textAlign: 'right' }}>{trades.length} ops</span>
     </div>
   );
@@ -37,13 +37,13 @@ function SectionCard({ title, sub, children }: { title: string; sub?: string; ch
   return (
     <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 14, overflow: 'hidden', marginBottom: 14 }}>
       <div style={{ padding: '14px 16px', borderBottom: `1px solid ${G.border}` }}>
-        <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'Outfit, sans-serif' }}>{title}</div>
+        <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "'Inter',sans-serif" }}>{title}</div>
         {sub && <div style={{ fontSize: 11, color: G.muted, marginTop: 2 }}>{sub}</div>}
       </div>
       <div style={{ padding: '6px 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(80px,140px) 1fr 72px 48px 60px', gap: 8, padding: '6px 14px 8px', borderBottom: `1px solid ${G.border}` }}>
           {['Categoría', 'P&L visual', 'P&L', 'Win%', 'Trades'].map(h => (
-            <span key={h} style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: G.muted }}>{h}</span>
+            <span key={h} style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: G.muted }}>{h}</span>
           ))}
         </div>
         {children}
@@ -58,7 +58,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
   if (!trades.length) return (
     <div style={{ textAlign: 'center', padding: '60px 20px', color: G.muted }}>
       <div style={{ fontSize: 40, marginBottom: 12 }}>📊</div>
-      <div style={{ fontSize: 14, fontFamily: 'Outfit, sans-serif' }}>Sin datos aún</div>
+      <div style={{ fontSize: 14, fontFamily: "'Inter',sans-serif" }}>Sin datos aún</div>
       <div style={{ fontSize: 12, marginTop: 6 }}>Registra trades para ver tu análisis</div>
     </div>
   );
@@ -167,7 +167,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
       {/* Tab nav */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap', overflowX: 'auto' }}>
         {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '7px 14px', borderRadius: 20, border: `1px solid ${tab === t.id ? G.accent : G.border}`, background: tab === t.id ? `${G.accent}18` : 'transparent', color: tab === t.id ? G.accent : G.muted, fontSize: 12, cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontWeight: tab === t.id ? 600 : 400, transition: 'all 0.15s', boxShadow: tab === t.id ? `0 0 10px ${G.accent}30` : 'none' }}>{t.label}</button>
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '7px 14px', borderRadius: 20, border: `1px solid ${tab === t.id ? G.accent : G.border}`, background: tab === t.id ? `${G.accent}18` : 'transparent', color: tab === t.id ? G.accent : G.muted, fontSize: 12, cursor: 'pointer', fontFamily: "'Inter',sans-serif", fontWeight: tab === t.id ? 600 : 400, transition: 'all 0.15s', boxShadow: tab === t.id ? `0 0 10px ${G.accent}30` : 'none' }}>{t.label}</button>
         ))}
       </div>
 
@@ -183,8 +183,8 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
             ].map(s => (
               <div key={s.label} style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 12, padding: '14px 16px', borderTop: `2px solid ${s.color}` }}>
                 <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
-                <div style={{ fontFamily: 'monospace', fontSize: 9, color: G.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
-                <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 18, fontWeight: 800, color: s.color }}>{s.val}</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: G.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 800, color: s.color }}>{s.val}</div>
                 <div style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>{s.sub}</div>
               </div>
             ))}
@@ -192,16 +192,16 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
 
           {/* Plan analysis */}
           <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit, sans-serif', marginBottom: 12 }}>📋 Con plan vs Sin plan</div>
+            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Inter',sans-serif", marginBottom: 12 }}>📋 Con plan vs Sin plan</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div style={{ background: `${G.green}12`, border: `1px solid ${G.green}30`, borderRadius: 10, padding: 14 }}>
-                <div style={{ fontSize: 10, color: G.muted, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: 6 }}>CON PLAN ✓</div>
-                <div style={{ fontFamily: 'Outfit', fontSize: 22, fontWeight: 800, color: pnlConPlan >= 0 ? G.green : G.red }}>{fmt(pnlConPlan)}</div>
+                <div style={{ fontSize: 10, color: G.muted, fontFamily: "'JetBrains Mono',monospace", letterSpacing: '0.1em', marginBottom: 6 }}>CON PLAN ✓</div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: pnlConPlan >= 0 ? G.green : G.red }}>{fmt(pnlConPlan)}</div>
                 <div style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>{conPlan.length} ops · {conPlanWr}% WR</div>
               </div>
               <div style={{ background: `${G.red}12`, border: `1px solid ${G.red}30`, borderRadius: 10, padding: 14 }}>
-                <div style={{ fontSize: 10, color: G.muted, fontFamily: 'monospace', letterSpacing: '0.1em', marginBottom: 6 }}>SIN PLAN ✕</div>
-                <div style={{ fontFamily: 'Outfit', fontSize: 22, fontWeight: 800, color: pnlSinPlan >= 0 ? G.green : G.red }}>{fmt(pnlSinPlan)}</div>
+                <div style={{ fontSize: 10, color: G.muted, fontFamily: "'JetBrains Mono',monospace", letterSpacing: '0.1em', marginBottom: 6 }}>SIN PLAN ✕</div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 22, fontWeight: 800, color: pnlSinPlan >= 0 ? G.green : G.red }}>{fmt(pnlSinPlan)}</div>
                 <div style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>{sinPlan.length} ops · {sinPlan.length ? Math.round(sinPlan.filter(t => t.res === 'win').length / sinPlan.length * 100) : 0}% WR</div>
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
           {/* Worst emo warning */}
           {worstEmo && worstEmo[1].reduce((s, t) => s + t.pnl, 0) < 0 && (
             <div style={{ background: `${G.red}08`, border: `1px solid ${G.red}30`, borderRadius: 12, padding: 14 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: G.red, fontFamily: 'Outfit', marginBottom: 6 }}>⚠️ Estado a evitar</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: G.red, fontFamily: "'Inter',sans-serif", marginBottom: 6 }}>⚠️ Estado a evitar</div>
               <div style={{ fontSize: 12, color: G.muted2 }}>
                 Cuando operas en estado <strong style={{ color: G.text }}>{worstEmo[0]}</strong> pierdes {fmt(worstEmo[1].reduce((s, t) => s + t.pnl, 0))} en {worstEmo[1].length} operaciones. Considera parar el día cuando estés en ese estado.
               </div>
@@ -233,17 +233,17 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
                     strokeLinecap="round" style={{ filter: `drop-shadow(0 0 8px ${scoreColor})`, transition: 'stroke-dasharray 1.5s ease' }} />
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ fontFamily: 'Outfit', fontSize: 36, fontWeight: 900, color: scoreColor, lineHeight: 1 }}>{totalScore}</div>
-                  <div style={{ fontFamily: 'monospace', fontSize: 9, color: G.muted, letterSpacing: '0.1em' }}>/100</div>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 36, fontWeight: 900, color: scoreColor, lineHeight: 1 }}>{totalScore}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: G.muted, letterSpacing: '0.1em' }}>/100</div>
                 </div>
               </div>
-              <div style={{ fontFamily: 'Outfit', fontSize: 18, fontWeight: 700, color: scoreColor }}>{scoreLabel}</div>
+              <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 18, fontWeight: 700, color: scoreColor }}>{scoreLabel}</div>
               <div style={{ fontSize: 11, color: G.muted, marginTop: 4 }}>Puntuación de trading</div>
             </div>
 
             {/* Score breakdown */}
             <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 14, padding: 18 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit', marginBottom: 14 }}>Desglose</div>
+              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Inter',sans-serif", marginBottom: 14 }}>Desglose</div>
               {[
                 { label: 'Win Rate', pts: Math.round(scoreWr), max: 25, color: G.cyan },
                 { label: 'Rentabilidad', pts: Math.round(scorePnl), max: 25, color: G.green },
@@ -253,7 +253,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
               ].map(s => (
                 <div key={s.label} style={{ marginBottom: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, color: G.text, fontFamily: 'Outfit' }}>{s.label}</span>
+                    <span style={{ fontSize: 12, color: G.text, fontFamily: "'Inter',sans-serif" }}>{s.label}</span>
                     <span style={{ fontFamily: 'Space Mono', fontSize: 11, color: s.color }}>{s.pts}<span style={{ color: G.muted }}>/{s.max}</span></span>
                   </div>
                   <div style={{ height: 5, background: 'rgba(255,255,255,0.05)', borderRadius: 3, overflow: 'hidden' }}>
@@ -266,7 +266,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
 
           {/* Tips */}
           <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 12, padding: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit', marginBottom: 12 }}>💡 Para mejorar tu puntuación</div>
+            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Inter',sans-serif", marginBottom: 12 }}>💡 Para mejorar tu puntuación</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {[
                 wr < 50 && '📊 Tu win rate está por debajo del 50%. Sé más selectivo con los setups.',
@@ -276,7 +276,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
                 totalScore < 50 && '🎯 Define objetivos mensuales claros y sígue tu plan al 100%.',
                 totalScore >= 75 && '✅ Excelente trading. Mantén la consistencia y aumenta el capital gradualmente.',
               ].filter(Boolean).slice(0, 4).map((tip, i) => (
-                <div key={i} style={{ background: G.card2, borderRadius: 8, padding: '10px 12px', fontSize: 12, color: G.muted2, lineHeight: 1.5, border: `1px solid ${G.border}`, fontFamily: 'Outfit' }}>{tip}</div>
+                <div key={i} style={{ background: G.card2, borderRadius: 8, padding: '10px 12px', fontSize: 12, color: G.muted2, lineHeight: 1.5, border: `1px solid ${G.border}`, fontFamily: "'Inter',sans-serif" }}>{tip}</div>
               ))}
             </div>
           </div>
@@ -319,7 +319,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
             ))}
           </SectionCard>
           <div style={{ background: `${G.accent}08`, border: `1px solid ${G.accent}30`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: G.accent, fontFamily: 'Outfit', marginBottom: 6 }}>💡 Interpretación</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: G.accent, fontFamily: "'Inter',sans-serif", marginBottom: 6 }}>💡 Interpretación</div>
             <div style={{ fontSize: 12, color: G.muted2, lineHeight: 1.6 }}>
               Las franjas 14-17h (apertura NY) suelen ser las más volátiles para XAU/USD y Nasdaq. Los mejores setups aparecen cuando el mercado asienta dirección tras la apertura americana.
             </div>
@@ -340,7 +340,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
           </SectionCard>
           {(byDay['Sáb'] || byDay['Dom']) && (
             <div style={{ background: `${G.red}08`, border: `1px solid ${G.red}30`, borderRadius: 12, padding: 14 }}>
-              <div style={{ fontSize: 12, color: G.red, fontWeight: 600, marginBottom: 4, fontFamily: 'Outfit' }}>⚠️ Operando en fin de semana</div>
+              <div style={{ fontSize: 12, color: G.red, fontWeight: 600, marginBottom: 4, fontFamily: "'Inter',sans-serif" }}>⚠️ Operando en fin de semana</div>
               <div style={{ fontSize: 12, color: G.muted2, lineHeight: 1.5 }}>Los mercados tienen menor liquidez en fin de semana. Los resultados suelen ser menos predecibles.</div>
             </div>
           )}
@@ -387,14 +387,14 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 14 }}>
               {stats.map(s => (
                 <div key={s.l} style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 12, padding: '14px 16px', borderTop: `2px solid ${s.c}` }}>
-                  <div style={{ fontFamily: 'monospace', fontSize: 8, color: G.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>{s.l}</div>
-                  <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 20, fontWeight: 800, color: s.c }}>{s.v}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: G.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>{s.l}</div>
+                  <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 20, fontWeight: 800, color: s.c }}>{s.v}</div>
                   {s.info && <div style={{ fontSize: 10, color: G.muted, marginTop: 4 }}>{s.info}</div>}
                 </div>
               ))}
             </div>
             <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 12, padding: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit, sans-serif', marginBottom: 10 }}>💡 Cómo interpretar</div>
+              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Inter',sans-serif", marginBottom: 10 }}>💡 Cómo interpretar</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {[
                   ['Profit Factor >2', 'Sistema muy rentable'],
@@ -403,7 +403,7 @@ export default function AnalisisClient({ trades }: { trades: Trade[] }) {
                   ['Win Rate + Expectativa', 'Los dos deben ser positivos'],
                 ].map(([k,v]) => (
                   <div key={k} style={{ background: G.card2, borderRadius: 8, padding: '9px 12px', border: `1px solid ${G.border}` }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: G.text, fontFamily: 'Outfit, sans-serif' }}>{k}</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: G.text, fontFamily: "'Inter',sans-serif" }}>{k}</div>
                     <div style={{ fontSize: 10, color: G.muted, marginTop: 2 }}>{v}</div>
                   </div>
                 ))}

@@ -13,12 +13,14 @@ import DiarioClient from './DiarioClient';
 import CalculadoraClient from './CalculadoraClient';
 import ImportadorMT5 from './ImportadorMT5';
 import RevisionSemanal from './RevisionSemanal';
+import LogrosClient from './LogrosClient';
+import NotificacionesPanel from './NotificacionesPanel';
 
 type Trade = { id: number; date: string; time: string; pair: string; tf: string; dir: string; res: string; plan: string | null; entry: number; sl: number; tp: number; risk: number; lot: number; rr: string; pnl: number; rreal: string; conf: string[]; emo: string; notes: string; };
 type Capital = { initial: number; aportaciones: { id: number; date: string; amount: number; desc: string }[]; };
 type Objetivo = { id: number; label: string; target: number; current: number; color: string; };
 type Account = { id: string; name: string; icon: string; color: string; };
-type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio' | 'diario' | 'calculadora' | 'importar' | 'revision';
+type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio' | 'diario' | 'calculadora' | 'importar' | 'revision' | 'logros';
 
 const DEFAULT_ACCOUNTS: Account[] = [
   { id: 'propia', name: 'Cuenta Propia', icon: '💼', color: '#00e5ff' },
@@ -165,6 +167,7 @@ export default function DashboardClient() {
   const [activeAccount, setActiveAccount] = useState<Account>(DEFAULT_ACCOUNTS[0]);
   const [showAccountPicker, setShowAccountPicker] = useState(false);
   const [showAddAccount, setShowAddAccount] = useState(false);
+  const [showNotifs, setShowNotifs] = useState(false);
   const [newAccName, setNewAccName] = useState('');
   const [newAccIcon, setNewAccIcon] = useState('💼');
   const [newAccColor, setNewAccColor] = useState('#4d9fff');
@@ -353,8 +356,8 @@ export default function DashboardClient() {
   const greeting=now2.getHours()<12?'Buenos días':now2.getHours()<20?'Buenas tardes':'Buenas noches';
 
   const inp:React.CSSProperties={background:G.card2,border:`1px solid ${G.border}`,borderRadius:8,padding:'9px 12px',color:G.text,fontFamily:'inherit',fontSize:13,width:'100%'};
-  const secT:React.CSSProperties={fontFamily:'monospace',fontSize:9,letterSpacing:'0.2em',textTransform:'uppercase',color:G.accent,marginBottom:12,paddingBottom:8,borderBottom:`1px solid ${G.border}`};
-  const lbl:React.CSSProperties={fontFamily:'monospace',fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5};
+  const secT:React.CSSProperties={fontFamily:G.fontData,fontSize:9,letterSpacing:'0.2em',textTransform:'uppercase',color:G.accent,marginBottom:12,paddingBottom:8,borderBottom:`1px solid ${G.border}`};
+  const lbl:React.CSSProperties={fontFamily:G.fontData,fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5};
 
   const Tog=({label,active,color,bg,onClick}:{label:string;active:boolean;color:string;bg:string;onClick:()=>void})=>(
     <button onClick={onClick} style={{padding:'9px 8px',borderRadius:8,border:`1px solid ${active?color:G.border}`,background:active?bg:G.card2,color:active?color:G.muted,fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',transition:'all 0.15s',boxShadow:active?`0 0 10px ${color}40`:'none'}}>{label}</button>
@@ -362,7 +365,7 @@ export default function DashboardClient() {
 
   const navItems: [Page,string,string][] = mobile
     ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Semáforo'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['patrimonio','💎','Patrimonio']]
-    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Diario'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio'],['calculadora','🧮','Calculadora'],['importar','📥','Importar MT5'],['revision','📝','Revisión']];
+    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Diario'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio'],['logros','🏆','Logros'],['calculadora','🧮','Calculadora'],['importar','📥','Importar MT5'],['revision','📝','Revisión']];
 
   if(loading) return(
     <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
@@ -370,7 +373,7 @@ export default function DashboardClient() {
         <div style={{position:'absolute',inset:0,border:`2px solid ${G.border}`,borderTop:`2px solid ${G.accent}`,borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
         <div style={{position:'absolute',inset:8,border:`2px solid ${G.border}`,borderBottom:`2px solid ${G.cyan}`,borderRadius:'50%',animation:'spin 1.2s linear infinite reverse'}}/>
       </div>
-      <div style={{fontFamily:'monospace',fontSize:11,color:G.muted,letterSpacing:'0.2em'}}>CARGANDO SAVAGE TRADING...</div>
+      <div style={{fontFamily:G.fontData,fontSize:11,color:G.muted,letterSpacing:'0.2em'}}>CARGANDO SAVAGE TRADING...</div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
@@ -378,7 +381,7 @@ export default function DashboardClient() {
   const sidebarW = mobile ? 0 : 250;
 
   return (
-    <div style={{display:'flex',minHeight:'100vh',background:G.bg,fontFamily:"'Outfit','Inter',sans-serif",color:G.text,overflowX:'hidden',width:'100%',position:'relative'}}>
+    <div style={{display:'flex',minHeight:'100vh',background:G.bg,fontFamily:G.fontUi,color:G.text,overflowX:'hidden',width:'100%',position:'relative'}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
@@ -397,18 +400,18 @@ export default function DashboardClient() {
 
       {/* ══ SIDEBAR — desktop only ══ */}
       {!mobile && (
-        <div style={{width:sidebarW,background:G.sb,borderRight:`1px solid ${G.border}`,display:'flex',flexDirection:'column',position:'fixed',top:0,left:0,bottom:0,zIndex:100,overflowY:'auto'}}>
+        <div className='sidebar' style={{width:sidebarW,borderRight:`1px solid ${G.border}`,display:'flex',flexDirection:'column',position:'fixed',top:0,left:0,bottom:0,zIndex:100,overflowY:'auto'}}>
           <div style={{padding:'18px 16px 14px',borderBottom:`1px solid ${G.border}`,flexShrink:0}}>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
               <Logo/>
               <div>
-                <div style={{fontFamily:'Outfit',fontSize:14,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',letterSpacing:'0.02em'}}>SAVAGE TRADING</div>
-                <div style={{fontSize:9,color:G.muted,letterSpacing:'0.14em',fontFamily:'monospace',marginTop:1}}>JOURNAL PRO</div>
+                <div style={{fontFamily:G.fontUi,fontSize:14,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',letterSpacing:'0.02em'}}>SAVAGE TRADING</div>
+                <div style={{fontSize:9,color:G.muted,letterSpacing:'0.14em',fontFamily:G.fontData,marginTop:1}}>JOURNAL PRO</div>
               </div>
             </div>
             {/* Account switcher */}
             <div style={{position:'relative'}}>
-              <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{width:'100%',display:'flex',alignItems:'center',gap:8,padding:'8px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:9,cursor:'pointer',color:G.text,fontFamily:'Outfit',fontSize:12,fontWeight:600,transition:'all 0.15s'}}>
+              <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{width:'100%',display:'flex',alignItems:'center',gap:8,padding:'8px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:9,cursor:'pointer',color:G.text,fontFamily:G.fontUi,fontSize:12,fontWeight:600,transition:'all 0.15s'}}>
                 <span style={{fontSize:16}}>{activeAccount.icon}</span>
                 <span style={{flex:1,textAlign:'left',color:activeAccount.color}}>{activeAccount.name}</span>
                 <span style={{fontSize:10,color:G.muted}}>▾</span>
@@ -422,7 +425,7 @@ export default function DashboardClient() {
                       onClick={()=>switchAccount(acc)}>
                       <span style={{fontSize:18}}>{acc.icon}</span>
                       <div style={{flex:1}}>
-                        <div style={{fontSize:12,fontWeight:600,color:acc.color,fontFamily:'Outfit'}}>{acc.name}</div>
+                        <div style={{fontSize:12,fontWeight:600,color:acc.color,fontFamily:G.fontUi}}>{acc.name}</div>
                       </div>
                       {activeAccount.id===acc.id&&<span style={{fontSize:10,color:acc.color}}>✓</span>}
                       {accounts.length>1&&activeAccount.id!==acc.id&&(
@@ -430,7 +433,7 @@ export default function DashboardClient() {
                       )}
                     </div>
                   ))}
-                  <div onClick={()=>{setShowAddAccount(true);setShowAccountPicker(false);}} style={{display:'flex',alignItems:'center',gap:8,padding:'9px 12px',cursor:'pointer',color:G.accent,fontSize:12,fontFamily:'Outfit',fontWeight:600}}
+                  <div onClick={()=>{setShowAddAccount(true);setShowAccountPicker(false);}} style={{display:'flex',alignItems:'center',gap:8,padding:'9px 12px',cursor:'pointer',color:G.accent,fontSize:12,fontFamily:G.fontUi,fontWeight:600}}
                     onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.background=`${G.accent}10`}
                     onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.background='transparent'}>
                     <span>⊕</span><span>Nueva cuenta</span>
@@ -451,10 +454,10 @@ export default function DashboardClient() {
 
           {/* Perf history */}
           <div style={{padding:'10px 12px',borderTop:`1px solid ${G.border}`,flex:1,display:'flex',flexDirection:'column',minHeight:0}}>
-            <div style={{fontFamily:'monospace',fontSize:8,letterSpacing:'0.18em',color:G.muted,marginBottom:8,textTransform:'uppercase'}}>RENDIMIENTO</div>
+            <div style={{fontFamily:G.fontData,fontSize:8,letterSpacing:'0.18em',color:G.muted,marginBottom:8,textTransform:'uppercase'}}>RENDIMIENTO</div>
             <div style={{display:'flex',background:G.bg,borderRadius:7,padding:3,gap:2,marginBottom:10,flexShrink:0}}>
               {(['semanas','meses','años'] as const).map(t=>(
-                <button key={t} onClick={()=>setSidebarTab(t)} style={{flex:1,padding:'4px 0',borderRadius:5,border:'none',background:sidebarTab===t?G.card2:'transparent',color:sidebarTab===t?G.accent:G.muted,fontSize:8,cursor:'pointer',fontFamily:'monospace',letterSpacing:'0.06em',textTransform:'uppercase',transition:'all 0.15s'}}>
+                <button key={t} onClick={()=>setSidebarTab(t)} style={{flex:1,padding:'4px 0',borderRadius:5,border:'none',background:sidebarTab===t?G.card2:'transparent',color:sidebarTab===t?G.accent:G.muted,fontSize:8,cursor:'pointer',fontFamily:G.fontData,letterSpacing:'0.06em',textTransform:'uppercase',transition:'all 0.15s'}}>
                   {t.slice(0,3).toUpperCase()}
                 </button>
               ))}
@@ -467,8 +470,8 @@ export default function DashboardClient() {
                 return(
                   <div key={key} style={{marginBottom:7,padding:'8px 10px',background:G.card,borderRadius:8,border:`1px solid ${G.border}`}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
-                      <span style={{fontFamily:'monospace',fontSize:9,color:G.muted2}}>{label}</span>
-                      <span style={{fontFamily:'Outfit',fontSize:12,fontWeight:700,color:s.pnl>=0?G.green:G.red}}>{fmt(s.pnl)}</span>
+                      <span style={{fontFamily:G.fontData,fontSize:9,color:G.muted2}}>{label}</span>
+                      <span style={{fontFamily:G.fontUi,fontSize:12,fontWeight:700,color:s.pnl>=0?G.green:G.red}}>{fmt(s.pnl)}</span>
                     </div>
                     <div style={{height:3,background:'rgba(255,255,255,0.05)',borderRadius:2,overflow:'hidden',marginBottom:3}}>
                       <div style={{height:'100%',width:`${barW*100}%`,background:s.pnl>=0?G.green:G.red,borderRadius:2,transition:'width 0.8s ease'}}/>
@@ -486,14 +489,14 @@ export default function DashboardClient() {
           {/* Balance */}
           <div style={{padding:'10px 12px 16px',borderTop:`1px solid ${G.border}`,flexShrink:0}}>
             <div style={{background:G.bg,border:`1px solid ${G.border2}`,borderRadius:11,padding:'12px 14px',marginBottom:10}}>
-              <div style={{fontFamily:'monospace',fontSize:8,color:G.muted,letterSpacing:'0.15em',marginBottom:4}}>BALANCE ACTUAL</div>
-              <div style={{fontFamily:'Outfit',fontSize:22,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(animBalance)}</div>
+              <div style={{fontFamily:G.fontData,fontSize:8,color:G.muted,letterSpacing:'0.15em',marginBottom:4}}>BALANCE ACTUAL</div>
+              <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(animBalance)}</div>
               <div style={{display:'flex',alignItems:'center',gap:4,marginTop:3}}>
                 <div style={{width:5,height:5,borderRadius:'50%',background:totalPnl>=0?G.green:G.red,boxShadow:`0 0 5px ${totalPnl>=0?G.green:G.red}`}}/>
-                <span style={{fontSize:10,color:totalPnl>=0?G.green:G.red,fontFamily:'Outfit',fontWeight:600}}>{fmt(totalPnl)} P&L</span>
+                <span style={{fontSize:10,color:totalPnl>=0?G.green:G.red,fontFamily:G.fontUi,fontWeight:600}}>{fmt(totalPnl)} P&L</span>
               </div>
             </div>
-            <button onClick={logout} style={{width:'100%',padding:'7px',background:'transparent',border:`1px solid ${G.border}`,borderRadius:7,color:G.muted,fontSize:10,cursor:'pointer',fontFamily:'monospace',letterSpacing:'0.08em'}}>CERRAR SESIÓN</button>
+            <button onClick={logout} style={{width:'100%',padding:'7px',background:'transparent',border:`1px solid ${G.border}`,borderRadius:7,color:G.muted,fontSize:10,cursor:'pointer',fontFamily:G.fontData,letterSpacing:'0.08em'}}>CERRAR SESIÓN</button>
           </div>
         </div>
       )}
@@ -507,12 +510,16 @@ export default function DashboardClient() {
             {mobile&&(
               <div className="mobile-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0,paddingTop:'env(safe-area-inset-top)',paddingBottom:0,paddingLeft:0,paddingRight:0}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%',padding:'12px 16px'}}>
-                <div style={{display:'flex',alignItems:'center',gap:8}}><Logo/><div style={{fontFamily:'Outfit',fontSize:13,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAVAGE TRADING</div></div>
+                <div style={{display:'flex',alignItems:'center',gap:8}}><Logo/><div style={{fontFamily:G.fontUi,fontSize:13,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAVAGE TRADING</div></div>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:20,cursor:'pointer',fontFamily:'Outfit',fontSize:11,fontWeight:600,color:activeAccount.color}}>
+                  <button onClick={()=>setShowNotifs(!showNotifs)} style={{width:32,height:32,borderRadius:8,background:'rgba(0,180,255,0.08)',border:'1px solid rgba(0,180,255,0.15)',color:'#00d4ff',cursor:'pointer',fontSize:14,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    🔔
+                    {trades.filter(t=>t.date===new Date().toISOString().split('T')[0]).length>0&&<span style={{position:'absolute',top:-2,right:-2,width:8,height:8,borderRadius:'50%',background:'#ff3366',border:'1px solid #050a12'}}/>}
+                  </button>
+                  <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:20,cursor:'pointer',fontFamily:G.fontUi,fontSize:11,fontWeight:600,color:activeAccount.color}}>
                     <span>{activeAccount.icon}</span><span>{activeAccount.name}</span><span style={{fontSize:9,color:G.muted}}>▾</span>
                   </button>
-                  <div style={{fontFamily:'Outfit',fontSize:16,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(balance)}</div>
+                  <div style={{fontFamily:G.fontUi,fontSize:16,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(balance)}</div>
                 </div>
                 </div>
                 {showAccountPicker&&(
@@ -520,11 +527,11 @@ export default function DashboardClient() {
                     {accounts.map(acc=>(
                       <div key={acc.id} onClick={()=>switchAccount(acc)} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',cursor:'pointer',borderBottom:`1px solid ${G.border}`}}>
                         <span style={{fontSize:16}}>{acc.icon}</span>
-                        <span style={{fontSize:12,fontWeight:600,color:acc.color,fontFamily:'Outfit'}}>{acc.name}</span>
+                        <span style={{fontSize:12,fontWeight:600,color:acc.color,fontFamily:G.fontUi}}>{acc.name}</span>
                         {activeAccount.id===acc.id&&<span style={{marginLeft:'auto',color:acc.color,fontSize:12}}>✓</span>}
                       </div>
                     ))}
-                    <div onClick={()=>{setShowAddAccount(true);setShowAccountPicker(false);}} style={{display:'flex',alignItems:'center',gap:8,padding:'9px 14px',cursor:'pointer',color:G.accent,fontSize:12,fontFamily:'Outfit',fontWeight:600}}>
+                    <div onClick={()=>{setShowAddAccount(true);setShowAccountPicker(false);}} style={{display:'flex',alignItems:'center',gap:8,padding:'9px 14px',cursor:'pointer',color:G.accent,fontSize:12,fontFamily:G.fontUi,fontWeight:600}}>
                       <span>⊕</span><span>Nueva cuenta</span>
                     </div>
                   </div>
@@ -534,12 +541,12 @@ export default function DashboardClient() {
             {!mobile&&(
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:22}}>
                 <div>
-                  <div style={{fontFamily:'monospace',fontSize:9,color:G.muted,letterSpacing:'0.15em',marginBottom:5}}>{dateStr}</div>
-                  <div style={{fontSize:28,fontWeight:800,letterSpacing:'-0.02em',color:G.text,fontFamily:'Outfit'}}>
+                  <div style={{fontFamily:G.fontData,fontSize:9,color:G.muted,letterSpacing:'0.15em',marginBottom:5}}>{dateStr}</div>
+                  <div style={{fontSize:28,fontWeight:800,letterSpacing:'-0.02em',color:G.text,fontFamily:G.fontUi}}>
                     {greeting}, <span style={{background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Cristian</span>
                   </div>
                 </div>
-                <button onClick={()=>setPage('nuevo')} style={{display:'flex',alignItems:'center',gap:7,padding:'11px 22px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'Outfit',boxShadow:`0 0 22px ${G.accent}50`,letterSpacing:'0.02em'}}>
+                <button onClick={()=>setPage('nuevo')} style={{display:'flex',alignItems:'center',gap:7,padding:'11px 22px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi,boxShadow:`0 0 22px ${G.accent}50`,letterSpacing:'0.02em'}}>
                   ⊕ Nuevo Trade
                 </button>
               </div>
@@ -554,9 +561,9 @@ export default function DashboardClient() {
               ].map(s=>(
                 <div key={s.label} className="statcard" style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:'14px 16px',position:'relative',overflow:'hidden',transition:'all 0.2s',cursor:'default'}}>
                   <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${s.color},transparent)`}}/>
-                  <div style={{fontFamily:'monospace',fontSize:9,letterSpacing:'0.18em',color:G.muted,marginBottom:6,textTransform:'uppercase'}}>{s.label}</div>
-                  <div style={{fontFamily:'Outfit',fontSize:mobile?20:26,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
-                  <div style={{fontSize:11,color:G.muted,marginTop:5,fontFamily:'Outfit'}}>{s.sub}</div>
+                  <div style={{fontFamily:G.fontData,fontSize:9,letterSpacing:'0.18em',color:G.muted,marginBottom:6,textTransform:'uppercase'}}>{s.label}</div>
+                  <div style={{fontFamily:G.fontUi,fontSize:mobile?20:26,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
+                  <div style={{fontSize:11,color:G.muted,marginTop:5,fontFamily:G.fontUi}}>{s.sub}</div>
                 </div>
               ))}
             </div>
@@ -579,8 +586,8 @@ export default function DashboardClient() {
             {(
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18,marginBottom:12}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-                  <div><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>Curva de Capital</div><div style={{fontSize:11,color:G.muted}}>Evolución histórica</div></div>
-                  <span style={{fontFamily:'Outfit',fontSize:13,fontWeight:700,color:balance>=capital.initial?G.green:G.red}}>{fmt(balance-capital.initial)}</span>
+                  <div><div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>Curva de Capital</div><div style={{fontSize:11,color:G.muted}}>Evolución histórica</div></div>
+                  <span style={{fontFamily:G.fontUi,fontSize:13,fontWeight:700,color:balance>=capital.initial?G.green:G.red}}>{fmt(balance-capital.initial)}</span>
                 </div>
                 <div style={{height:160}}>
                   {curve.data.length>1
@@ -595,15 +602,15 @@ export default function DashboardClient() {
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:10,marginBottom:12}}>
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:16}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-                  <div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>Calendario P&L</div>
+                  <div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>Calendario P&L</div>
                   <div style={{display:'flex',alignItems:'center',gap:6}}>
                     <button onClick={()=>setCalMonth(m=>new Date(m.getFullYear(),m.getMonth()-1))} style={{background:G.card2,border:`1px solid ${G.border}`,borderRadius:5,color:G.accent,width:22,height:22,cursor:'pointer',fontSize:11}}>‹</button>
-                    <span style={{fontFamily:'monospace',fontSize:9,color:G.accent,minWidth:90,textAlign:'center'}}>{calMonth.toLocaleDateString('es-ES',{month:'short',year:'numeric'}).toUpperCase()}</span>
+                    <span style={{fontFamily:G.fontData,fontSize:9,color:G.accent,minWidth:90,textAlign:'center'}}>{calMonth.toLocaleDateString('es-ES',{month:'short',year:'numeric'}).toUpperCase()}</span>
                     <button onClick={()=>setCalMonth(m=>new Date(m.getFullYear(),m.getMonth()+1))} style={{background:G.card2,border:`1px solid ${G.border}`,borderRadius:5,color:G.accent,width:22,height:22,cursor:'pointer',fontSize:11}}>›</button>
                   </div>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:3}}>
-                  {['L','M','X','J','V','S','D'].map(d=><div key={d} style={{textAlign:'center',fontFamily:'monospace',fontSize:7,color:G.muted}}>{d}</div>)}
+                  {['L','M','X','J','V','S','D'].map(d=><div key={d} style={{textAlign:'center',fontFamily:G.fontData,fontSize:7,color:G.muted}}>{d}</div>)}
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2}}>
                   {calDays().map((cell,i)=>{
@@ -612,7 +619,7 @@ export default function DashboardClient() {
                       <div key={i} style={{aspectRatio:'1',borderRadius:5,border:`1px solid ${cell?.pnl!=null?(cell.pnl>=0?`${G.green}35`:`${G.red}35`):isToday?G.accent:G.border}`,background:cell?.pnl!=null?(cell.pnl>=0?`${G.green}12`:`${G.red}12`):isToday?`${G.accent}10`:'transparent',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
                         {cell&&<>
                           <div style={{fontSize:7,color:isToday?G.accent:cell.pnl!=null?G.text:G.muted,fontWeight:600}}>{cell.day}</div>
-                          {cell.pnl!=null&&<div style={{fontSize:6,fontFamily:'monospace',color:cell.pnl>=0?G.green:G.red,fontWeight:700}}>{cell.pnl>=0?'+':''}{cell.pnl.toFixed(0)}</div>}
+                          {cell.pnl!=null&&<div style={{fontSize:6,fontFamily:G.fontData,color:cell.pnl>=0?G.green:G.red,fontWeight:700}}>{cell.pnl>=0?'+':''}{cell.pnl.toFixed(0)}</div>}
                         </>}
                       </div>
                     );
@@ -621,8 +628,8 @@ export default function DashboardClient() {
               </div>
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:16}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-                  <div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>Trades Recientes</div>
-                  <button onClick={()=>setPage('historial')} style={{fontSize:10,color:G.accent,background:'none',border:'none',cursor:'pointer',fontFamily:'monospace'}}>VER TODOS →</button>
+                  <div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>Trades Recientes</div>
+                  <button onClick={()=>setPage('historial')} style={{fontSize:10,color:G.accent,background:'none',border:'none',cursor:'pointer',fontFamily:G.fontData}}>VER TODOS →</button>
                 </div>
                 {trades.length===0?<div style={{textAlign:'center',padding:'24px 0',color:G.muted,fontSize:12}}>Sin trades aún</div>
                 :[...trades].reverse().slice(0,6).map(t=>(
@@ -632,11 +639,11 @@ export default function DashboardClient() {
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:7,height:7,borderRadius:'50%',background:t.res==='win'?G.green:t.res==='loss'?G.red:G.purple,flexShrink:0}}/>
                       <div>
-                        <div style={{fontSize:12,fontWeight:600,fontFamily:'Outfit'}}>{t.pair} <span style={{fontSize:10,color:t.dir==='buy'?G.green:G.red}}>{t.dir==='buy'?'▲':'▼'}</span></div>
+                        <div style={{fontSize:12,fontWeight:600,fontFamily:G.fontUi}}>{t.pair} <span style={{fontSize:10,color:t.dir==='buy'?G.green:G.red}}>{t.dir==='buy'?'▲':'▼'}</span></div>
                         <div style={{fontSize:10,color:G.muted}}>{t.date} · {t.tf}</div>
                       </div>
                     </div>
-                    <div style={{fontFamily:'Outfit',fontSize:14,fontWeight:700,color:t.pnl>0?G.green:t.pnl<0?G.red:G.purple}}>{fmt(t.pnl)}</div>
+                    <div style={{fontFamily:G.fontUi,fontSize:14,fontWeight:700,color:t.pnl>0?G.green:t.pnl<0?G.red:G.purple}}>{fmt(t.pnl)}</div>
                   </div>
                 ))}
               </div>
@@ -645,11 +652,11 @@ export default function DashboardClient() {
             {/* LAST 10 CIRCLES */}
             {!mobile&&(
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:16,marginBottom:12}}>
-                <div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit',marginBottom:12}}>Últimas operaciones</div>
+                <div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi,marginBottom:12}}>Últimas operaciones</div>
                 <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
                   {last10.map(t=>(
                     <div key={t.id} onClick={()=>setModalTrade(t)} className="tradecircle" style={{width:56,height:56,borderRadius:'50%',background:t.res==='win'?`${G.green}18`:t.res==='loss'?`${G.red}18`:`${G.purple}18`,border:`2px solid ${t.res==='win'?G.green:t.res==='loss'?G.red:G.purple}`,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'transform 0.2s',boxShadow:`0 0 10px ${t.res==='win'?G.green:t.res==='loss'?G.red:G.purple}25`}}>
-                      <div style={{fontFamily:'Outfit',fontSize:9,fontWeight:700,color:t.res==='win'?G.green:t.res==='loss'?G.red:G.purple,lineHeight:1}}>{t.pnl>=0?'+':''}{Math.abs(t.pnl).toFixed(0)}</div>
+                      <div style={{fontFamily:G.fontUi,fontSize:9,fontWeight:700,color:t.res==='win'?G.green:t.res==='loss'?G.red:G.purple,lineHeight:1}}>{t.pnl>=0?'+':''}{Math.abs(t.pnl).toFixed(0)}</div>
                       <div style={{fontSize:7,color:G.muted,marginTop:1}}>{t.pair.split('/')[0]}</div>
                     </div>
                   ))}
@@ -662,8 +669,8 @@ export default function DashboardClient() {
             {objetivos.length>0&&(
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:16,marginBottom:12}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-                  <div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>🎯 Mis Objetivos</div>
-                  <button onClick={()=>setPage('objetivos')} style={{fontSize:10,color:G.accent,background:'none',border:'none',cursor:'pointer',fontFamily:'monospace'}}>VER TODOS →</button>
+                  <div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>🎯 Mis Objetivos</div>
+                  <button onClick={()=>setPage('objetivos')} style={{fontSize:10,color:G.accent,background:'none',border:'none',cursor:'pointer',fontFamily:G.fontData}}>VER TODOS →</button>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:`repeat(${Math.min(objetivos.length,mobile?2:4)},1fr)`,gap:10}}>
                   {syncedObjetivos.slice(0,mobile?2:4).map(o=>(
@@ -678,8 +685,8 @@ export default function DashboardClient() {
         {/* ─── NUEVO TRADE ─── */}
         {page==='nuevo'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
-            {mobile&&<div style={{fontSize:18,fontWeight:700,fontFamily:'Outfit',marginBottom:16}}>⊕ Nuevo Trade</div>}
-            {!mobile&&<div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Nuevo Trade</div><div style={{fontSize:12,color:G.muted}}>Registra tu operación</div></div>}
+            {mobile&&<div style={{fontSize:18,fontWeight:700,fontFamily:G.fontUi,marginBottom:16}}>⊕ Nuevo Trade</div>}
+            {!mobile&&<div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>Nuevo Trade</div><div style={{fontSize:12,color:G.muted}}>Registra tu operación</div></div>}
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 260px',gap:12,alignItems:'start'}}>
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:mobile?16:20}}>
                 <div style={secT}>INFO BÁSICA</div>
@@ -699,7 +706,7 @@ export default function DashboardClient() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:16}}>
                   <div><label style={lbl}>RIESGO €</label><input type="number" value={fRisk} onChange={e=>setFRisk(e.target.value)} placeholder="0.00" style={inp}/></div>
                   <div><label style={lbl}>LOTE</label><input type="number" value={fLot} onChange={e=>setFLot(e.target.value)} placeholder="0.01" style={inp}/></div>
-                  <div><label style={lbl}>R:R</label><div style={{background:G.card2,border:`1px solid ${parseFloat(fRR.split(':')[1])>=2?`${G.green}60`:G.border}`,borderRadius:8,padding:'9px 12px',fontFamily:'Outfit',fontWeight:700,color:parseFloat(fRR.split(':')[1])>=2?G.green:G.gold,textAlign:'center',fontSize:13}}>{fRR}</div></div>
+                  <div><label style={lbl}>R:R</label><div style={{background:G.card2,border:`1px solid ${parseFloat(fRR.split(':')[1])>=2?`${G.green}60`:G.border}`,borderRadius:8,padding:'9px 12px',fontFamily:G.fontUi,fontWeight:700,color:parseFloat(fRR.split(':')[1])>=2?G.green:G.gold,textAlign:'center',fontSize:13}}>{fRR}</div></div>
                 </div>
                 <div style={secT}>RESULTADO</div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:10}}>
@@ -729,24 +736,24 @@ export default function DashboardClient() {
                 </div>
                 <div style={secT}>NOTAS</div>
                 <textarea value={fNotes} onChange={e=>setFNotes(e.target.value)} placeholder="¿Qué setup viste? ¿Qué aprendiste?" style={{...inp,minHeight:70,resize:'vertical',lineHeight:1.6,marginBottom:16}}/>
-                <button onClick={saveTrade} disabled={saving} style={{width:'100%',padding:13,background:saving?G.muted:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:14,fontWeight:700,cursor:saving?'not-allowed':'pointer',fontFamily:'Outfit',boxShadow:saving?'none':`0 0 20px ${G.accent}40`,letterSpacing:'0.02em',transition:'all 0.2s'}}>
+                <button onClick={saveTrade} disabled={saving} style={{width:'100%',padding:13,background:saving?G.muted:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:14,fontWeight:700,cursor:saving?'not-allowed':'pointer',fontFamily:G.fontUi,boxShadow:saving?'none':`0 0 20px ${G.accent}40`,letterSpacing:'0.02em',transition:'all 0.2s'}}>
                   {saving?'⟳ GUARDANDO...':'⊕ GUARDAR OPERACIÓN'}
                 </button>
               </div>
               {!mobile&&(
                 <div style={{position:'sticky',top:22,display:'flex',flexDirection:'column',gap:10}}>
                   <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:14}}>
-                    <div style={{fontSize:11,fontWeight:600,color:G.accent,marginBottom:10,fontFamily:'monospace',letterSpacing:'0.1em'}}>PREVIEW</div>
+                    <div style={{fontSize:11,fontWeight:600,color:G.accent,marginBottom:10,fontFamily:G.fontData,letterSpacing:'0.1em'}}>PREVIEW</div>
                     {[['PAR',fPair],['DIR',fDir?(fDir==='buy'?'▲ LONG':'▼ SHORT'):'—'],['R:R',fRR],['RIESGO',fRisk?fRisk+'€':'—'],['RESULTADO',fRes?.toUpperCase()||'—'],['P&L',fPnl?fmt(parseFloat(fPnl)):'—'],['PLAN',fPlan==='yes'?'✓':fPlan==='no'?'✕':'—']].map(([k,v])=>(
                       <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:`1px solid ${G.border}`,fontSize:11}}>
-                        <span style={{color:G.muted,fontFamily:'monospace',fontSize:9}}>{k}</span>
-                        <span style={{fontFamily:'Outfit',fontWeight:700,fontSize:12}}>{v}</span>
+                        <span style={{color:G.muted,fontFamily:G.fontData,fontSize:9}}>{k}</span>
+                        <span style={{fontFamily:G.fontUi,fontWeight:700,fontSize:12}}>{v}</span>
                       </div>
                     ))}
                   </div>
                   <div style={{background:G.card,border:`1px solid ${G.border2}`,borderRadius:12,padding:14}}>
-                    <div style={{fontFamily:'monospace',fontSize:9,color:G.muted,marginBottom:4}}>BALANCE ACTUAL</div>
-                    <div style={{fontFamily:'Outfit',fontSize:22,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(balance)}</div>
+                    <div style={{fontFamily:G.fontData,fontSize:9,color:G.muted,marginBottom:4}}>BALANCE ACTUAL</div>
+                    <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(balance)}</div>
                   </div>
                 </div>
               )}
@@ -758,7 +765,7 @@ export default function DashboardClient() {
         {page==='historial'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18,flexWrap:'wrap',gap:8}}>
-              <div><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Historial</div><div style={{fontSize:12,color:G.muted}}>{filteredTrades.length} operaciones</div></div>
+              <div><div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>Historial</div><div style={{fontSize:12,color:G.muted}}>{filteredTrades.length} operaciones</div></div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 {[['all','Todas'],['win','Wins'],['loss','Losses'],['XAU/USD','Oro'],['NAS100','Nasdaq']].map(([f,l])=>(
                   <button key={f} onClick={()=>setHistFilter(f)} style={{padding:'5px 12px',borderRadius:20,border:`1px solid ${histFilter===f?G.accent:G.border}`,background:histFilter===f?`${G.accent}15`:'transparent',color:histFilter===f?G.accent:G.muted,fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>{l}</button>
@@ -768,7 +775,7 @@ export default function DashboardClient() {
             <div className="table-scroll">
             <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden',minWidth:mobile?'auto':'600px'}}>
               {!mobile&&<div style={{display:'grid',gridTemplateColumns:'100px 90px 55px 80px 1fr 90px',padding:'9px 16px',background:G.bg,borderBottom:`1px solid ${G.border}`,gap:8}}>
-                {['Fecha','Activo','Dir','Resultado','Notas','P&L'].map(h=><span key={h} style={{fontFamily:'monospace',fontSize:9,letterSpacing:'0.12em',textTransform:'uppercase',color:G.muted}}>{h}</span>)}
+                {['Fecha','Activo','Dir','Resultado','Notas','P&L'].map(h=><span key={h} style={{fontFamily:G.fontData,fontSize:9,letterSpacing:'0.12em',textTransform:'uppercase',color:G.muted}}>{h}</span>)}
               </div>}
               {filteredTrades.length===0?<div style={{textAlign:'center',padding:'40px 0',color:G.muted,fontSize:13}}>Sin operaciones</div>
               :filteredTrades.map(t=>(
@@ -777,19 +784,19 @@ export default function DashboardClient() {
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
                         <div style={{width:8,height:8,borderRadius:'50%',background:t.res==='win'?G.green:t.res==='loss'?G.red:G.purple}}/>
                         <div>
-                          <div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>{t.pair} <span style={{fontSize:11,color:t.dir==='buy'?G.green:G.red}}>{t.dir==='buy'?'▲':'▼'}</span></div>
+                          <div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>{t.pair} <span style={{fontSize:11,color:t.dir==='buy'?G.green:G.red}}>{t.dir==='buy'?'▲':'▼'}</span></div>
                           <div style={{fontSize:10,color:G.muted}}>{t.date} · {t.res.toUpperCase()}</div>
                         </div>
                       </div>
-                      <div style={{fontFamily:'Outfit',fontSize:14,fontWeight:700,color:t.pnl>0?G.green:t.pnl<0?G.red:G.purple}}>{fmt(t.pnl)}</div>
+                      <div style={{fontFamily:G.fontUi,fontSize:14,fontWeight:700,color:t.pnl>0?G.green:t.pnl<0?G.red:G.purple}}>{fmt(t.pnl)}</div>
                     </div>
                   : <div key={t.id} onClick={()=>setModalTrade(t)} className="trow" style={{display:'grid',gridTemplateColumns:'100px 90px 55px 80px 1fr 90px',padding:'11px 16px',borderBottom:`1px solid ${G.border}`,gap:8,alignItems:'center',cursor:'pointer',transition:'background 0.1s'}}>
-                      <span style={{fontFamily:'monospace',fontSize:11,color:G.muted}}>{t.date}</span>
-                      <span style={{fontFamily:'monospace',fontSize:11,color:G.accent}}>{t.pair}</span>
+                      <span style={{fontFamily:G.fontData,fontSize:11,color:G.muted}}>{t.date}</span>
+                      <span style={{fontFamily:G.fontData,fontSize:11,color:G.accent}}>{t.pair}</span>
                       <span style={{fontSize:12,color:t.dir==='buy'?G.green:G.red,fontWeight:700}}>{t.dir==='buy'?'▲':'▼'}</span>
-                      <span style={{padding:'3px 7px',borderRadius:5,fontSize:10,fontFamily:'monospace',fontWeight:700,background:t.res==='win'?`${G.green}18`:t.res==='loss'?`${G.red}18`:`${G.purple}18`,color:t.res==='win'?G.green:t.res==='loss'?G.red:G.purple,display:'inline-block'}}>{t.res.toUpperCase()}</span>
+                      <span style={{padding:'3px 7px',borderRadius:5,fontSize:10,fontFamily:G.fontData,fontWeight:700,background:t.res==='win'?`${G.green}18`:t.res==='loss'?`${G.red}18`:`${G.purple}18`,color:t.res==='win'?G.green:t.res==='loss'?G.red:G.purple,display:'inline-block'}}>{t.res.toUpperCase()}</span>
                       <span style={{color:G.muted,fontSize:11,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.notes?t.notes.slice(0,40)+(t.notes.length>40?'…':''):'—'}</span>
-                      <span style={{fontFamily:'Outfit',fontSize:13,fontWeight:700,textAlign:'right',color:t.pnl>0?G.green:t.pnl<0?G.red:G.purple}}>{fmt(t.pnl)}</span>
+                      <span style={{fontFamily:G.fontUi,fontSize:13,fontWeight:700,textAlign:'right',color:t.pnl>0?G.green:t.pnl<0?G.red:G.purple}}>{fmt(t.pnl)}</span>
                     </div>
               ))}
             </div>
@@ -800,14 +807,14 @@ export default function DashboardClient() {
         {/* ─── CAPITAL ─── */}
         {page==='capital'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
-            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Capital</div><div style={{fontSize:12,color:G.muted}}>Gestión de capital y aportaciones</div></div>
+            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>Capital</div><div style={{fontSize:12,color:G.muted}}>Gestión de capital y aportaciones</div></div>
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:12,alignItems:'start'}}>
               <div>
                 <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18,marginBottom:10}}>
                   <div style={secT}>CAPITAL INICIAL</div>
                   <label style={lbl}>IMPORTE €</label>
                   <input type="number" value={capInitial} onChange={e=>setCapInitial(e.target.value)} placeholder="500.00" style={{...inp,marginBottom:12}}/>
-                  <button onClick={setIC} style={{width:'100%',padding:11,background:`linear-gradient(135deg,#065f46,${G.green})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Outfit'}}>Guardar capital inicial</button>
+                  <button onClick={setIC} style={{width:'100%',padding:11,background:`linear-gradient(135deg,#065f46,${G.green})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi}}>Guardar capital inicial</button>
                 </div>
                 <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18}}>
                   <div style={secT}>NUEVA APORTACIÓN</div>
@@ -817,15 +824,15 @@ export default function DashboardClient() {
                   </div>
                   <label style={lbl}>DESCRIPCIÓN</label>
                   <input type="text" value={apDesc} onChange={e=>setApDesc(e.target.value)} placeholder="Aportación mensual" style={{...inp,marginBottom:12}}/>
-                  <button onClick={addAp} style={{width:'100%',padding:11,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Outfit'}}>Añadir aportación</button>
+                  <button onClick={addAp} style={{width:'100%',padding:11,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi}}>Añadir aportación</button>
                 </div>
               </div>
               <div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
                   {[{l:'Capital inicial',v:fmtA(capital.initial),c:G.accent},{l:'Total aportado',v:fmtA(totalAport),c:G.gold},{l:'P&L total',v:fmt(totalPnl),c:totalPnl>=0?G.green:G.red},{l:'Balance total',v:fmtA(balance),c:G.cyan}].map(s=>(
                     <div key={s.l} style={{background:G.card,border:`1px solid ${G.border}`,borderTop:`2px solid ${s.c}`,borderRadius:12,padding:14}}>
-                      <div style={{fontFamily:'monospace',fontSize:8,color:G.muted,marginBottom:6,textTransform:'uppercase',letterSpacing:'0.1em'}}>{s.l}</div>
-                      <div style={{fontFamily:'Outfit',fontSize:20,fontWeight:800,color:s.c}}>{s.v}</div>
+                      <div style={{fontFamily:G.fontData,fontSize:8,color:G.muted,marginBottom:6,textTransform:'uppercase',letterSpacing:'0.1em'}}>{s.l}</div>
+                      <div style={{fontFamily:G.fontUi,fontSize:20,fontWeight:800,color:s.c}}>{s.v}</div>
                     </div>
                   ))}
                 </div>
@@ -834,9 +841,9 @@ export default function DashboardClient() {
                   {capital.aportaciones.length===0?<div style={{textAlign:'center',padding:'16px 0',color:G.muted,fontSize:12}}>Sin aportaciones</div>
                   :capital.aportaciones.map(a=>(
                     <div key={a.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 10px',background:G.card2,borderRadius:8,marginBottom:6,border:`1px solid ${G.border}`}}>
-                      <div><div style={{fontWeight:600,fontSize:13,fontFamily:'Outfit'}}>{a.desc}</div><div style={{fontSize:11,color:G.muted}}>{a.date}</div></div>
+                      <div><div style={{fontWeight:600,fontSize:13,fontFamily:G.fontUi}}>{a.desc}</div><div style={{fontSize:11,color:G.muted}}>{a.date}</div></div>
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
-                        <span style={{fontFamily:'Outfit',fontWeight:700,color:G.green}}>+{fmtA(a.amount)}</span>
+                        <span style={{fontFamily:G.fontUi,fontWeight:700,color:G.green}}>+{fmtA(a.amount)}</span>
                         <button onClick={()=>delAp(a.id)} style={{background:`${G.red}15`,border:`1px solid ${G.red}50`,color:G.red,padding:'3px 8px',borderRadius:6,fontSize:10,cursor:'pointer'}}>✕</button>
                       </div>
                     </div>
@@ -850,16 +857,16 @@ export default function DashboardClient() {
         {/* ─── NOTICIAS ─── */}
         {page==='noticias'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
-            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Noticias & Mercados</div><div style={{fontSize:12,color:G.muted}}>TradingView en tiempo real · En español</div></div>
+            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>Noticias & Mercados</div><div style={{fontSize:12,color:G.muted}}>TradingView en tiempo real · En español</div></div>
 
             {/* Link directo al calendario en español */}
             <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:'16px 18px',marginBottom:12,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
-                <div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit',marginBottom:4}}>📅 Calendario Económico</div>
+                <div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi,marginBottom:4}}>📅 Calendario Económico</div>
                 <div style={{fontSize:12,color:G.muted}}>Abre el calendario completo en español con todos los eventos</div>
               </div>
               <a href="https://es.investing.com/economic-calendar/" target="_blank" rel="noopener noreferrer"
-                style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,color:'#05111e',fontSize:12,fontWeight:700,borderRadius:9,textDecoration:'none',fontFamily:'Outfit',whiteSpace:'nowrap',flexShrink:0,marginLeft:16}}>
+                style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,color:'#05111e',fontSize:12,fontWeight:700,borderRadius:9,textDecoration:'none',fontFamily:G.fontUi,whiteSpace:'nowrap',flexShrink:0,marginLeft:16}}>
                 ABRIR CALENDARIO →
               </a>
             </div>
@@ -867,7 +874,7 @@ export default function DashboardClient() {
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:12,marginBottom:12}}>
               {/* TradingView News */}
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden'}}>
-                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📰 Noticias Forex & Mercados</div><div style={{fontSize:11,color:G.muted}}>TradingView · En español · Tiempo real</div></div>
+                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>📰 Noticias Forex & Mercados</div><div style={{fontSize:11,color:G.muted}}>TradingView · En español · Tiempo real</div></div>
                 <div style={{height:440}}>
                   <iframe
                     src="https://www.tradingview.com/embed-widget/timeline/?feedMode=market&market=forex&isTransparent=true&displayMode=regular&width=100%25&height=100%25&colorTheme=dark&locale=es"
@@ -879,7 +886,7 @@ export default function DashboardClient() {
               </div>
               {/* TradingView Market Overview */}
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden'}}>
-                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>📊 Resumen de Mercado</div><div style={{fontSize:11,color:G.muted}}>Oro · Nasdaq · Crypto · Forex</div></div>
+                <div style={{padding:'14px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>📊 Resumen de Mercado</div><div style={{fontSize:11,color:G.muted}}>Oro · Nasdaq · Crypto · Forex</div></div>
                 <div style={{height:440}}>
                   <iframe
                     src="https://www.tradingview.com/embed-widget/market-overview/?colorTheme=dark&dateRange=12M&showSymbolLogo=true&isTransparent=true&width=100%25&height=100%25&locale=es&tabs=%5B%7B%22title%22%3A%22%C3%8Dndices%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22NASDAQ%3ANDX%22%7D%2C%7B%22s%22%3A%22OANDA%3AXAUUSD%22%7D%2C%7B%22s%22%3A%22TVC%3ADXY%22%7D%5D%7D%2C%7B%22title%22%3A%22Crypto%22%2C%22symbols%22%3A%5B%7B%22s%22%3A%22BITSTAMP%3ABTCUSD%22%7D%2C%7B%22s%22%3A%22BINANCE%3AETHUSD%22%7D%5D%7D%5D"
@@ -892,7 +899,7 @@ export default function DashboardClient() {
             </div>
             {/* Ticker tape */}
             <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,overflow:'hidden',marginBottom:12}}>
-              <div style={{padding:'12px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:'Outfit'}}>💹 Precios en Tiempo Real</div></div>
+              <div style={{padding:'12px 16px',borderBottom:`1px solid ${G.border}`}}><div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>💹 Precios en Tiempo Real</div></div>
               <div style={{height:70}}>
                 <iframe
                   src="https://www.tradingview.com/embed-widget/ticker-tape/?symbols=%5B%7B%22proName%22%3A%22OANDA%3AXAUUSD%22%2C%22title%22%3A%22Oro%22%7D%2C%7B%22proName%22%3A%22NASDAQ%3ANDX%22%2C%22title%22%3A%22Nasdaq%22%7D%2C%7B%22proName%22%3A%22FX%3AEURUSD%22%2C%22title%22%3A%22EUR%2FUSD%22%7D%2C%7B%22proName%22%3A%22BITSTAMP%3ABTCUSD%22%2C%22title%22%3A%22Bitcoin%22%7D%2C%7B%22proName%22%3A%22TVC%3ADXY%22%2C%22title%22%3A%22DXY%22%7D%5D&showSymbolLogo=true&isTransparent=true&displayMode=adaptive&colorTheme=dark&locale=es"
@@ -903,10 +910,10 @@ export default function DashboardClient() {
               </div>
             </div>
             <div style={{background:`${G.gold}07`,border:`1px solid ${G.gold}28`,borderRadius:12,padding:16}}>
-              <div style={{fontSize:13,fontWeight:600,color:G.gold,marginBottom:10,fontFamily:'Outfit'}}>⚠️ Reglas en noticias de alto impacto</div>
+              <div style={{fontSize:13,fontWeight:600,color:G.gold,marginBottom:10,fontFamily:G.fontUi}}>⚠️ Reglas en noticias de alto impacto</div>
               <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:8}}>
                 {['🚫 No abrir 15 min antes de evento rojo','⏳ Esperar 15 min después de la publicación','📊 El Oro reacciona fuerte al IPC y FED','📈 Nasdaq muy sensible al NFP y tipos','💱 Spread se amplía antes de noticias','✅ Mejores setups 30 min después'].map((r,i)=>(
-                  <div key={i} style={{background:G.card,borderRadius:8,padding:'9px 12px',fontSize:12,color:G.muted2,lineHeight:1.5,border:`1px solid ${G.border}`,fontFamily:'Outfit'}}>{r}</div>
+                  <div key={i} style={{background:G.card,borderRadius:8,padding:'9px 12px',fontSize:12,color:G.muted2,lineHeight:1.5,border:`1px solid ${G.border}`,fontFamily:G.fontUi}}>{r}</div>
                 ))}
               </div>
             </div>
@@ -916,29 +923,29 @@ export default function DashboardClient() {
         {/* ─── RENDIMIENTO ─── */}
         {page==='rendimiento'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
-            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>Rendimiento Histórico</div><div style={{fontSize:12,color:G.muted}}>Análisis completo de tu performance</div></div>
+            <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>Rendimiento Histórico</div><div style={{fontSize:12,color:G.muted}}>Análisis completo de tu performance</div></div>
             {/* Resumen anual */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
               {[{l:'P&L Total',v:fmt(totalPnl),c:totalPnl>=0?G.green:G.red},{l:'Win Rate',v:wr+'%',c:wr>=50?G.green:G.red},{l:'Total Trades',v:String(trades.length),c:G.accent},{l:'Días operados',v:String(Object.keys(byDay).length),c:G.gold}].map(s=>(
                 <div key={s.l} style={{background:G.card,border:`1px solid ${G.border}`,borderTop:`2px solid ${s.c}`,borderRadius:12,padding:16}}>
-                  <div style={{fontFamily:'monospace',fontSize:9,color:G.muted,marginBottom:6,textTransform:'uppercase',letterSpacing:'0.1em'}}>{s.l}</div>
-                  <div style={{fontFamily:'Outfit',fontSize:24,fontWeight:800,color:s.c}}>{s.v}</div>
+                  <div style={{fontFamily:G.fontData,fontSize:9,color:G.muted,marginBottom:6,textTransform:'uppercase',letterSpacing:'0.1em'}}>{s.l}</div>
+                  <div style={{fontFamily:G.fontUi,fontSize:24,fontWeight:800,color:s.c}}>{s.v}</div>
                 </div>
               ))}
             </div>
             {/* Yearly */}
             {yearlyStats.length>0&&(
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18,marginBottom:12}}>
-                <div style={{fontSize:14,fontWeight:600,fontFamily:'Outfit',marginBottom:14}}>📅 Rendimiento Anual</div>
+                <div style={{fontSize:14,fontWeight:600,fontFamily:G.fontUi,marginBottom:14}}>📅 Rendimiento Anual</div>
                 {yearlyStats.map(([year,s])=>(
                   <div key={year} style={{display:'grid',gridTemplateColumns:'80px 1fr 100px 80px 80px',gap:12,alignItems:'center',padding:'12px 0',borderBottom:`1px solid ${G.border}`}}>
-                    <div style={{fontFamily:'Outfit',fontSize:18,fontWeight:800,color:G.accent}}>{year}</div>
+                    <div style={{fontFamily:G.fontUi,fontSize:18,fontWeight:800,color:G.accent}}>{year}</div>
                     <div style={{height:8,background:'rgba(255,255,255,0.05)',borderRadius:4,overflow:'hidden'}}>
                       <div style={{height:'100%',width:`${Math.min(Math.abs(s.pnl)/maxAbsPnl*100,100)}%`,background:s.pnl>=0?G.green:G.red,borderRadius:4,transition:'width 0.8s ease'}}/>
                     </div>
-                    <div style={{fontFamily:'Outfit',fontSize:16,fontWeight:700,color:s.pnl>=0?G.green:G.red,textAlign:'right'}}>{fmt(s.pnl)}</div>
-                    <div style={{textAlign:'center'}}><div style={{fontSize:10,color:G.muted}}>trades</div><div style={{fontFamily:'Outfit',fontWeight:700,color:G.text}}>{s.trades}</div></div>
-                    <div style={{textAlign:'center'}}><div style={{fontSize:10,color:G.muted}}>win rate</div><div style={{fontFamily:'Outfit',fontWeight:700,color:s.wins/s.trades>=0.5?G.green:G.red}}>{s.trades>0?Math.round(s.wins/s.trades*100):0}%</div></div>
+                    <div style={{fontFamily:G.fontUi,fontSize:16,fontWeight:700,color:s.pnl>=0?G.green:G.red,textAlign:'right'}}>{fmt(s.pnl)}</div>
+                    <div style={{textAlign:'center'}}><div style={{fontSize:10,color:G.muted}}>trades</div><div style={{fontFamily:G.fontUi,fontWeight:700,color:G.text}}>{s.trades}</div></div>
+                    <div style={{textAlign:'center'}}><div style={{fontSize:10,color:G.muted}}>win rate</div><div style={{fontFamily:G.fontUi,fontWeight:700,color:s.wins/s.trades>=0.5?G.green:G.red}}>{s.trades>0?Math.round(s.wins/s.trades*100):0}%</div></div>
                   </div>
                 ))}
               </div>
@@ -946,14 +953,14 @@ export default function DashboardClient() {
             {/* Monthly */}
             {monthlyStats.length>0&&(
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18,marginBottom:12}}>
-                <div style={{fontSize:14,fontWeight:600,fontFamily:'Outfit',marginBottom:14}}>📆 Rendimiento Mensual</div>
+                <div style={{fontSize:14,fontWeight:600,fontFamily:G.fontUi,marginBottom:14}}>📆 Rendimiento Mensual</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:10}}>
                   {monthlyStats.map(([month,s])=>{
                     const pct=Math.abs(s.pnl)/maxAbsPnl;
                     return(
                       <div key={month} style={{background:G.card2,border:`1px solid ${s.pnl>=0?`${G.green}25`:`${G.red}25`}`,borderRadius:10,padding:'12px 14px'}}>
-                        <div style={{fontFamily:'monospace',fontSize:10,color:G.muted2,marginBottom:6}}>{new Date(month+'-01').toLocaleDateString('es-ES',{month:'long',year:'numeric'}).toUpperCase()}</div>
-                        <div style={{fontFamily:'Outfit',fontSize:18,fontWeight:800,color:s.pnl>=0?G.green:G.red,marginBottom:8}}>{fmt(s.pnl)}</div>
+                        <div style={{fontFamily:G.fontData,fontSize:10,color:G.muted2,marginBottom:6}}>{new Date(month+'-01').toLocaleDateString('es-ES',{month:'long',year:'numeric'}).toUpperCase()}</div>
+                        <div style={{fontFamily:G.fontUi,fontSize:18,fontWeight:800,color:s.pnl>=0?G.green:G.red,marginBottom:8}}>{fmt(s.pnl)}</div>
                         <div style={{height:4,background:'rgba(255,255,255,0.05)',borderRadius:2,overflow:'hidden',marginBottom:6}}>
                           <div style={{height:'100%',width:`${pct*100}%`,background:s.pnl>=0?G.green:G.red,borderRadius:2}}/>
                         </div>
@@ -970,14 +977,14 @@ export default function DashboardClient() {
             {/* Weekly */}
             {weeklyStats.length>0&&(
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18}}>
-                <div style={{fontSize:14,fontWeight:600,fontFamily:'Outfit',marginBottom:14}}>📅 Últimas Semanas</div>
+                <div style={{fontSize:14,fontWeight:600,fontFamily:G.fontUi,marginBottom:14}}>📅 Últimas Semanas</div>
                 {weeklyStats.map(([week,s])=>(
                   <div key={week} style={{display:'grid',gridTemplateColumns:'120px 1fr 100px 70px 70px',gap:10,alignItems:'center',padding:'9px 0',borderBottom:`1px solid ${G.border}`}}>
-                    <div style={{fontFamily:'monospace',fontSize:10,color:G.muted2}}>Sem {week.slice(5)}</div>
+                    <div style={{fontFamily:G.fontData,fontSize:10,color:G.muted2}}>Sem {week.slice(5)}</div>
                     <div style={{height:5,background:'rgba(255,255,255,0.05)',borderRadius:3,overflow:'hidden'}}>
                       <div style={{height:'100%',width:`${Math.abs(s.pnl)/maxAbsPnl*100}%`,background:s.pnl>=0?G.green:G.red,borderRadius:3}}/>
                     </div>
-                    <div style={{fontFamily:'Outfit',fontSize:14,fontWeight:700,color:s.pnl>=0?G.green:G.red,textAlign:'right'}}>{fmt(s.pnl)}</div>
+                    <div style={{fontFamily:G.fontUi,fontSize:14,fontWeight:700,color:s.pnl>=0?G.green:G.red,textAlign:'right'}}>{fmt(s.pnl)}</div>
                     <div style={{textAlign:'center',fontSize:11,color:G.muted}}>{s.trades} ops</div>
                     <div style={{textAlign:'center',fontSize:11,color:s.wins/s.trades>=0.5?G.green:G.muted}}>{s.trades>0?Math.round(s.wins/s.trades*100):0}%</div>
                   </div>
@@ -992,14 +999,14 @@ export default function DashboardClient() {
         {page==='objetivos'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
-              <div><div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🎯 Mis Objetivos</div><div style={{fontSize:12,color:G.muted}}>Define y sigue tu progreso</div></div>
-              <button onClick={()=>openObjModal()} style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Outfit'}}>+ Nuevo objetivo</button>
+              <div><div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>🎯 Mis Objetivos</div><div style={{fontSize:12,color:G.muted}}>Define y sigue tu progreso</div></div>
+              <button onClick={()=>openObjModal()} style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi}}>+ Nuevo objetivo</button>
             </div>
             {objetivos.length===0?
               <div style={{textAlign:'center',padding:'60px 0',color:G.muted,fontSize:13}}>
                 <div style={{fontSize:40,marginBottom:12}}>🎯</div>
                 <div>Sin objetivos aún. Crea el primero.</div>
-                <button onClick={()=>openObjModal()} style={{marginTop:16,padding:'10px 20px',background:`${G.accent}20`,border:`1px solid ${G.accent}`,borderRadius:10,color:G.accent,fontSize:13,cursor:'pointer',fontFamily:'Outfit'}}>+ Crear objetivo</button>
+                <button onClick={()=>openObjModal()} style={{marginTop:16,padding:'10px 20px',background:`${G.accent}20`,border:`1px solid ${G.accent}`,borderRadius:10,color:G.accent,fontSize:13,cursor:'pointer',fontFamily:G.fontUi}}>+ Crear objetivo</button>
               </div>
             :(
               <>
@@ -1008,14 +1015,14 @@ export default function DashboardClient() {
                 </div>
                 {/* Objectives detail */}
                 <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18}}>
-                  <div style={{fontSize:14,fontWeight:600,fontFamily:'Outfit',marginBottom:14}}>Detalle de objetivos</div>
+                  <div style={{fontSize:14,fontWeight:600,fontFamily:G.fontUi,marginBottom:14}}>Detalle de objetivos</div>
                   {objetivos.map(o=>{
                     const pct=o.target>0?Math.min(o.current/o.target*100,100):0;
                     return(
                       <div key={o.id} style={{marginBottom:12,padding:'12px 14px',background:G.card2,borderRadius:10,border:`1px solid ${G.border}`}}>
                         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-                          <div style={{fontFamily:'Outfit',fontSize:14,fontWeight:600}}>{o.label}</div>
-                          <div style={{fontFamily:'Outfit',fontSize:13,fontWeight:700,color:o.color}}>{Math.round(pct)}% — {fmtA(o.current)} / {fmtA(o.target)}</div>
+                          <div style={{fontFamily:G.fontUi,fontSize:14,fontWeight:600}}>{o.label}</div>
+                          <div style={{fontFamily:G.fontUi,fontSize:13,fontWeight:700,color:o.color}}>{Math.round(pct)}% — {fmtA(o.current)} / {fmtA(o.target)}</div>
                         </div>
                         <div style={{height:8,background:'rgba(255,255,255,0.05)',borderRadius:4,overflow:'hidden'}}>
                           <div style={{height:'100%',width:`${pct}%`,background:o.color,borderRadius:4,transition:'width 1s ease',boxShadow:`0 0 8px ${o.color}60`}}/>
@@ -1034,7 +1041,7 @@ export default function DashboardClient() {
         {page==='analisis'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',maxWidth:'100%',overflowX:'hidden',paddingTop:mobile?'16px':'0'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔬 Análisis de Rendimiento</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>🔬 Análisis de Rendimiento</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Descubre tu ventaja real basada en tus datos</div>
             </div>
             <AnalisisClient trades={trades} />
@@ -1048,7 +1055,7 @@ export default function DashboardClient() {
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <div style={{width:38,height:38,borderRadius:'50%',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🤖</div>
                 <div>
-                  <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>IA Coach Personal</div>
+                  <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>IA Coach Personal</div>
                   <div style={{fontSize:12,color:G.muted,marginTop:1}}>Analiza tus datos reales · Powered by Claude AI</div>
                 </div>
               </div>
@@ -1061,7 +1068,7 @@ export default function DashboardClient() {
         {page==='grafico'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🖼️ Analizador de Gráficos IA</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>🖼️ Analizador de Gráficos IA</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Sube una captura y Claude analiza tu gráfico en segundos</div>
             </div>
             <ChartAnalyzer />
@@ -1072,7 +1079,7 @@ export default function DashboardClient() {
         {page==='informes'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>📄 Informes Descargables</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>📄 Informes Descargables</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Genera y descarga tu informe de trading en PDF</div>
             </div>
             <ReportGenerator trades={trades} capital={capital} />
@@ -1083,10 +1090,21 @@ export default function DashboardClient() {
         {page==='alertas'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🔔 Alertas Inteligentes</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>🔔 Alertas Inteligentes</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Avisos automáticos basados en tus datos reales</div>
             </div>
             <AlertasClient trades={trades} />
+          </div>
+        )}
+
+        {/* ─── LOGROS ─── */}
+        {page==='logros'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>🏆 Logros & Diplomas</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Hitos conseguidos en tu carrera como trader</div>
+            </div>
+            <LogrosClient trades={trades} totalPnl={totalPnl} />
           </div>
         )}
 
@@ -1094,7 +1112,7 @@ export default function DashboardClient() {
         {page==='calculadora'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🧮 Calculadora de Posición</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>🧮 Calculadora de Posición</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Calcula el tamaño exacto según tu riesgo</div>
             </div>
             <CalculadoraClient capital={balance} />
@@ -1105,7 +1123,7 @@ export default function DashboardClient() {
         {page==='importar'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>📥 Importar historial MT5</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>📥 Importar historial MT5</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Importa tus trades de Axi directamente desde el CSV de MT5</div>
             </div>
             <ImportadorMT5 onImport={importarTrades} />
@@ -1116,7 +1134,7 @@ export default function DashboardClient() {
         {page==='revision'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>📝 Revisión Semanal</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>📝 Revisión Semanal</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>10 minutos cada domingo · La herramienta más poderosa del trading</div>
             </div>
             <RevisionSemanal trades={trades} />
@@ -1127,7 +1145,7 @@ export default function DashboardClient() {
         {page==='diario'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>🚦 Diario & Semáforo</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>🚦 Diario & Semáforo</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>¿Estás en condiciones de operar hoy?</div>
             </div>
             <DiarioClient />
@@ -1138,12 +1156,15 @@ export default function DashboardClient() {
         {page==='patrimonio'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
-              <div style={{fontSize:22,fontWeight:700,fontFamily:'Outfit'}}>💎 Patrimonio & Inversiones</div>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>💎 Patrimonio & Inversiones</div>
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Carteras · Posiciones · Aportaciones programadas</div>
             </div>
             <PatrimonioClient tradingBalance={balance} />
           </div>
         )}
+
+      {/* ══ NOTIFICATIONS PANEL ══ */}
+      {showNotifs&&<NotificacionesPanel trades={trades} onClose={()=>setShowNotifs(false)}/>}
 
       {/* ══ MOBILE BOTTOM NAV ══ */}
       <div className="bottom-nav" style={{paddingBottom:'env(safe-area-inset-bottom)'}}>
@@ -1161,24 +1182,24 @@ export default function DashboardClient() {
       {showAddAccount&&(
         <div onClick={e=>e.target===e.currentTarget&&setShowAddAccount(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:400,display:'flex',alignItems:'center',justifyContent:'center',padding:20,backdropFilter:'blur(4px)'}}>
           <div style={{background:G.card,border:`1px solid ${G.border2}`,borderRadius:16,padding:24,width:'100%',maxWidth:360}}>
-            <div style={{fontSize:16,fontWeight:700,fontFamily:'Outfit',marginBottom:18}}>Nueva cuenta</div>
-            <label style={{fontFamily:'monospace',fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5}}>NOMBRE</label>
-            <input value={newAccName} onChange={e=>setNewAccName(e.target.value)} placeholder="Ej: Fondeo FTMO" style={{width:'100%',background:G.card2,border:`1px solid ${G.border}`,borderRadius:8,padding:'9px 12px',color:G.text,fontFamily:'Outfit',fontSize:13,outline:'none',marginBottom:12}}/>
-            <label style={{fontFamily:'monospace',fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5}}>ICONO</label>
+            <div style={{fontSize:16,fontWeight:700,fontFamily:G.fontUi,marginBottom:18}}>Nueva cuenta</div>
+            <label style={{fontFamily:G.fontData,fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5}}>NOMBRE</label>
+            <input value={newAccName} onChange={e=>setNewAccName(e.target.value)} placeholder="Ej: Fondeo FTMO" style={{width:'100%',background:G.card2,border:`1px solid ${G.border}`,borderRadius:8,padding:'9px 12px',color:G.text,fontFamily:G.fontUi,fontSize:13,outline:'none',marginBottom:12}}/>
+            <label style={{fontFamily:G.fontData,fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5}}>ICONO</label>
             <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
               {['💼','📈','₿','🏦','🎯','💰','📊','🔥'].map(icon=>(
                 <button key={icon} onClick={()=>setNewAccIcon(icon)} style={{width:36,height:36,borderRadius:8,border:`2px solid ${newAccIcon===icon?G.accent:G.border}`,background:newAccIcon===icon?`${G.accent}20`:G.card2,fontSize:18,cursor:'pointer',transition:'all 0.15s'}}>{icon}</button>
               ))}
             </div>
-            <label style={{fontFamily:'monospace',fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5}}>COLOR</label>
+            <label style={{fontFamily:G.fontData,fontSize:9,letterSpacing:'0.15em',textTransform:'uppercase',color:G.muted,display:'block',marginBottom:5}}>COLOR</label>
             <div style={{display:'flex',gap:8,marginBottom:18}}>
               {[G.cyan,G.green,G.gold,G.red,G.purple,G.accent].map(c=>(
                 <button key={c} onClick={()=>setNewAccColor(c)} style={{width:28,height:28,borderRadius:'50%',background:c,border:`3px solid ${newAccColor===c?'white':'transparent'}`,cursor:'pointer',boxShadow:newAccColor===c?`0 0 10px ${c}`:'none'}}/>
               ))}
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-              <button onClick={()=>setShowAddAccount(false)} style={{padding:11,background:'transparent',border:`1px solid ${G.border}`,borderRadius:9,color:G.muted,fontSize:13,cursor:'pointer',fontFamily:'Outfit'}}>Cancelar</button>
-              <button onClick={addAccount} disabled={!newAccName.trim()} style={{padding:11,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Outfit',opacity:!newAccName.trim()?0.5:1}}>Crear</button>
+              <button onClick={()=>setShowAddAccount(false)} style={{padding:11,background:'transparent',border:`1px solid ${G.border}`,borderRadius:9,color:G.muted,fontSize:13,cursor:'pointer',fontFamily:G.fontUi}}>Cancelar</button>
+              <button onClick={addAccount} disabled={!newAccName.trim()} style={{padding:11,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi,opacity:!newAccName.trim()?0.5:1}}>Crear</button>
             </div>
           </div>
         </div>
@@ -1188,7 +1209,7 @@ export default function DashboardClient() {
       {showObjModal&&(
         <div onClick={e=>e.target===e.currentTarget&&setShowObjModal(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',padding:20,backdropFilter:'blur(4px)'}}>
           <div style={{background:G.card,border:`1px solid ${G.border2}`,borderRadius:16,padding:24,width:'100%',maxWidth:400}}>
-            <div style={{fontSize:16,fontWeight:700,fontFamily:'Outfit',marginBottom:18}}>{editObj?'Editar':'Nuevo'} Objetivo</div>
+            <div style={{fontSize:16,fontWeight:700,fontFamily:G.fontUi,marginBottom:18}}>{editObj?'Editar':'Nuevo'} Objetivo</div>
             <div style={{marginBottom:12}}>
               <label style={lbl}>NOMBRE DEL OBJETIVO</label>
               <input value={objLabel} onChange={e=>setObjLabel(e.target.value)} placeholder="Ej: 5% este mes" style={inp}/>
@@ -1206,8 +1227,8 @@ export default function DashboardClient() {
               </div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-              <button onClick={()=>setShowObjModal(false)} style={{padding:11,background:'transparent',border:`1px solid ${G.border}`,borderRadius:9,color:G.muted,fontSize:13,cursor:'pointer',fontFamily:'Outfit'}}>Cancelar</button>
-              <button onClick={saveObj} style={{padding:11,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Outfit'}}>Guardar</button>
+              <button onClick={()=>setShowObjModal(false)} style={{padding:11,background:'transparent',border:`1px solid ${G.border}`,borderRadius:9,color:G.muted,fontSize:13,cursor:'pointer',fontFamily:G.fontUi}}>Cancelar</button>
+              <button onClick={saveObj} style={{padding:11,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi}}>Guardar</button>
             </div>
           </div>
         </div>
@@ -1218,25 +1239,25 @@ export default function DashboardClient() {
         <div onClick={e=>e.target===e.currentTarget&&setModalTrade(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',padding:20,backdropFilter:'blur(4px)'}}>
           <div style={{background:G.card,border:`1px solid ${G.border2}`,borderRadius:16,padding:22,width:'100%',maxWidth:480,maxHeight:'85vh',overflowY:'auto',boxShadow:`0 0 40px ${G.accent}12`}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-              <div><div style={{fontSize:16,fontWeight:700,color:G.accent,fontFamily:'Outfit'}}>{modalTrade.pair}</div><div style={{fontSize:11,color:G.muted}}>{modalTrade.date} · {modalTrade.time} · {modalTrade.tf}</div></div>
+              <div><div style={{fontSize:16,fontWeight:700,color:G.accent,fontFamily:G.fontUi}}>{modalTrade.pair}</div><div style={{fontSize:11,color:G.muted}}>{modalTrade.date} · {modalTrade.time} · {modalTrade.tf}</div></div>
               <button onClick={()=>setModalTrade(null)} style={{width:30,height:30,borderRadius:8,border:`1px solid ${G.border}`,background:G.card2,color:G.muted,cursor:'pointer',fontSize:15}}>✕</button>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
               {[{l:'Resultado',v:modalTrade.res.toUpperCase(),c:modalTrade.res==='win'?G.green:modalTrade.res==='loss'?G.red:G.purple},{l:'P&L',v:fmt(modalTrade.pnl),c:modalTrade.pnl>0?G.green:modalTrade.pnl<0?G.red:G.purple},{l:'Dirección',v:modalTrade.dir==='buy'?'▲ LONG':'▼ SHORT',c:modalTrade.dir==='buy'?G.green:G.red},{l:'R:R',v:modalTrade.rr,c:G.gold},{l:'Riesgo',v:modalTrade.risk+'€',c:G.red},{l:'R obtenido',v:modalTrade.rreal||'—',c:G.green}].map(s=>(
                 <div key={s.l} style={{background:G.card2,borderRadius:9,padding:'10px 12px',border:`1px solid ${G.border}`}}>
-                  <div style={{fontFamily:'monospace',fontSize:8,letterSpacing:'0.12em',color:G.muted,marginBottom:4,textTransform:'uppercase'}}>{s.l}</div>
-                  <div style={{fontFamily:'Outfit',fontSize:15,fontWeight:700,color:s.c}}>{s.v}</div>
+                  <div style={{fontFamily:G.fontData,fontSize:8,letterSpacing:'0.12em',color:G.muted,marginBottom:4,textTransform:'uppercase'}}>{s.l}</div>
+                  <div style={{fontFamily:G.fontUi,fontSize:15,fontWeight:700,color:s.c}}>{s.v}</div>
                 </div>
               ))}
             </div>
-            {modalTrade.entry>0&&<div style={{background:G.card2,borderRadius:9,padding:'10px 12px',fontFamily:'monospace',fontSize:11,lineHeight:2,marginBottom:10,border:`1px solid ${G.border}`}}>Entry: <span style={{color:G.gold}}>{modalTrade.entry}</span> · SL: <span style={{color:G.red}}>{modalTrade.sl}</span> · TP: <span style={{color:G.green}}>{modalTrade.tp}</span></div>}
-            {modalTrade.conf.length>0&&<div style={{marginBottom:10}}><div style={{fontFamily:'monospace',fontSize:8,color:G.muted,marginBottom:5,textTransform:'uppercase',letterSpacing:'0.1em'}}>Confluencias</div><div style={{display:'flex',flexWrap:'wrap',gap:4}}>{modalTrade.conf.map(c=><span key={c} style={{padding:'4px 10px',background:`${G.accent}10`,border:`1px solid ${G.border}`,borderRadius:12,fontSize:11,color:G.accent}}>{c}</span>)}</div></div>}
+            {modalTrade.entry>0&&<div style={{background:G.card2,borderRadius:9,padding:'10px 12px',fontFamily:G.fontData,fontSize:11,lineHeight:2,marginBottom:10,border:`1px solid ${G.border}`}}>Entry: <span style={{color:G.gold}}>{modalTrade.entry}</span> · SL: <span style={{color:G.red}}>{modalTrade.sl}</span> · TP: <span style={{color:G.green}}>{modalTrade.tp}</span></div>}
+            {modalTrade.conf.length>0&&<div style={{marginBottom:10}}><div style={{fontFamily:G.fontData,fontSize:8,color:G.muted,marginBottom:5,textTransform:'uppercase',letterSpacing:'0.1em'}}>Confluencias</div><div style={{display:'flex',flexWrap:'wrap',gap:4}}>{modalTrade.conf.map(c=><span key={c} style={{padding:'4px 10px',background:`${G.accent}10`,border:`1px solid ${G.border}`,borderRadius:12,fontSize:11,color:G.accent}}>{c}</span>)}</div></div>}
             <div style={{display:'flex',gap:16,marginBottom:10}}>
-              <div><div style={{fontFamily:'monospace',fontSize:8,color:G.muted,marginBottom:2,textTransform:'uppercase'}}>Emoción</div><span style={{fontSize:13}}>{modalTrade.emo||'—'}</span></div>
-              <div><div style={{fontFamily:'monospace',fontSize:8,color:G.muted,marginBottom:2,textTransform:'uppercase'}}>Plan</div><span style={{color:modalTrade.plan==='yes'?G.green:G.red,fontWeight:700,fontFamily:'Outfit'}}>{modalTrade.plan==='yes'?'✓ Sí':modalTrade.plan==='no'?'✕ No':'—'}</span></div>
+              <div><div style={{fontFamily:G.fontData,fontSize:8,color:G.muted,marginBottom:2,textTransform:'uppercase'}}>Emoción</div><span style={{fontSize:13}}>{modalTrade.emo||'—'}</span></div>
+              <div><div style={{fontFamily:G.fontData,fontSize:8,color:G.muted,marginBottom:2,textTransform:'uppercase'}}>Plan</div><span style={{color:modalTrade.plan==='yes'?G.green:G.red,fontWeight:700,fontFamily:G.fontUi}}>{modalTrade.plan==='yes'?'✓ Sí':modalTrade.plan==='no'?'✕ No':'—'}</span></div>
             </div>
-            {modalTrade.notes&&<div style={{background:G.card2,borderRadius:9,padding:12,fontSize:12,color:G.muted2,lineHeight:1.7,marginBottom:12,border:`1px solid ${G.border}`,fontFamily:'Outfit'}}>{modalTrade.notes}</div>}
-            <button onClick={()=>deleteTrade(modalTrade.id)} style={{width:'100%',padding:11,background:`${G.red}15`,border:`1px solid ${G.red}50`,borderRadius:9,color:G.red,fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'Outfit'}}>Eliminar operación</button>
+            {modalTrade.notes&&<div style={{background:G.card2,borderRadius:9,padding:12,fontSize:12,color:G.muted2,lineHeight:1.7,marginBottom:12,border:`1px solid ${G.border}`,fontFamily:G.fontUi}}>{modalTrade.notes}</div>}
+            <button onClick={()=>deleteTrade(modalTrade.id)} style={{width:'100%',padding:11,background:`${G.red}15`,border:`1px solid ${G.red}50`,borderRadius:9,color:G.red,fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi}}>Eliminar operación</button>
           </div>
         </div>
       )}

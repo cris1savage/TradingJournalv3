@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 
 const G = {
-  card:'#112240', card2:'#162d4a', border:'rgba(100,160,255,0.12)',
-  accent:'#4d9fff', cyan:'#00e5ff', green:'#00e676', red:'#ff4081', gold:'#ffb300',
-  purple:'#7c4dff', text:'#e8f4ff', muted:'#4a7a9b', muted2:'#6b9cc7',
+  card:'#0c1628', card2:'#0f1e38', border:'rgba(0,180,255,0.1)',
+  accent:'#0066dd', cyan:'#00d4ff', green:'#00e676', red:'#ff3366', gold:'#f5a623',
+  purple:'#7c4dff', text:'#e8f0fe', muted:'#4a6a8a', muted2:'#8ba0bf',
 };
 
 type Trade = { date: string; res: string; plan: string|null; pnl: number; emo: string; pair: string; };
@@ -32,8 +32,8 @@ const getWeek = () => {
   return d.getUTCFullYear() + '-W' + Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7).toString().padStart(2,'0');
 };
 
-const inp: React.CSSProperties = { background: G.card2, border: `1px solid ${G.border}`, borderRadius: 8, padding: '10px 13px', color: G.text, fontFamily: 'Outfit,sans-serif', fontSize: 13, width: '100%', outline: 'none', resize: 'vertical' as const, minHeight: 70, lineHeight: 1.6 };
-const lbl: React.CSSProperties = { fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: G.muted, display: 'block', marginBottom: 6 };
+const inp: React.CSSProperties = { background: G.card2, border: `1px solid ${G.border}`, borderRadius: 8, padding: '10px 13px', color: G.text, fontFamily: "'Inter',sans-serif", fontSize: 13, width: '100%', outline: 'none', resize: 'vertical' as const, minHeight: 70, lineHeight: 1.6 };
+const lbl: React.CSSProperties = { fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: G.muted, display: 'block', marginBottom: 6 };
 
 export default function RevisionSemanal({ trades }: { trades: Trade[] }) {
   const [revisiones, setRevisiones] = useState<Record<string, Revision>>({});
@@ -97,8 +97,8 @@ export default function RevisionSemanal({ trades }: { trades: Trade[] }) {
           { l: 'Sin plan', v: sinPlan>0?`${sinPlan} trade${sinPlan>1?'s':''}✕`:'✓ Todos con plan', c: sinPlan>0?G.red:G.green },
         ].map(s=>(
           <div key={s.l} style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 10, padding: '12px 14px' }}>
-            <div style={{ fontFamily: 'monospace', fontSize: 8, color: G.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 5 }}>{s.l}</div>
-            <div style={{ fontFamily: 'monospace', fontSize: 15, fontWeight: 700, color: s.c }}>{s.v}</div>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: G.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 5 }}>{s.l}</div>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 15, fontWeight: 700, color: s.c }}>{s.v}</div>
           </div>
         ))}
       </div>
@@ -106,14 +106,14 @@ export default function RevisionSemanal({ trades }: { trades: Trade[] }) {
       {rev.completada ? (
         <div style={{ background: `${G.green}10`, border: `1px solid ${G.green}30`, borderRadius: 14, padding: '24px', textAlign: 'center', marginBottom: 14 }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: G.green, fontFamily: 'Outfit,sans-serif', marginBottom: 4 }}>Revisión completada esta semana</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: G.green, fontFamily: "'Inter',sans-serif", marginBottom: 4 }}>Revisión completada esta semana</div>
           <div style={{ fontSize: 12, color: G.muted }}>Tu nota: <strong style={{color:G.gold}}>{rev.nota}/10</strong></div>
-          <button onClick={() => update('completada', false)} style={{ marginTop: 12, padding: '7px 14px', background: 'transparent', border: `1px solid ${G.border}`, borderRadius: 7, color: G.muted, fontSize: 11, cursor: 'pointer', fontFamily: 'Outfit,sans-serif' }}>Editar revisión</button>
+          <button onClick={() => update('completada', false)} style={{ marginTop: 12, padding: '7px 14px', background: 'transparent', border: `1px solid ${G.border}`, borderRadius: 7, color: G.muted, fontSize: 11, cursor: 'pointer', fontFamily: "'Inter',sans-serif" }}>Editar revisión</button>
         </div>
       ) : (
         <div>
           <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 14, padding: 20, marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit,sans-serif', marginBottom: 4 }}>📝 Revisión Semanal — {week}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Inter',sans-serif", marginBottom: 4 }}>📝 Revisión Semanal — {week}</div>
             <div style={{ fontSize: 11, color: G.muted, marginBottom: 18 }}>Dedica 10 minutos. Es la herramienta de mejora más poderosa que existe en trading.</div>
 
             {PREGUNTAS.map(q => (
@@ -127,7 +127,7 @@ export default function RevisionSemanal({ trades }: { trades: Trade[] }) {
             <div style={{ marginBottom: 18 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <label style={lbl}>NOTA A TU SEMANA</label>
-                <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: rev.nota >= 7 ? G.green : rev.nota >= 5 ? G.gold : G.red }}>{rev.nota}/10</span>
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: rev.nota >= 7 ? G.green : rev.nota >= 5 ? G.gold : G.red }}>{rev.nota}/10</span>
               </div>
               <input type="range" min="1" max="10" value={rev.nota} onChange={e=>update('nota', parseInt(e.target.value))} style={{ width: '100%', accentColor: G.accent }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
@@ -136,7 +136,7 @@ export default function RevisionSemanal({ trades }: { trades: Trade[] }) {
               </div>
             </div>
 
-            <button onClick={completar} disabled={!rev.q1 || !rev.q5} style={{ width: '100%', padding: '13px', background: rev.q1 && rev.q5 ? `linear-gradient(135deg,${G.accent},${G.cyan})` : G.card2, border: 'none', borderRadius: 10, color: rev.q1 && rev.q5 ? '#05111e' : G.muted, fontSize: 14, fontWeight: 700, cursor: rev.q1 && rev.q5 ? 'pointer' : 'not-allowed', fontFamily: 'Outfit,sans-serif', transition: 'all 0.2s' }}>
+            <button onClick={completar} disabled={!rev.q1 || !rev.q5} style={{ width: '100%', padding: '13px', background: rev.q1 && rev.q5 ? `linear-gradient(135deg,${G.accent},${G.cyan})` : G.card2, border: 'none', borderRadius: 10, color: rev.q1 && rev.q5 ? '#05111e' : G.muted, fontSize: 14, fontWeight: 700, cursor: rev.q1 && rev.q5 ? 'pointer' : 'not-allowed', fontFamily: "'Inter',sans-serif", transition: 'all 0.2s' }}>
               {!rev.q1 ? 'Rellena al menos la primera pregunta para completar' : !rev.q5 ? 'Añade qué vas a cambiar para completar' : '✓ Marcar revisión como completada'}
             </button>
           </div>
@@ -147,18 +147,18 @@ export default function RevisionSemanal({ trades }: { trades: Trade[] }) {
       {historyEntries.length > 0 && (
         <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 14, overflow: 'hidden' }}>
           <div style={{ padding: '13px 18px', borderBottom: `1px solid ${G.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'Outfit,sans-serif' }}>📚 Revisiones anteriores</div>
-            <button onClick={()=>setShowHistory(!showHistory)} style={{ fontSize: 11, color: G.accent, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'monospace' }}>{showHistory?'Ocultar ↑':'Ver ↓'}</button>
+            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Inter',sans-serif" }}>📚 Revisiones anteriores</div>
+            <button onClick={()=>setShowHistory(!showHistory)} style={{ fontSize: 11, color: G.accent, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'JetBrains Mono',monospace" }}>{showHistory?'Ocultar ↑':'Ver ↓'}</button>
           </div>
           {showHistory && historyEntries.map(r => (
             <div key={r.week} style={{ padding: '13px 18px', borderBottom: `1px solid ${G.border}`, display: 'grid', gridTemplateColumns: '100px 1fr 50px', gap: 12, alignItems: 'start' }}>
-              <div style={{ fontFamily: 'monospace', fontSize: 11, color: G.muted }}>{r.week}</div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: G.muted }}>{r.week}</div>
               <div>
                 {r.q1 && <div style={{ fontSize: 11, color: G.muted2, marginBottom: 2 }}>✅ {r.q1.slice(0,80)}{r.q1.length>80?'...':''}</div>}
                 {r.q5 && <div style={{ fontSize: 11, color: G.muted2 }}>🔄 {r.q5.slice(0,80)}{r.q5.length>80?'...':''}</div>}
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 700, color: r.nota>=7?G.green:r.nota>=5?G.gold:G.red }}>{r.nota}</div>
+                <div style={{ fontFamily: "'Inter',sans-serif", fontSize: 16, fontWeight: 700, color: r.nota>=7?G.green:r.nota>=5?G.gold:G.red }}>{r.nota}</div>
                 <div style={{ fontSize: 9, color: G.muted }}>/10</div>
               </div>
             </div>
