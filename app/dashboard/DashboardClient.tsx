@@ -877,6 +877,16 @@ export default function DashboardClient() {
         )}
 
         {/* ─── NOTICIAS ─── */}
+        {page==='calendario'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>📰 Calendario Económico</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Eventos de alto impacto · XAU/USD & NAS100 · Horario España</div>
+            </div>
+            <CalendarioEconomico />
+          </div>
+        )}
+
         {page==='noticias'&&(
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}><div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>Noticias & Mercados</div><div style={{fontSize:12,color:G.muted}}>TradingView en tiempo real · En español</div></div>
