@@ -35,10 +35,12 @@ const fmtA = (n: number) => n.toFixed(2) + '€';
 const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
 
 const G = {
-  bg: '#0b1a2e', sb: '#0d1f38', card: '#112240', card2: '#162d4a',
-  border: 'rgba(100,160,255,0.12)', border2: 'rgba(0,229,255,0.3)',
-  accent: '#4d9fff', cyan: '#00e5ff', green: '#00e676', red: '#ff4081',
-  gold: '#ffb300', purple: '#7c4dff', text: '#e8f4ff', muted: '#4a7a9b', muted2: '#6b9cc7',
+  bg:'#050a12', sb:'#080f1e', card:'#0c1628', card2:'#0f1e38', card3:'#132240',
+  border:'rgba(0,180,255,0.1)', border2:'rgba(0,180,255,0.22)', border3:'rgba(0,212,255,0.4)',
+  accent:'#0066dd', cyan:'#00d4ff', green:'#00e676', red:'#ff3366', gold:'#f5a623', purple:'#a78bfa',
+  text:'#e8f0fe', muted:'#4a6a8a', muted2:'#8ba0bf',
+  fontData:"'JetBrains Mono',monospace" as string,
+  fontUi:"'Inter',sans-serif" as string,
 };
 
 function useCounter(target: number, dur = 1000) {
