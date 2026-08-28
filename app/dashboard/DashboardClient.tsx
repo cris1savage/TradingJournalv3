@@ -15,6 +15,8 @@ import ImportadorMT5 from './ImportadorMT5';
 import RevisionSemanal from './RevisionSemanal';
 import LogrosClient from './LogrosClient';
 import SeguimientoClient from './SeguimientoClient';
+import CalendarioEconomico from './CalendarioEconomico';
+import RendimientoSemanas from './RendimientoSemanas';
 import ObjetivosRiesgo from './ObjetivosRiesgo';
 import NotificacionesPanel from './NotificacionesPanel';
 
@@ -22,7 +24,7 @@ type Trade = { id: number; date: string; time: string; pair: string; tf: string;
 type Capital = { initial: number; aportaciones: { id: number; date: string; amount: number; desc: string }[]; };
 type Objetivo = { id: number; label: string; target: number; current: number; color: string; };
 type Account = { id: string; name: string; icon: string; color: string; };
-type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio' | 'diario' | 'calculadora' | 'importar' | 'revision' | 'logros' | 'seguimiento' | 'riesgo';
+type Page = 'dashboard' | 'nuevo' | 'historial' | 'capital' | 'noticias' | 'rendimiento' | 'objetivos' | 'analisis' | 'coach' | 'grafico' | 'informes' | 'alertas' | 'patrimonio' | 'diario' | 'calculadora' | 'importar' | 'revision' | 'logros' | 'seguimiento' | 'riesgo' | 'semanas' | 'calendario';
 
 const DEFAULT_ACCOUNTS: Account[] = [
   { id: 'propia', name: 'Cuenta Propia', icon: '💼', color: '#00e5ff' },
@@ -54,45 +56,20 @@ function useCounter(target: number, dur = 1000) {
 }
 
 const Logo = () => (
-  <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
-    {/* Background with subtle inner glow */}
-    <rect width="46" height="46" rx="13" fill="#060f1e"/>
-    <rect width="46" height="46" rx="13" fill="url(#lgInner)" opacity="0.6"/>
-    {/* Glowing border */}
-    <rect x="0.75" y="0.75" width="44.5" height="44.5" rx="12.25" stroke="url(#lgBorder)" strokeWidth="1.5" fill="none"/>
-    {/* S letter - bold, left */}
-    <text x="11" y="30" fontFamily="'Arial Black',Impact,'Helvetica Neue',sans-serif" fontSize="20" fontWeight="900" fill="url(#lgS)">S</text>
-    {/* T letter - bold, right, slightly offset */}
-    <text x="26" y="30" fontFamily="'Arial Black',Impact,'Helvetica Neue',sans-serif" fontSize="20" fontWeight="900" fill="url(#lgT)">T</text>
-    {/* Thin accent line below */}
-    <rect x="8" y="33.5" width="30" height="1.5" rx="0.75" fill="url(#lgLine)"/>
-    {/* Top right glow dot */}
-    <circle cx="40" cy="9" r="2.5" fill="#00e5ff" opacity="0.9" style={{filter:'blur(0.5px)'}}/>
-    <circle cx="40" cy="9" r="5" fill="#00e5ff" opacity="0.15"/>
-    <defs>
-      <linearGradient id="lgInner" x1="0" y1="0" x2="46" y2="46">
-        <stop offset="0%" stopColor="#1a3a6e" stopOpacity="0.4"/>
-        <stop offset="100%" stopColor="#00e5ff" stopOpacity="0.05"/>
-      </linearGradient>
-      <linearGradient id="lgBorder" x1="0" y1="0" x2="46" y2="46">
-        <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.9"/>
-        <stop offset="40%" stopColor="#4d9fff" stopOpacity="0.6"/>
-        <stop offset="100%" stopColor="#4d9fff" stopOpacity="0.1"/>
-      </linearGradient>
-      <linearGradient id="lgS" x1="0" y1="10" x2="0" y2="30" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#ffffff"/>
-        <stop offset="100%" stopColor="#4d9fff"/>
-      </linearGradient>
-      <linearGradient id="lgT" x1="0" y1="10" x2="0" y2="30" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#00e5ff"/>
-        <stop offset="100%" stopColor="#4d9fff"/>
-      </linearGradient>
-      <linearGradient id="lgLine" x1="8" y1="0" x2="38" y2="0" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#4d9fff" stopOpacity="0.2"/>
-        <stop offset="40%" stopColor="#00e5ff"/>
-        <stop offset="100%" stopColor="#4d9fff" stopOpacity="0.2"/>
-      </linearGradient>
-    </defs>
+  <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+    <rect width="44" height="44" rx="12" fill="#06101e"/>
+    {/* Hexagon */}
+    <polygon points="22,4 38,13 38,31 22,40 6,31 6,13" fill="#060e1c" stroke="#00d4ff" strokeWidth="1.4" strokeOpacity="0.7"/>
+    {/* Inner hex glow */}
+    <polygon points="22,4 38,13 38,31 22,40 6,31 6,13" fill="none" stroke="#00d4ff" strokeWidth="0.4" strokeOpacity="0.25"/>
+    {/* S */}
+    <text x="9" y="28" fontFamily="'Inter','Arial Black',sans-serif" fontSize="17" fontWeight="900" fill="#00d4ff">S</text>
+    {/* T */}
+    <text x="24" y="28" fontFamily="'Inter','Arial Black',sans-serif" fontSize="17" fontWeight="900" fill="#0066aa">T</text>
+    {/* Accent line */}
+    <line x1="9" y1="31" x2="35" y2="31" stroke="#00d4ff" strokeWidth="1.5" strokeLinecap="square"/>
+    {/* Dot */}
+    <rect x="36" y="28" width="4" height="4" fill="#00d4ff"/>
   </svg>
 );
 
@@ -369,7 +346,7 @@ export default function DashboardClient() {
 
   const navItems: [Page,string,string][] = mobile
     ? [['dashboard','◉','Inicio'],['nuevo','⊕','Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Semáforo'],['seguimiento','📡','Seguim.'],['riesgo','🛡️','Riesgo'],['alertas','🔔','Alertas'],['coach','🤖','Coach'],['patrimonio','💎','Patrimonio']]
-    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Diario'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio'],['seguimiento','📡','Seguimiento'],['riesgo','🛡️','Riesgo'],['logros','🏆','Logros'],['calculadora','🧮','Calculadora'],['importar','📥','Importar MT5'],['revision','📝','Revisión']];
+    : [['dashboard','◉','Dashboard'],['nuevo','⊕','Nuevo Trade'],['historial','≡','Historial'],['capital','◈','Capital'],['diario','🚦','Diario'],['noticias','⚡','Noticias'],['rendimiento','📈','Rendimiento'],['analisis','🔬','Análisis'],['coach','🤖','IA Coach'],['grafico','🖼️','Gráfico IA'],['informes','📄','Informes'],['alertas','🔔','Alertas'],['objetivos','🎯','Objetivos'],['patrimonio','💎','Patrimonio'],['seguimiento','📡','Seguimiento'],['semanas','📅','Semanas'],['riesgo','🛡️','Riesgo'],['logros','🏆','Logros'],['calculadora','🧮','Calculadora'],['calendario','📰','Calendario'],['importar','📥','Importar MT5'],['revision','📝','Revisión']];
 
   if(loading) return(
     <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
@@ -494,7 +471,7 @@ export default function DashboardClient() {
           <div style={{padding:'10px 12px 16px',borderTop:`1px solid ${G.border}`,flexShrink:0}}>
             <div style={{background:G.bg,border:`1px solid ${G.border2}`,borderRadius:11,padding:'12px 14px',marginBottom:10}}>
               <div style={{fontFamily:G.fontData,fontSize:8,color:G.muted,letterSpacing:'0.15em',marginBottom:4}}>BALANCE ACTUAL</div>
-              <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(animBalance)}</div>
+              <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:'#00d4ff'}}>{fmtA(animBalance)}</div>
               <div style={{display:'flex',alignItems:'center',gap:4,marginTop:3}}>
                 <div style={{width:5,height:5,borderRadius:'50%',background:totalPnl>=0?G.green:G.red,boxShadow:`0 0 5px ${totalPnl>=0?G.green:G.red}`}}/>
                 <span style={{fontSize:10,color:totalPnl>=0?G.green:G.red,fontFamily:G.fontUi,fontWeight:600}}>{fmt(totalPnl)} P&L</span>
@@ -523,7 +500,7 @@ export default function DashboardClient() {
                   <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:20,cursor:'pointer',fontFamily:G.fontUi,fontSize:11,fontWeight:600,color:activeAccount.color}}>
                     <span>{activeAccount.icon}</span><span>{activeAccount.name}</span><span style={{fontSize:9,color:G.muted}}>▾</span>
                   </button>
-                  <div style={{fontFamily:G.fontUi,fontSize:16,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(balance)}</div>
+                  <div style={{fontFamily:G.fontUi,fontSize:16,fontWeight:800,color:'#00d4ff'}}>{fmtA(balance)}</div>
                 </div>
                 </div>
                 {showAccountPicker&&(
@@ -591,16 +568,57 @@ export default function DashboardClient() {
               <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:18,marginBottom:12}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
                   <div><div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>Curva de Capital</div><div style={{fontSize:11,color:G.muted}}>Evolución histórica</div></div>
-                  <span style={{fontFamily:G.fontUi,fontSize:13,fontWeight:700,color:balance>=capital.initial?G.green:G.red}}>{fmt(balance-capital.initial)}</span>
+                  <span style={{fontFamily:G.fontUi,fontSize:13,fontWeight:700,color:totalPnl>=0?G.green:G.red}}>{totalPnl>=0?'+':''}{(balance-capital.initial).toFixed(2)}€</span>
                 </div>
-                <div style={{height:160}}>
+                <div style={{height:mobile?140:170}}>
                   {curve.data.length>1
-                    ? <Line data={{labels:curve.labels,datasets:[{data:curve.data,borderColor:G.accent,backgroundColor:`${G.accent}10`,borderWidth:2.5,pointRadius:curve.data.length<15?4:0,pointBackgroundColor:G.accent,pointBorderColor:G.bg,pointBorderWidth:2,fill:true,tension:0.4}]}}
+                    ? <Line data={{labels:curve.labels,datasets:[{data:curve.data,borderColor:totalPnl>=0?'#00e676':'#ff3366',backgroundColor:totalPnl>=0?'rgba(0,230,118,0.06)':'rgba(255,51,102,0.06)',borderWidth:1.8,pointRadius:0,pointHoverRadius:3,fill:true,tension:0.08}]}}
                         options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:G.card2,titleColor:G.accent,bodyColor:G.text}},scales:{x:{ticks:{color:G.muted,font:{family:'monospace' as const,size:9},maxTicksLimit:6},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:G.muted,font:{family:'monospace' as const,size:9},callback:(v:unknown)=>String(v)+'€'},grid:{color:'rgba(255,255,255,0.03)'}}}}}/>
                     : <div style={{height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:G.muted,fontSize:12,flexDirection:'column',gap:8}}><span style={{fontSize:28}}>📊</span>Añade tu primer trade</div>}
                 </div>
               </div>
             )}
+
+            {/* WEEKLY PERFORMANCE MINI */}
+            {trades.length > 0 && (()=>{
+              const weekData = (() => {
+                const result: {label:string; pnl:number; pct:number; trades:number}[] = [];
+                const now = new Date();
+                for (let w = 3; w >= 0; w--) {
+                  const start = new Date(now); start.setDate(now.getDate() - now.getDay() + 1 - w*7);
+                  const end = new Date(start); end.setDate(start.getDate() + 6);
+                  const wTrades = trades.filter(t => { const d = new Date(t.date); return d >= start && d <= end; });
+                  const pnl = wTrades.reduce((s,t)=>s+t.pnl,0);
+                  result.push({ label: `Sem ${w===0?'actual':w===1?'-1':w===2?'-2':'-3'}`, pnl, pct: capital.initial>0?pnl/capital.initial*100:0, trades: wTrades.length });
+                }
+                return result;
+              })();
+              const maxAbs = Math.max(...weekData.map(w=>Math.abs(w.pnl)), 1);
+              return (
+                <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:'14px 16px',marginBottom:12}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+                    <div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>Rendimiento Semanal</div>
+                    <button onClick={()=>setPage('semanas')} style={{fontSize:10,color:G.cyan,background:'none',border:'none',cursor:'pointer',fontFamily:G.fontData}}>VER TODO →</button>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+                    {weekData.map((w,i)=>{
+                      const barH = Math.abs(w.pnl)/maxAbs*40;
+                      const isLast = i===3;
+                      return (
+                        <div key={i} style={{textAlign:'center'}}>
+                          <div style={{height:50,display:'flex',alignItems:'flex-end',justifyContent:'center',marginBottom:5}}>
+                            <div style={{width:'60%',height:`${Math.max(barH,2)}px`,background:w.pnl>=0?'#00e676':'#ff3366',borderRadius:'2px 2px 0 0',opacity:isLast?1:0.6,boxShadow:isLast&&w.pnl>=0?'0 0 8px rgba(0,230,118,0.4)':isLast&&w.pnl<0?'0 0 8px rgba(255,51,102,0.4)':'none',transition:'height 0.6s ease'}}/>
+                          </div>
+                          <div style={{fontFamily:G.fontData,fontSize:11,fontWeight:700,color:w.pnl>=0?'#00e676':'#ff3366'}}>{w.trades>0?(w.pnl>=0?'+':'')+w.pnl.toFixed(2)+'€':'—'}</div>
+                          <div style={{fontFamily:G.fontData,fontSize:9,color:isLast?G.cyan:G.muted,marginTop:2}}>{w.label}</div>
+                          {w.trades>0&&<div style={{fontFamily:G.fontData,fontSize:8,color:G.muted}}>{w.trades} ops</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* CALENDAR + RECENT */}
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr':'1fr 1fr',gap:10,marginBottom:12}}>
@@ -757,7 +775,7 @@ export default function DashboardClient() {
                   </div>
                   <div style={{background:G.card,border:`1px solid ${G.border2}`,borderRadius:12,padding:14}}>
                     <div style={{fontFamily:G.fontData,fontSize:9,color:G.muted,marginBottom:4}}>BALANCE ACTUAL</div>
-                    <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:balance>=capital.initial?G.green:G.red}}>{fmtA(balance)}</div>
+                    <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:'#00d4ff'}}>{fmtA(balance)}</div>
                   </div>
                 </div>
               )}
@@ -1109,6 +1127,17 @@ export default function DashboardClient() {
               <div style={{fontSize:12,color:G.muted,marginTop:2}}>Resumen · Por instrumento · Heatmap · Calendario P&L</div>
             </div>
             <SeguimientoClient trades={trades} />
+          </div>
+        )}
+
+        {/* ─── SEMANAS ─── */}
+        {page==='semanas'&&(
+          <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
+            <div style={{marginBottom:18}}>
+              <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>📅 Rendimiento por Semanas</div>
+              <div style={{fontSize:12,color:G.muted,marginTop:2}}>Agrupado por mes · Mejor y peor semana · Evolución semanal</div>
+            </div>
+            <RendimientoSemanas trades={trades} capitalInicial={capital.initial} />
           </div>
         )}
 

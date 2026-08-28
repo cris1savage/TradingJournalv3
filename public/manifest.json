@@ -1,19 +1,15 @@
 {
   "name": "Savage Trading Journal",
   "short_name": "ST Journal",
-  "description": "Tu diario de trading profesional — XAU/USD & NAS100",
+  "description": "Professional trading journal — XAU/USD & NAS100",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#060f1e",
-  "theme_color": "#0d1f38",
+  "background_color": "#050a12",
+  "theme_color": "#050a12",
   "orientation": "portrait-primary",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
-  "categories": ["finance", "productivity"],
-  "shortcuts": [
-    { "name": "Nuevo Trade", "url": "/dashboard", "description": "Registrar operación rápida" },
-    { "name": "Dashboard", "url": "/dashboard", "description": "Ver estadísticas" }
-  ]
+  "categories": ["finance", "productivity"]
 }
