@@ -12,27 +12,43 @@ export async function GET() {
     );
 
     if (!res.ok) throw new Error(`FMP error: ${res.status}`);
-    const raw = await res.json() as {date:string;country:string;event:string;impact:string;actual:string|null;estimate:string|null;previous:string|null}[];
+    const raw = await res.json() as Record<string,unknown>[];
 
-    const relevant = ['USD','EUR','GBP','JPY','CAD'];
+    // FMP uses different country/currency codes — map them all
+    const currencyMap: Record<string,string> = {
+      'US':'USD','United States':'USD','EUR':'EUR','EU':'EUR','European Union':'EUR',
+      'UK':'GBP','GB':'GBP','United Kingdom':'GBP','JP':'JPY','Japan':'JPY',
+      'CA':'CAD','Canada':'CAD','CH':'CHF','Switzerland':'CHF','AU':'AUD','Australia':'AUD',
+      'USD':'USD','EUR':'EUR','GBP':'GBP','JPY':'JPY','CAD':'CAD','CHF':'CHF','AUD':'AUD',
+    };
+
     const filtered = raw
-      .filter(e => relevant.includes((e.country||'').toUpperCase()))
-      .map(e => ({
-        fecha: (e.date||'').split(' ')[0],
-        hora: (e.date||'').split(' ')[1]?.slice(0,5) || '00:00',
-        moneda: (e.country||'USD').toUpperCase(),
-        impacto: e.impact === 'High' ? 'HIGH' : e.impact === 'Medium' ? 'MEDIUM' : 'LOW',
-        titulo: e.event || '',
-        actual: e.actual || null,
-        estimado: e.estimate || null,
-        previo: e.previous || null,
-        restringido: e.impact === 'High',
-      }))
+      .map(e => {
+        const country = String(e.country || e.currency || '');
+        const moneda = currencyMap[country] || country.toUpperCase().slice(0,3);
+        const impact = String(e.impact || e.importance || '');
+        const impacto = impact === 'High' || impact === 'high' || impact === '3' ? 'HIGH'
+          : impact === 'Medium' || impact === 'medium' || impact === '2' ? 'MEDIUM' : 'LOW';
+        const dateStr = String(e.date || '');
+        return {
+          fecha: dateStr.split(' ')[0] || dateStr.split('T')[0] || '',
+          hora: dateStr.includes(' ') ? dateStr.split(' ')[1]?.slice(0,5) || '00:00'
+            : dateStr.includes('T') ? dateStr.split('T')[1]?.slice(0,5) || '00:00' : '00:00',
+          moneda,
+          impacto,
+          titulo: String(e.event || e.name || e.title || ''),
+          actual: e.actual != null ? String(e.actual) : null,
+          estimado: e.estimate != null ? String(e.estimate) : null,
+          previo: e.previous != null ? String(e.previous) : null,
+          restringido: impacto === 'HIGH',
+        };
+      })
+      .filter(e => e.titulo && e.fecha)
       .sort((a,b) => a.fecha.localeCompare(b.fecha) || a.hora.localeCompare(b.hora));
 
     return NextResponse.json(filtered);
   } catch(e) {
-    console.error(e);
+    console.error('Economic calendar error:', e);
     return NextResponse.json([]);
   }
 }

@@ -64,7 +64,10 @@ export default function CalendarioEconomico() {
 
   const today = new Date().toISOString().split('T')[0];
 
+  // Filter client side - show all currencies but filter on demand
+  const MONEDAS_RELEVANTES = ['USD','EUR','GBP','JPY','CAD','CHF','AUD'];
   const filtered = eventos.filter(e => {
+    if (!MONEDAS_RELEVANTES.includes(e.moneda)) return false;
     if (filtroImpacto !== 'ALL' && e.impacto !== filtroImpacto) return false;
     if (filtroMoneda !== 'ALL' && e.moneda !== filtroMoneda) return false;
     return true;
