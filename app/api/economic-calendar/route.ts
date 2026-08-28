@@ -16,10 +16,14 @@ export async function GET() {
 
     // FMP uses different country/currency codes — map them all
     const currencyMap: Record<string,string> = {
-      'US':'USD','United States':'USD','EUR':'EUR','EU':'EUR','European Union':'EUR',
-      'UK':'GBP','GB':'GBP','United Kingdom':'GBP','JP':'JPY','Japan':'JPY',
-      'CA':'CAD','Canada':'CAD','CH':'CHF','Switzerland':'CHF','AU':'AUD','Australia':'AUD',
-      'USD':'USD','EUR':'EUR','GBP':'GBP','JPY':'JPY','CAD':'CAD','CHF':'CHF','AUD':'AUD',
+      'US':'USD','United States':'USD',
+      'EU':'EUR','European Union':'EUR','DE':'EUR','FR':'EUR','IT':'EUR','ES':'EUR',
+      'UK':'GBP','GB':'GBP','United Kingdom':'GBP',
+      'JP':'JPY','Japan':'JPY',
+      'CA':'CAD','Canada':'CAD',
+      'CH':'CHF','Switzerland':'CHF',
+      'AU':'AUD','Australia':'AUD',
+      'NZ':'NZD','New Zealand':'NZD',
     };
 
     const filtered = raw
