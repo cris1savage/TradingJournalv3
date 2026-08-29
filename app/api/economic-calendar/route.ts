@@ -4,57 +4,85 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const from = searchParams.get('from') || new Date().toISOString().split('T')[0];
-    const toDate = new Date(from);
+    const toDate = new Date(from + 'T12:00:00');
     toDate.setDate(toDate.getDate() + 7);
     const to = toDate.toISOString().split('T')[0];
 
-    const url = `https://financialmodelingprep.com/api/v3/economic_calendar?from=${from}&to=${to}&apikey=${process.env.FMP_API_KEY}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    const raw = await res.json();
+    // Investing.com economic calendar - server side fetch bypasses CORS
+    const res = await fetch(
+      `https://economic-calendar.investing.com/economic-calendar/Service/getCalendarFilteredData`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': 'https://es.investing.com/economic-calendar/',
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+          'Accept': 'application/json, text/javascript, */*; q=0.01',
+          'Accept-Language': 'es-ES,es;q=0.9',
+          'Origin': 'https://es.investing.com',
+        },
+        body: new URLSearchParams({
+          'country[]': ['5', '22', '6', '25', '32', '17'].join('&country[]='),
+          dateFrom: from,
+          dateTo: to,
+          timeZone: '18',
+          timeFilter: 'timeRemain',
+          currentTab: 'custom',
+          limit_from: '0',
+        }).toString(),
+        cache: 'no-store',
+      }
+    );
 
-    if (!Array.isArray(raw)) return NextResponse.json([]);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
 
-    const currencyMap: Record<string,string> = {
-      'US':'USD','United States':'USD',
-      'EU':'EUR','European Union':'EUR','DE':'EUR','FR':'EUR','IT':'EUR','ES':'EUR',
-      'UK':'GBP','GB':'GBP','United Kingdom':'GBP',
-      'JP':'JPY','Japan':'JPY',
-      'CA':'CAD','Canada':'CAD',
-      'CH':'CHF','Switzerland':'CHF',
-      'AU':'AUD','Australia':'AUD',
-      'NZ':'NZD','CN':'CNY','China':'CNY',
-    };
+    // Try to parse - Investing returns HTML rows
+    const events: {fecha:string;hora:string;moneda:string;impacto:string;titulo:string;actual:string|null;estimado:string|null;previo:string|null;restringido:boolean}[] = [];
 
-    const filtered = (raw as Record<string,unknown>[])
-      .map(e => {
-        const country = String(e.country || e.currency || '');
-        const moneda = currencyMap[country] || (country.length <= 4 ? country.toUpperCase() : null);
-        if (!moneda) return null;
-        const impact = String(e.impact || '');
-        const impacto = impact === 'High' ? 'HIGH' : impact === 'Medium' ? 'MEDIUM' : 'LOW';
-        const dateStr = String(e.date || '');
-        const sep = dateStr.includes('T') ? 'T' : ' ';
-        const [datePart, timePart] = dateStr.split(sep);
-        return {
-          fecha: datePart || '',
-          hora: (timePart || '00:00').slice(0,5),
-          moneda,
+    // Parse the HTML table rows
+    const rowRegex = /<tr[^>]*id="eventRowId_(\d+)"[^>]*data-importance="(\d+)"[^>]*>([\s\S]*?)<\/tr>/g;
+    const tdRegex = /<td[^>]*class="[^"]*"[^>]*>([\s\S]*?)<\/td>/g;
+
+    let match;
+    while ((match = rowRegex.exec(text)) !== null) {
+      const importance = parseInt(match[2]);
+      const rowHtml = match[3];
+      
+      // Extract cells
+      const cells: string[] = [];
+      let tdMatch;
+      const tdRe = /<td[^>]*>([\s\S]*?)<\/td>/g;
+      while ((tdMatch = tdRe.exec(rowHtml)) !== null) {
+        cells.push(tdMatch[1].replace(/<[^>]+>/g, '').trim());
+      }
+
+      if (cells.length >= 4) {
+        const impacto = importance >= 3 ? 'HIGH' : importance >= 2 ? 'MEDIUM' : 'LOW';
+        events.push({
+          fecha: from, // approximate - would need date parsing
+          hora: cells[0] || '00:00',
+          moneda: cells[1] || 'USD',
           impacto,
-          titulo: String(e.event || ''),
-          actual: e.actual != null ? String(e.actual) : null,
-          estimado: e.estimate != null ? String(e.estimate) : null,
-          previo: e.previous != null ? String(e.previous) : null,
-          restringido: impacto === 'HIGH',
-        };
-      })
-      .filter(Boolean)
-      .sort((a: unknown,b: unknown) => {
-        const ea = a as {fecha:string;hora:string};
-        const eb = b as {fecha:string;hora:string};
-        return ea.fecha.localeCompare(eb.fecha) || ea.hora.localeCompare(eb.hora);
-      });
+          titulo: cells[3] || '',
+          actual: cells[4] || null,
+          estimado: cells[5] || null,
+          previo: cells[6] || null,
+          restringido: importance >= 3,
+        });
+      }
+    }
 
-    return NextResponse.json(filtered);
+    if (events.length > 0) return NextResponse.json(events);
+
+    // Fallback: try JSON response
+    try {
+      const json = JSON.parse(text);
+      if (json.data) return NextResponse.json(json.data);
+    } catch { /* not JSON */ }
+
+    return NextResponse.json([]);
   } catch(e) {
     console.error('Calendar error:', e);
     return NextResponse.json([]);

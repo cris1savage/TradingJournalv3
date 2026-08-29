@@ -267,7 +267,7 @@ button:active:not(:disabled) { transform: scale(0.97); }
   display: none;
   padding-bottom: max(8px, env(safe-area-inset-bottom));
 }
-@media (max-width: 768px) { .bottom-nav { display: block; } }
+@media (max-width: 768px) { .bottom-nav { display: none !important; } }
 
 .bottom-nav-scroll { display: flex; overflow-x: auto; scrollbar-width: none; }
 .bottom-nav-scroll::-webkit-scrollbar { display: none; }
