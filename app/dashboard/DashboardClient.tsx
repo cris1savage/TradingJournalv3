@@ -140,7 +140,7 @@ function FloatingMenu({ page, setPage, navItems }: {
   const G = {
     bg:'#0a0a0a', card:'#1a1a1a', card2:'#202020',
     border:'rgba(255,255,255,0.06)', border2:'rgba(0,255,136,0.25)',
-    cyan:'#00ff88', text:'#ffffff', muted:'#666666', muted2:'#aaaaaa',
+    cyan:'#00ff88', green:'#00ff88', text:'#ffffff', muted:'#666666', muted2:'#aaaaaa',
     fontData:"'JetBrains Mono',monospace" as string,
     fontUi:"'Inter',sans-serif" as string,
   };
