@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 
 const G = {
-  card:'#0c1628', card2:'#0f1e38', surface:'#080f1e',
-  border:'rgba(0,180,255,0.1)', border2:'rgba(0,180,255,0.22)',
-  cyan:'#00d4ff', green:'#00e676', red:'#ff3366', gold:'#f5a623',
-  text:'#e8f0fe', muted:'#4a6a8a', muted2:'#8ba0bf',
+  card:'#1a1a1a', card2:'#202020', surface:'#0f0f0f',
+  border:'rgba(255,255,255,0.06)', border2:'rgba(255,255,255,0.1)',
+  cyan:'#00ff88', green:'#00ff88', red:'#ff4444', gold:'#ffaa00',
+  text:'#ffffff', muted:'#666666', muted2:'#aaaaaa',
   fontData:"'JetBrains Mono',monospace" as string,
   fontUi:"'Inter',sans-serif" as string,
 };

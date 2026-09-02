@@ -37,10 +37,11 @@ const fmtA = (n: number) => n.toFixed(2) + '€';
 const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
 
 const G = {
-  bg:'#050a12', sb:'#080f1e', card:'#0c1628', card2:'#0f1e38', card3:'#132240',
-  border:'rgba(0,180,255,0.1)', border2:'rgba(0,180,255,0.22)', border3:'rgba(0,212,255,0.4)',
-  accent:'#0066dd', cyan:'#00d4ff', green:'#00e676', red:'#ff3366', gold:'#f5a623', purple:'#a78bfa',
-  text:'#e8f0fe', muted:'#4a6a8a', muted2:'#8ba0bf',
+  bg:'#0a0a0a', sb:'#0f0f0f', card:'#1a1a1a', card2:'#202020', card3:'#262626',
+  border:'rgba(255,255,255,0.06)', border2:'rgba(255,255,255,0.1)', border3:'rgba(0,255,136,0.3)',
+  accent:'#00ff88', cyan:'#00ff88', green:'#00ff88', red:'#ff4444', gold:'#ffaa00', purple:'#aa66ff',
+  green2:'#00cc6a', blue:'#4488ff',
+  text:'#ffffff', muted:'#666666', muted2:'#aaaaaa',
   fontData:"'JetBrains Mono',monospace" as string,
   fontUi:"'Inter',sans-serif" as string,
 };
@@ -56,20 +57,11 @@ function useCounter(target: number, dur = 1000) {
 }
 
 const Logo = () => (
-  <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-    <rect width="44" height="44" rx="12" fill="#06101e"/>
-    {/* Hexagon */}
-    <polygon points="22,4 38,13 38,31 22,40 6,31 6,13" fill="#060e1c" stroke="#00d4ff" strokeWidth="1.4" strokeOpacity="0.7"/>
-    {/* Inner hex glow */}
-    <polygon points="22,4 38,13 38,31 22,40 6,31 6,13" fill="none" stroke="#00d4ff" strokeWidth="0.4" strokeOpacity="0.25"/>
-    {/* S */}
-    <text x="9" y="28" fontFamily="'Inter','Arial Black',sans-serif" fontSize="17" fontWeight="900" fill="#00d4ff">S</text>
-    {/* T */}
-    <text x="24" y="28" fontFamily="'Inter','Arial Black',sans-serif" fontSize="17" fontWeight="900" fill="#0066aa">T</text>
-    {/* Accent line */}
-    <line x1="9" y1="31" x2="35" y2="31" stroke="#00d4ff" strokeWidth="1.5" strokeLinecap="square"/>
-    {/* Dot */}
-    <rect x="36" y="28" width="4" height="4" fill="#00d4ff"/>
+  <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+    <rect width="40" height="40" rx="10" fill="#111111"/>
+    <polygon points="20,4 34,12 34,28 20,36 6,28 6,12" fill="none" stroke="#00ff88" strokeWidth="1.5" strokeOpacity="0.8"/>
+    <text x="8" y="26" fontFamily="'Inter','Arial Black',sans-serif" fontSize="15" fontWeight="900" fill="#00ff88">S</text>
+    <text x="21" y="26" fontFamily="'Inter','Arial Black',sans-serif" fontSize="15" fontWeight="900" fill="rgba(0,255,136,0.5)">T</text>
   </svg>
 );
 
@@ -146,9 +138,9 @@ function FloatingMenu({ page, setPage, navItems }: {
 }) {
   const [open, setOpen] = React.useState(false);
   const G = {
-    bg:'#050a12', card:'#0c1628', card2:'#0f1e38',
-    border:'rgba(0,180,255,0.12)', border2:'rgba(0,212,255,0.3)',
-    cyan:'#00d4ff', text:'#e8f0fe', muted:'#4a6a8a', muted2:'#8ba0bf',
+    bg:'#0a0a0a', card:'#1a1a1a', card2:'#202020',
+    border:'rgba(255,255,255,0.06)', border2:'rgba(0,255,136,0.25)',
+    cyan:'#00ff88', text:'#ffffff', muted:'#666666', muted2:'#aaaaaa',
     fontData:"'JetBrains Mono',monospace" as string,
     fontUi:"'Inter',sans-serif" as string,
   };
@@ -195,8 +187,8 @@ function FloatingMenu({ page, setPage, navItems }: {
                       style={{
                         display:'flex', flexDirection:'column', alignItems:'center', gap:5,
                         padding:'11px 6px', borderRadius:12,
-                        background: isActive ? 'rgba(0,212,255,0.12)' : 'rgba(255,255,255,0.04)',
-                        border: `1px solid ${isActive ? 'rgba(0,212,255,0.4)' : 'rgba(255,255,255,0.06)'}`,
+                        background: isActive ? 'rgba(0,255,136,0.1)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${isActive ? 'rgba(0,255,136,0.3)' : 'rgba(255,255,255,0.05)'}`,
                         cursor:'pointer', transition:'all 0.15s',
                       }}>
                       <span style={{ fontSize:20 }}>{icon}</span>
@@ -226,7 +218,7 @@ function FloatingMenu({ page, setPage, navItems }: {
         {/* Current page indicator */}
         <div style={{ padding:'10px 16px', display:'flex', alignItems:'center', gap:8, borderRight:`1px solid ${G.border}` }}>
           <span style={{ fontSize:16 }}>{currentItem?.[1] || '◉'}</span>
-          <span style={{ fontFamily:G.fontUi, fontSize:11, color:G.cyan, fontWeight:600, maxWidth:80, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{currentItem?.[2] || 'Inicio'}</span>
+          <span style={{ fontFamily:G.fontUi, fontSize:11, color:G.green, fontWeight:600, maxWidth:80, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{currentItem?.[2] || 'Inicio'}</span>
         </div>
         {/* Menu toggle */}
         <button onClick={() => setOpen(!open)} style={{
@@ -466,7 +458,7 @@ export default function DashboardClient() {
     <div style={{minHeight:'100vh',background:G.bg,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
       <div style={{width:48,height:48,position:'relative'}}>
         <div style={{position:'absolute',inset:0,border:`2px solid ${G.border}`,borderTop:`2px solid ${G.accent}`,borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
-        <div style={{position:'absolute',inset:8,border:`2px solid ${G.border}`,borderBottom:`2px solid ${G.cyan}`,borderRadius:'50%',animation:'spin 1.2s linear infinite reverse'}}/>
+        <div style={{position:'absolute',inset:8,border:`2px solid ${G.border}`,borderBottom:`2px solid ${G.green}`,borderRadius:'50%',animation:'spin 1.2s linear infinite reverse'}}/>
       </div>
       <div style={{fontFamily:G.fontData,fontSize:11,color:G.muted,letterSpacing:'0.2em'}}>CARGANDO SAVAGE TRADING...</div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -476,7 +468,7 @@ export default function DashboardClient() {
   const sidebarW = mobile ? 0 : 250;
 
   return (
-    <div style={{display:'flex',minHeight:'100vh',background:G.bg,fontFamily:G.fontUi,color:G.text,overflowX:'hidden',width:'100%',position:'relative'}}>
+    <div style={{display:'flex',minHeight:'100vh',background:'#0a0a0a',fontFamily:G.fontUi,color:G.text,overflowX:'hidden',width:'100%',position:'relative'}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
@@ -500,7 +492,7 @@ export default function DashboardClient() {
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
               <Logo/>
               <div>
-                <div style={{fontFamily:G.fontUi,fontSize:14,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',letterSpacing:'0.02em'}}>SAVAGE TRADING</div>
+                <div style={{fontFamily:G.fontUi,fontSize:14,fontWeight:800,color:G.green,letterSpacing:'0.02em'}}>SAVAGE TRADING</div>
                 <div style={{fontSize:9,color:G.muted,letterSpacing:'0.14em',fontFamily:G.fontData,marginTop:1}}>JOURNAL PRO</div>
               </div>
             </div>
@@ -585,7 +577,7 @@ export default function DashboardClient() {
           <div style={{padding:'10px 12px 16px',borderTop:`1px solid ${G.border}`,flexShrink:0}}>
             <div style={{background:G.bg,border:`1px solid ${G.border2}`,borderRadius:11,padding:'12px 14px',marginBottom:10}}>
               <div style={{fontFamily:G.fontData,fontSize:8,color:G.muted,letterSpacing:'0.15em',marginBottom:4}}>BALANCE ACTUAL</div>
-              <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:'#00d4ff'}}>{fmtA(animBalance)}</div>
+              <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:'#00ff88'}}>{fmtA(animBalance)}</div>
               <div style={{display:'flex',alignItems:'center',gap:4,marginTop:3}}>
                 <div style={{width:5,height:5,borderRadius:'50%',background:totalPnl>=0?G.green:G.red,boxShadow:`0 0 5px ${totalPnl>=0?G.green:G.red}`}}/>
                 <span style={{fontSize:10,color:totalPnl>=0?G.green:G.red,fontFamily:G.fontUi,fontWeight:600}}>{fmt(totalPnl)} P&L</span>
@@ -605,16 +597,16 @@ export default function DashboardClient() {
             {mobile&&(
               <div className="mobile-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:0,paddingTop:'env(safe-area-inset-top)',paddingBottom:0,paddingLeft:0,paddingRight:0}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%',padding:'12px 16px'}}>
-                <div style={{display:'flex',alignItems:'center',gap:8}}><Logo/><div style={{fontFamily:G.fontUi,fontSize:13,fontWeight:800,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAVAGE TRADING</div></div>
+                <div style={{display:'flex',alignItems:'center',gap:8}}><Logo/><div style={{fontFamily:G.fontUi,fontSize:13,fontWeight:800,color:G.green}}>SAVAGE TRADING</div></div>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <button onClick={()=>setShowNotifs(!showNotifs)} style={{width:32,height:32,borderRadius:8,background:'rgba(0,180,255,0.08)',border:'1px solid rgba(0,180,255,0.15)',color:'#00d4ff',cursor:'pointer',fontSize:14,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <button onClick={()=>setShowNotifs(!showNotifs)} style={{width:32,height:32,borderRadius:8,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',color:'#00ff88',cursor:'pointer',fontSize:14,position:'relative',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                     🔔
-                    {trades.filter(t=>t.date===new Date().toISOString().split('T')[0]).length>0&&<span style={{position:'absolute',top:-2,right:-2,width:8,height:8,borderRadius:'50%',background:'#ff3366',border:'1px solid #050a12'}}/>}
+                    {trades.filter(t=>t.date===new Date().toISOString().split('T')[0]).length>0&&<span style={{position:'absolute',top:-2,right:-2,width:8,height:8,borderRadius:'50%',background:'#ff4444',border:'1px solid #0a0a0a'}}/>}
                   </button>
                   <button onClick={()=>setShowAccountPicker(!showAccountPicker)} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',background:G.card,border:`1px solid ${activeAccount.color}50`,borderRadius:20,cursor:'pointer',fontFamily:G.fontUi,fontSize:11,fontWeight:600,color:activeAccount.color}}>
                     <span>{activeAccount.icon}</span><span>{activeAccount.name}</span><span style={{fontSize:9,color:G.muted}}>▾</span>
                   </button>
-                  <div style={{fontFamily:G.fontUi,fontSize:16,fontWeight:800,color:'#00d4ff'}}>{fmtA(balance)}</div>
+                  <div style={{fontFamily:G.fontUi,fontSize:16,fontWeight:800,color:'#00ff88'}}>{fmtA(balance)}</div>
                 </div>
                 </div>
                 {showAccountPicker&&(
@@ -637,11 +629,11 @@ export default function DashboardClient() {
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:22}}>
                 <div>
                   <div style={{fontFamily:G.fontData,fontSize:9,color:G.muted,letterSpacing:'0.15em',marginBottom:5}}>{dateStr}</div>
-                  <div style={{fontSize:28,fontWeight:800,letterSpacing:'-0.02em',color:G.text,fontFamily:G.fontUi}}>
-                    {greeting}, <span style={{background:`linear-gradient(135deg,${G.accent},${G.cyan})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Cristian</span>
+                  <div style={{fontSize:mobile?24:32,fontWeight:800,letterSpacing:'-0.02em',color:G.text,fontFamily:G.fontUi}}>
+                    {greeting}, <span style={{color:G.green}}>Cristian</span>
                   </div>
                 </div>
-                <button onClick={()=>setPage('nuevo')} style={{display:'flex',alignItems:'center',gap:7,padding:'11px 22px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi,boxShadow:`0 0 22px ${G.accent}50`,letterSpacing:'0.02em'}}>
+                <button onClick={()=>setPage('nuevo')} style={{display:'flex',alignItems:'center',gap:7,padding:'11px 22px',background:'#00ff88',border:'none',borderRadius:10,color:'#000000',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi,boxShadow:`0 0 22px ${G.accent}50`,letterSpacing:'0.02em'}}>
                   ⊕ Nuevo Trade
                 </button>
               </div>
@@ -650,15 +642,14 @@ export default function DashboardClient() {
             {/* STAT CARDS */}
             <div style={{display:'grid',gridTemplateColumns:mobile?'1fr 1fr':'repeat(3,1fr)',gap:10,marginBottom:12,minWidth:0}}>
               {[
-                {label:'BALANCE',val:fmtA(animBalance),sub:'Capital total',color:G.accent},
+                {label:'BALANCE',val:fmtA(animBalance),sub:'Capital total',color:'#ffffff'},
                 {label:'P&L TOTAL',val:fmt(totalPnl),sub:`${trades.length} operaciones`,color:totalPnl>=0?G.green:G.red},
                 {label:'HOY',val:String(todayTrades.length)+' ops',sub:fmt(todayTrades.reduce((s,t)=>s+t.pnl,0))+' hoy',color:G.gold},
               ].map(s=>(
-                <div key={s.label} className="statcard" style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:'14px 16px',position:'relative',overflow:'hidden',transition:'all 0.2s',cursor:'default'}}>
-                  <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${s.color},transparent)`}}/>
-                  <div style={{fontFamily:G.fontData,fontSize:9,letterSpacing:'0.18em',color:G.muted,marginBottom:6,textTransform:'uppercase'}}>{s.label}</div>
-                  <div style={{fontFamily:G.fontUi,fontSize:mobile?20:26,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
-                  <div style={{fontSize:11,color:G.muted,marginTop:5,fontFamily:G.fontUi}}>{s.sub}</div>
+                <div key={s.label} className="statcard" style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:'16px 18px',position:'relative',overflow:'hidden',transition:'all 0.2s',cursor:'default'}}>
+                  <div style={{fontFamily:G.fontData,fontSize:9,letterSpacing:'0.18em',color:G.muted,marginBottom:8,textTransform:'uppercase'}}>{s.label}</div>
+                  <div style={{fontFamily:G.fontData,fontSize:mobile?22:30,fontWeight:700,color:s.color,lineHeight:1,letterSpacing:'-0.02em'}}>{s.val}</div>
+                  <div style={{fontSize:11,color:G.muted,marginTop:6,fontFamily:G.fontUi}}>{s.sub}</div>
                 </div>
               ))}
             </div>
@@ -686,7 +677,7 @@ export default function DashboardClient() {
                 </div>
                 <div style={{height:mobile?140:170}}>
                   {curve.data.length>1
-                    ? <Line data={{labels:curve.labels,datasets:[{data:curve.data,borderColor:totalPnl>=0?'#00e676':'#ff3366',backgroundColor:totalPnl>=0?'rgba(0,230,118,0.06)':'rgba(255,51,102,0.06)',borderWidth:1.8,pointRadius:0,pointHoverRadius:3,fill:true,tension:0.08}]}}
+                    ? <Line data={{labels:curve.labels,datasets:[{data:curve.data,borderColor:totalPnl>=0?'#00ff88':'#ff4444',backgroundColor:totalPnl>=0?'rgba(0,255,136,0.08)':'rgba(255,68,68,0.06)',borderWidth:1.8,pointRadius:0,pointHoverRadius:3,fill:true,tension:0.08}]}}
                         options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:G.card2,titleColor:G.accent,bodyColor:G.text}},scales:{x:{ticks:{color:G.muted,font:{family:'monospace' as const,size:9},maxTicksLimit:6},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{color:G.muted,font:{family:'monospace' as const,size:9},callback:(v:unknown)=>String(v)+'€'},grid:{color:'rgba(255,255,255,0.03)'}}}}}/>
                     : <div style={{height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:G.muted,fontSize:12,flexDirection:'column',gap:8}}><span style={{fontSize:28}}>📊</span>Añade tu primer trade</div>}
                 </div>
@@ -712,7 +703,7 @@ export default function DashboardClient() {
                 <div style={{background:G.card,border:`1px solid ${G.border}`,borderRadius:12,padding:'14px 16px',marginBottom:12}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
                     <div style={{fontSize:13,fontWeight:600,fontFamily:G.fontUi}}>Rendimiento Semanal</div>
-                    <button onClick={()=>setPage('semanas')} style={{fontSize:10,color:G.cyan,background:'none',border:'none',cursor:'pointer',fontFamily:G.fontData}}>VER TODO →</button>
+                    <button onClick={()=>setPage('semanas')} style={{fontSize:10,color:G.green,background:'none',border:'none',cursor:'pointer',fontFamily:G.fontData}}>VER TODO →</button>
                   </div>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
                     {weekData.map((w,i)=>{
@@ -721,9 +712,9 @@ export default function DashboardClient() {
                       return (
                         <div key={i} style={{textAlign:'center'}}>
                           <div style={{height:50,display:'flex',alignItems:'flex-end',justifyContent:'center',marginBottom:5}}>
-                            <div style={{width:'60%',height:`${Math.max(barH,2)}px`,background:w.pnl>=0?'#00e676':'#ff3366',borderRadius:'2px 2px 0 0',opacity:isLast?1:0.6,boxShadow:isLast&&w.pnl>=0?'0 0 8px rgba(0,230,118,0.4)':isLast&&w.pnl<0?'0 0 8px rgba(255,51,102,0.4)':'none',transition:'height 0.6s ease'}}/>
+                            <div style={{width:'60%',height:`${Math.max(barH,2)}px`,background:w.pnl>=0?'#00ff88':'#ff4444',borderRadius:'2px 2px 0 0',opacity:isLast?1:0.6,boxShadow:isLast&&w.pnl>=0?'0 0 8px rgba(0,230,118,0.4)':isLast&&w.pnl<0?'0 0 8px rgba(255,51,102,0.4)':'none',transition:'height 0.6s ease'}}/>
                           </div>
-                          <div style={{fontFamily:G.fontData,fontSize:11,fontWeight:700,color:w.pnl>=0?'#00e676':'#ff3366'}}>{w.trades>0?(w.pnl>=0?'+':'')+w.pnl.toFixed(2)+'€':'—'}</div>
+                          <div style={{fontFamily:G.fontData,fontSize:11,fontWeight:700,color:w.pnl>=0?'#00ff88':'#ff4444'}}>{w.trades>0?(w.pnl>=0?'+':'')+w.pnl.toFixed(2)+'€':'—'}</div>
                           <div style={{fontFamily:G.fontData,fontSize:9,color:isLast?G.cyan:G.muted,marginTop:2}}>{w.label}</div>
                           {w.trades>0&&<div style={{fontFamily:G.fontData,fontSize:8,color:G.muted}}>{w.trades} ops</div>}
                         </div>
@@ -752,7 +743,7 @@ export default function DashboardClient() {
                   {calDays().map((cell,i)=>{
                     const isToday=cell&&`${calMonth.getFullYear()}-${String(calMonth.getMonth()+1).padStart(2,'0')}-${String(cell.day).padStart(2,'0')}`===new Date().toISOString().split('T')[0];
                     return(
-                      <div key={i} style={{aspectRatio:'1',borderRadius:5,border:`1px solid ${cell?.pnl!=null?(cell.pnl>=0?`${G.green}35`:`${G.red}35`):isToday?G.accent:G.border}`,background:cell?.pnl!=null?(cell.pnl>=0?`${G.green}12`:`${G.red}12`):isToday?`${G.accent}10`:'transparent',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+                      <div key={i} style={{aspectRatio:'1',borderRadius:5,border:`1px solid ${cell?.pnl!=null?(cell.pnl>=0?'rgba(0,255,136,0.3)':'rgba(255,68,68,0.3)'):isToday?G.green:G.border}`,background:cell?.pnl!=null?(cell.pnl>=0?'rgba(0,255,136,0.12)':'rgba(255,68,68,0.12)'):isToday?`${G.accent}10`:'transparent',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
                         {cell&&<>
                           <div style={{fontSize:7,color:isToday?G.accent:cell.pnl!=null?G.text:G.muted,fontWeight:600}}>{cell.day}</div>
                           {cell.pnl!=null&&<div style={{fontSize:6,fontFamily:G.fontData,color:cell.pnl>=0?G.green:G.red,fontWeight:700}}>{cell.pnl>=0?'+':''}{cell.pnl.toFixed(0)}</div>}
@@ -872,7 +863,7 @@ export default function DashboardClient() {
                 </div>
                 <div style={secT}>NOTAS</div>
                 <textarea value={fNotes} onChange={e=>setFNotes(e.target.value)} placeholder="¿Qué setup viste? ¿Qué aprendiste?" style={{...inp,minHeight:70,resize:'vertical',lineHeight:1.6,marginBottom:16}}/>
-                <button onClick={saveTrade} disabled={saving} style={{width:'100%',padding:13,background:saving?G.muted:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:14,fontWeight:700,cursor:saving?'not-allowed':'pointer',fontFamily:G.fontUi,boxShadow:saving?'none':`0 0 20px ${G.accent}40`,letterSpacing:'0.02em',transition:'all 0.2s'}}>
+                <button onClick={saveTrade} disabled={saving} style={{width:'100%',padding:13,background:saving?G.muted:`linear-gradient(135deg,${G.accent},${G.green})`,border:'none',borderRadius:10,color:'#05111e',fontSize:14,fontWeight:700,cursor:saving?'not-allowed':'pointer',fontFamily:G.fontUi,boxShadow:saving?'none':`0 0 20px ${G.accent}40`,letterSpacing:'0.02em',transition:'all 0.2s'}}>
                   {saving?'⟳ GUARDANDO...':'⊕ GUARDAR OPERACIÓN'}
                 </button>
               </div>
@@ -889,7 +880,7 @@ export default function DashboardClient() {
                   </div>
                   <div style={{background:G.card,border:`1px solid ${G.border2}`,borderRadius:12,padding:14}}>
                     <div style={{fontFamily:G.fontData,fontSize:9,color:G.muted,marginBottom:4}}>BALANCE ACTUAL</div>
-                    <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:'#00d4ff'}}>{fmtA(balance)}</div>
+                    <div style={{fontFamily:G.fontUi,fontSize:22,fontWeight:800,color:'#00ff88'}}>{fmtA(balance)}</div>
                   </div>
                 </div>
               )}
@@ -960,7 +951,7 @@ export default function DashboardClient() {
                   </div>
                   <label style={lbl}>DESCRIPCIÓN</label>
                   <input type="text" value={apDesc} onChange={e=>setApDesc(e.target.value)} placeholder="Aportación mensual" style={{...inp,marginBottom:12}}/>
-                  <button onClick={addAp} style={{width:'100%',padding:11,background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi}}>Añadir aportación</button>
+                  <button onClick={addAp} style={{width:'100%',padding:11,background:`linear-gradient(135deg,${G.accent},${G.green})`,border:'none',borderRadius:9,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi}}>Añadir aportación</button>
                 </div>
               </div>
               <div>
@@ -1012,7 +1003,7 @@ export default function DashboardClient() {
                 <div style={{fontSize:12,color:G.muted}}>Abre el calendario completo en español con todos los eventos</div>
               </div>
               <a href="https://es.investing.com/economic-calendar/" target="_blank" rel="noopener noreferrer"
-                style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,color:'#05111e',fontSize:12,fontWeight:700,borderRadius:9,textDecoration:'none',fontFamily:G.fontUi,whiteSpace:'nowrap',flexShrink:0,marginLeft:16}}>
+                style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.green})`,color:'#05111e',fontSize:12,fontWeight:700,borderRadius:9,textDecoration:'none',fontFamily:G.fontUi,whiteSpace:'nowrap',flexShrink:0,marginLeft:16}}>
                 ABRIR CALENDARIO →
               </a>
             </div>
@@ -1146,7 +1137,7 @@ export default function DashboardClient() {
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
               <div><div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>🎯 Mis Objetivos</div><div style={{fontSize:12,color:G.muted}}>Define y sigue tu progreso</div></div>
-              <button onClick={()=>openObjModal()} style={{padding:'10px 18px',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,border:'none',borderRadius:10,color:'#05111e',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi}}>+ Nuevo objetivo</button>
+              <button onClick={()=>openObjModal()} style={{padding:'10px 18px',background:'#00ff88',border:'none',borderRadius:10,color:'#000000',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:G.fontUi}}>+ Nuevo objetivo</button>
             </div>
             {objetivos.length===0?
               <div style={{textAlign:'center',padding:'60px 0',color:G.muted,fontSize:13}}>
@@ -1199,7 +1190,7 @@ export default function DashboardClient() {
           <div className="pe" style={{padding:mobile?'16px 14px 0':'0',width:'100%'}}>
             <div style={{marginBottom:18}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <div style={{width:38,height:38,borderRadius:'50%',background:`linear-gradient(135deg,${G.accent},${G.cyan})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🤖</div>
+                <div style={{width:38,height:38,borderRadius:'50%',background:`linear-gradient(135deg,${G.accent},${G.green})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🤖</div>
                 <div>
                   <div style={{fontSize:22,fontWeight:700,fontFamily:G.fontUi}}>IA Coach Personal</div>
                   <div style={{fontSize:12,color:G.muted,marginTop:1}}>Analiza tus datos reales · Powered by Claude AI</div>

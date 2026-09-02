@@ -49,9 +49,9 @@ const LOGROS_FIJOS: LogroFijo[] = [
 ];
 
 const TIPO_STYLES = {
-  oro:   { border:'rgba(245,166,35,0.4)',  bg:'rgba(245,166,35,0.06)',  accent:'#f5a623', glow:'rgba(245,166,35,0.25)', label:'ORO' },
+  oro:   { border:'rgba(245,166,35,0.4)',  bg:'rgba(245,166,35,0.06)',  accent:'#ffaa00', glow:'rgba(245,166,35,0.25)', label:'ORO' },
   plata: { border:'rgba(160,174,192,0.4)', bg:'rgba(160,174,192,0.06)', accent:'#a0aec0', glow:'rgba(160,174,192,0.15)', label:'PLATA' },
-  cyan:  { border:'rgba(0,212,255,0.4)',   bg:'rgba(0,212,255,0.06)',   accent:'#00d4ff', glow:'rgba(0,212,255,0.25)', label:'BRONCE' },
+  cyan:  { border:'rgba(0,212,255,0.4)',   bg:'rgba(0,212,255,0.06)',   accent:'#00ff88', glow:'rgba(0,212,255,0.25)', label:'BRONCE' },
 };
 
 const KEY_RETOS = 'st_retos_personalizados';
@@ -207,15 +207,15 @@ export default function LogrosClient({ trades, totalPnl }: { trades: Trade[]; to
     return { actual, pct: Math.min(actual/r.meta*100, 100) };
   }
 
-  const inp: React.CSSProperties = { background:'#0f1e38', border:'1px solid rgba(0,180,255,0.1)', borderRadius:6, padding:'9px 12px', color:'#e8f0fe', fontFamily:"'Inter',sans-serif", fontSize:13, width:'100%', outline:'none' };
-  const lbl: React.CSSProperties = { fontFamily:"'JetBrains Mono',monospace", fontSize:9, letterSpacing:'0.15em', textTransform:'uppercase' as const, color:'#4a6a8a', display:'block', marginBottom:4 };
+  const inp: React.CSSProperties = { background:'#202020', border:'1px solid rgba(0,180,255,0.1)', borderRadius:6, padding:'9px 12px', color:'#ffffff', fontFamily:"'Inter',sans-serif", fontSize:13, width:'100%', outline:'none' };
+  const lbl: React.CSSProperties = { fontFamily:"'JetBrains Mono',monospace", fontSize:9, letterSpacing:'0.15em', textTransform:'uppercase' as const, color:'#666666', display:'block', marginBottom:4 };
 
   return (
     <div>
       {/* Tabs */}
       <div style={{ display:'flex', gap:0, borderBottom:'1px solid rgba(0,180,255,0.1)', marginBottom:20 }}>
         {([['logros','🏆 Logros'],['retos','⚡ Mis Retos']] as const).map(([t,l])=>(
-          <button key={t} onClick={()=>setTab(t)} style={{ padding:'9px 20px', background:'none', border:'none', borderBottom:`2px solid ${tab===t?'#00d4ff':'transparent'}`, color:tab===t?'#00d4ff':'#4a6a8a', fontSize:12, fontWeight:500, cursor:'pointer', fontFamily:"'Inter',sans-serif", marginBottom:-1, transition:'all 0.15s' }}>{l}</button>
+          <button key={t} onClick={()=>setTab(t)} style={{ padding:'9px 20px', background:'none', border:'none', borderBottom:`2px solid ${tab===t?'#00ff88':'transparent'}`, color:tab===t?'#00ff88':'#666666', fontSize:12, fontWeight:500, cursor:'pointer', fontFamily:"'Inter',sans-serif", marginBottom:-1, transition:'all 0.15s' }}>{l}</button>
         ))}
       </div>
 
@@ -224,9 +224,9 @@ export default function LogrosClient({ trades, totalPnl }: { trades: Trade[]; to
         <div>
           {/* Progress */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:16 }}>
-            {[{l:'Conseguidos',v:`${conseguidos}/${LOGROS_FIJOS.length}`,c:'#00d4ff'},{l:'Completado',v:`${Math.round(conseguidos/LOGROS_FIJOS.length*100)}%`,c:'#00e676'},{l:'Pendientes',v:String(LOGROS_FIJOS.length-conseguidos),c:'#f5a623'}].map(s=>(
-              <div key={s.l} style={{ background:'#0c1628', border:'1px solid rgba(0,180,255,0.1)', borderRadius:10, padding:'13px 15px' }}>
-                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:8, color:'#4a6a8a', letterSpacing:'0.15em', textTransform:'uppercase', marginBottom:6 }}>{s.l}</div>
+            {[{l:'Conseguidos',v:`${conseguidos}/${LOGROS_FIJOS.length}`,c:'#00ff88'},{l:'Completado',v:`${Math.round(conseguidos/LOGROS_FIJOS.length*100)}%`,c:'#00ff88'},{l:'Pendientes',v:String(LOGROS_FIJOS.length-conseguidos),c:'#ffaa00'}].map(s=>(
+              <div key={s.l} style={{ background:'#1a1a1a', border:'1px solid rgba(0,180,255,0.1)', borderRadius:10, padding:'13px 15px' }}>
+                <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:8, color:'#666666', letterSpacing:'0.15em', textTransform:'uppercase', marginBottom:6 }}>{s.l}</div>
                 <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:22, fontWeight:700, color:s.c }}>{s.v}</div>
               </div>
             ))}
@@ -245,16 +245,16 @@ export default function LogrosClient({ trades, totalPnl }: { trades: Trade[]; to
                   {l.conseguido && <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,transparent,${s.accent},transparent)` }}/>}
                   <div style={{ fontSize:26, marginBottom:8 }}>{l.icono}</div>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
-                    <div style={{ fontSize:13, fontWeight:600, color:l.conseguido?'#e8f0fe':'#4a6a8a', fontFamily:"'Inter',sans-serif" }}>{l.titulo}</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:l.conseguido?'#ffffff':'#666666', fontFamily:"'Inter',sans-serif" }}>{l.titulo}</div>
                     <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:7, color:s.accent, letterSpacing:'0.1em', marginLeft:6, flexShrink:0 }}>{s.label}</div>
                   </div>
-                  <div style={{ fontSize:11, color:'#4a6a8a', lineHeight:1.5, marginBottom:10, fontFamily:"'Inter',sans-serif" }}>{l.descripcion}</div>
+                  <div style={{ fontSize:11, color:'#666666', lineHeight:1.5, marginBottom:10, fontFamily:"'Inter',sans-serif" }}>{l.descripcion}</div>
                   {l.prog && !l.conseguido && (
                     <div>
                       <div style={{ height:3, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden', marginBottom:4 }}>
                         <div style={{ height:'100%', width:`${pct}%`, background:s.accent, borderRadius:2, transition:'width 0.8s ease' }}/>
                       </div>
-                      <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, color:'#4a6a8a' }}>{l.prog.actual.toFixed(0)}/{l.prog.meta} {l.prog.label}</div>
+                      <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, color:'#666666' }}>{l.prog.actual.toFixed(0)}/{l.prog.meta} {l.prog.label}</div>
                     </div>
                   )}
                   {l.conseguido && (
@@ -277,15 +277,15 @@ export default function LogrosClient({ trades, totalPnl }: { trades: Trade[]; to
         <div>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
             <div>
-              <div style={{ fontSize:14, fontWeight:600, fontFamily:"'Inter',sans-serif", color:'#e8f0fe' }}>Tus retos personalizados</div>
-              <div style={{ fontSize:11, color:'#4a6a8a', marginTop:2, fontFamily:"'Inter',sans-serif" }}>Crea y gestiona tus propios desafíos de trading</div>
+              <div style={{ fontSize:14, fontWeight:600, fontFamily:"'Inter',sans-serif", color:'#ffffff' }}>Tus retos personalizados</div>
+              <div style={{ fontSize:11, color:'#666666', marginTop:2, fontFamily:"'Inter',sans-serif" }}>Crea y gestiona tus propios desafíos de trading</div>
             </div>
             <button onClick={()=>setShowNewReto(!showNewReto)} style={{ padding:'8px 16px', background:'linear-gradient(135deg,#0055cc,#00d4ff)', border:'none', borderRadius:8, color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:"'Inter',sans-serif" }}>+ Nuevo reto</button>
           </div>
 
           {/* New reto form */}
           {showNewReto && (
-            <div style={{ background:'#0c1628', border:'1px solid rgba(0,180,255,0.2)', borderRadius:12, padding:18, marginBottom:16 }}>
+            <div style={{ background:'#1a1a1a', border:'1px solid rgba(0,180,255,0.2)', borderRadius:12, padding:18, marginBottom:16 }}>
               <div style={{ fontSize:13, fontWeight:600, fontFamily:"'Inter',sans-serif", marginBottom:14 }}>Crear nuevo reto</div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
                 <div><label style={lbl}>NOMBRE DEL RETO</label><input value={rTitulo} onChange={e=>setRTitulo(e.target.value)} placeholder="Ej: Alcanzar 500€" style={inp}/></div>
@@ -302,22 +302,22 @@ export default function LogrosClient({ trades, totalPnl }: { trades: Trade[]; to
                 <div><label style={lbl}>ICONO</label>
                   <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                     {['🎯','🔥','💰','⭐','🚀','💎','🏆','📈','⚡','🛡️'].map(ic=>(
-                      <button key={ic} onClick={()=>setRIcono(ic)} style={{ width:34,height:34, borderRadius:7, border:`1px solid ${rIcono===ic?'#00d4ff':'rgba(0,180,255,0.1)'}`, background:rIcono===ic?'rgba(0,212,255,0.12)':'transparent', fontSize:18, cursor:'pointer' }}>{ic}</button>
+                      <button key={ic} onClick={()=>setRIcono(ic)} style={{ width:34,height:34, borderRadius:7, border:`1px solid ${rIcono===ic?'#00ff88':'rgba(255,255,255,0.06)'}`, background:rIcono===ic?'rgba(0,212,255,0.12)':'transparent', fontSize:18, cursor:'pointer' }}>{ic}</button>
                     ))}
                   </div>
                 </div>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-                <button onClick={()=>setShowNewReto(false)} style={{ padding:11, background:'transparent', border:'1px solid rgba(0,180,255,0.1)', borderRadius:8, color:'#4a6a8a', fontSize:13, cursor:'pointer', fontFamily:"'Inter',sans-serif" }}>Cancelar</button>
+                <button onClick={()=>setShowNewReto(false)} style={{ padding:11, background:'transparent', border:'1px solid rgba(0,180,255,0.1)', borderRadius:8, color:'#666666', fontSize:13, cursor:'pointer', fontFamily:"'Inter',sans-serif" }}>Cancelar</button>
                 <button onClick={addReto} disabled={!rTitulo||!rMeta} style={{ padding:11, background:'linear-gradient(135deg,#0055cc,#00d4ff)', border:'none', borderRadius:8, color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Inter',sans-serif", opacity:(!rTitulo||!rMeta)?0.5:1 }}>Crear reto</button>
               </div>
             </div>
           )}
 
           {retos.length===0 ? (
-            <div style={{ textAlign:'center', padding:'50px 20px', color:'#4a6a8a' }}>
+            <div style={{ textAlign:'center', padding:'50px 20px', color:'#666666' }}>
               <div style={{ fontSize:40, marginBottom:12 }}>⚡</div>
-              <div style={{ fontSize:14, fontFamily:"'Inter',sans-serif", marginBottom:6, color:'#8ba0bf' }}>Sin retos personalizados aún</div>
+              <div style={{ fontSize:14, fontFamily:"'Inter',sans-serif", marginBottom:6, color:'#aaaaaa' }}>Sin retos personalizados aún</div>
               <div style={{ fontSize:12, fontFamily:"'Inter',sans-serif" }}>Crea tu primer reto para empezar a medir tu progreso</div>
             </div>
           ) : (
@@ -326,34 +326,34 @@ export default function LogrosClient({ trades, totalPnl }: { trades: Trade[]; to
                 const {actual, pct} = getRetoProgress(r);
                 const tipoLabel = {pnl:'€',trades:'ops',wr:'% WR',streak:'wins seguidos'}[r.tipo];
                 return (
-                  <div key={r.id} style={{ background:'#0c1628', border:`1px solid ${r.completado?'rgba(0,230,118,0.3)':'rgba(0,180,255,0.1)'}`, borderRadius:12, padding:'14px 18px', position:'relative', overflow:'hidden' }}>
+                  <div key={r.id} style={{ background:'#1a1a1a', border:`1px solid ${r.completado?'rgba(0,230,118,0.3)':'rgba(255,255,255,0.06)'}`, borderRadius:12, padding:'14px 18px', position:'relative', overflow:'hidden' }}>
                     {r.completado && <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#00e676,transparent)' }}/>}
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                         <span style={{ fontSize:22 }}>{r.icono}</span>
                         <div>
-                          <div style={{ fontSize:14, fontWeight:600, color:'#e8f0fe', fontFamily:"'Inter',sans-serif" }}>{r.titulo}</div>
-                          {r.descripcion && <div style={{ fontSize:11, color:'#4a6a8a', marginTop:2, fontFamily:"'Inter',sans-serif" }}>{r.descripcion}</div>}
+                          <div style={{ fontSize:14, fontWeight:600, color:'#ffffff', fontFamily:"'Inter',sans-serif" }}>{r.titulo}</div>
+                          {r.descripcion && <div style={{ fontSize:11, color:'#666666', marginTop:2, fontFamily:"'Inter',sans-serif" }}>{r.descripcion}</div>}
                         </div>
                       </div>
                       <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                         {r.completado && (
-                          <button onClick={()=>downloadDiploma(r.titulo,r.descripcion||r.titulo,r.icono,'cyan')} disabled={generating} style={{ padding:'4px 10px', background:'rgba(0,230,118,0.1)', border:'1px solid rgba(0,230,118,0.3)', borderRadius:5, color:'#00e676', fontSize:9, cursor:'pointer', fontFamily:"'JetBrains Mono',monospace", fontWeight:700 }}>⬇ PDF</button>
+                          <button onClick={()=>downloadDiploma(r.titulo,r.descripcion||r.titulo,r.icono,'cyan')} disabled={generating} style={{ padding:'4px 10px', background:'rgba(0,230,118,0.1)', border:'1px solid rgba(0,230,118,0.3)', borderRadius:5, color:'#00ff88', fontSize:9, cursor:'pointer', fontFamily:"'JetBrains Mono',monospace", fontWeight:700 }}>⬇ PDF</button>
                         )}
-                        <button onClick={()=>toggleReto(r.id)} style={{ padding:'4px 10px', background:r.completado?'rgba(0,230,118,0.1)':'rgba(0,212,255,0.1)', border:`1px solid ${r.completado?'rgba(0,230,118,0.3)':'rgba(0,212,255,0.2)'}`, borderRadius:5, color:r.completado?'#00e676':'#00d4ff', fontSize:9, cursor:'pointer', fontFamily:"'JetBrains Mono',monospace", fontWeight:700 }}>
+                        <button onClick={()=>toggleReto(r.id)} style={{ padding:'4px 10px', background:r.completado?'rgba(0,230,118,0.1)':'rgba(0,212,255,0.1)', border:`1px solid ${r.completado?'rgba(0,230,118,0.3)':'rgba(0,212,255,0.2)'}`, borderRadius:5, color:r.completado?'#00ff88':'#00ff88', fontSize:9, cursor:'pointer', fontFamily:"'JetBrains Mono',monospace", fontWeight:700 }}>
                           {r.completado?'✓ LISTO':'Marcar ✓'}
                         </button>
-                        <button onClick={()=>deleteReto(r.id)} style={{ width:26,height:26, borderRadius:6, background:'rgba(255,51,102,0.1)', border:'1px solid rgba(255,51,102,0.3)', color:'#ff3366', cursor:'pointer', fontSize:12 }}>✕</button>
+                        <button onClick={()=>deleteReto(r.id)} style={{ width:26,height:26, borderRadius:6, background:'rgba(255,51,102,0.1)', border:'1px solid rgba(255,51,102,0.3)', color:'#ff4444', cursor:'pointer', fontSize:12 }}>✕</button>
                       </div>
                     </div>
                     <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                       <div style={{ flex:1, height:4, background:'rgba(255,255,255,0.05)', borderRadius:2, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${pct}%`, background:r.completado?'#00e676':'#00d4ff', borderRadius:2, transition:'width 0.8s ease' }}/>
+                        <div style={{ height:'100%', width:`${pct}%`, background:r.completado?'#00ff88':'#00ff88', borderRadius:2, transition:'width 0.8s ease' }}/>
                       </div>
-                      <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:11, color:r.completado?'#00e676':'#8ba0bf', whiteSpace:'nowrap' }}>
+                      <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:11, color:r.completado?'#00ff88':'#aaaaaa', whiteSpace:'nowrap' }}>
                         {actual.toFixed(actual%1?2:0)} / {r.meta} {tipoLabel}
                       </div>
-                      <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:11, fontWeight:700, color:r.completado?'#00e676':'#00d4ff' }}>{Math.round(pct)}%</div>
+                      <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:11, fontWeight:700, color:r.completado?'#00ff88':'#00ff88' }}>{Math.round(pct)}%</div>
                     </div>
                   </div>
                 );
@@ -368,20 +368,20 @@ export default function LogrosClient({ trades, totalPnl }: { trades: Trade[]; to
         <div onClick={()=>setSelected(null)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:500, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(6px)' }}>
           <div onClick={e=>e.stopPropagation()} style={{ width:'100%', maxWidth:480, background:'linear-gradient(135deg,#0c1628,#0f2040)', border:`1px solid ${TIPO_STYLES[selectedLogro.tipo].border}`, borderRadius:16, padding:32, textAlign:'center', position:'relative', overflow:'hidden', boxShadow:`0 0 60px ${TIPO_STYLES[selectedLogro.tipo].glow}` }}>
             <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,transparent,${TIPO_STYLES[selectedLogro.tipo].accent},transparent)` }}/>
-            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, color:'#4a6a8a', letterSpacing:'0.3em', marginBottom:20 }}>SAVAGE TRADING JOURNAL PRO</div>
+            <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:9, color:'#666666', letterSpacing:'0.3em', marginBottom:20 }}>SAVAGE TRADING JOURNAL PRO</div>
             <div style={{ fontSize:50, marginBottom:12 }}>{selectedLogro.icono}</div>
             <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, color:TIPO_STYLES[selectedLogro.tipo].accent, letterSpacing:'0.2em', marginBottom:8 }}>LOGRO DESBLOQUEADO · {TIPO_STYLES[selectedLogro.tipo].label}</div>
-            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:24, fontWeight:800, color:'#e8f0fe', marginBottom:8 }}>{selectedLogro.titulo}</div>
-            <div style={{ fontSize:13, color:'#8ba0bf', marginBottom:24, fontFamily:"'Inter',sans-serif" }}>{selectedLogro.descripcion}</div>
+            <div style={{ fontFamily:"'Inter',sans-serif", fontSize:24, fontWeight:800, color:'#ffffff', marginBottom:8 }}>{selectedLogro.titulo}</div>
+            <div style={{ fontSize:13, color:'#aaaaaa', marginBottom:24, fontFamily:"'Inter',sans-serif" }}>{selectedLogro.descripcion}</div>
             <div style={{ borderTop:'1px solid rgba(255,255,255,0.08)', paddingTop:16, display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, color:'#4a6a8a' }}>Cristian Fandos</div>
-              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, color:'#4a6a8a' }}>{new Date().toLocaleDateString('es-ES')}</div>
+              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, color:'#666666' }}>Cristian Fandos</div>
+              <div style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:10, color:'#666666' }}>{new Date().toLocaleDateString('es-ES')}</div>
             </div>
             <div style={{ display:'flex', gap:8, justifyContent:'center' }}>
               <button onClick={()=>downloadDiploma(selectedLogro.titulo,selectedLogro.descripcion,selectedLogro.icono,selectedLogro.tipo)} disabled={generating} style={{ padding:'9px 20px', background:`linear-gradient(135deg,#0055cc,${TIPO_STYLES[selectedLogro.tipo].accent})`, border:'none', borderRadius:8, color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:"'Inter',sans-serif" }}>
                 {generating?'Generando...':'⬇ Descargar Diploma PDF'}
               </button>
-              <button onClick={()=>setSelected(null)} style={{ padding:'9px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#4a6a8a', fontSize:12, cursor:'pointer', fontFamily:"'Inter',sans-serif" }}>Cerrar</button>
+              <button onClick={()=>setSelected(null)} style={{ padding:'9px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#666666', fontSize:12, cursor:'pointer', fontFamily:"'Inter',sans-serif" }}>Cerrar</button>
             </div>
           </div>
         </div>

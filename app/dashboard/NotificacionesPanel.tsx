@@ -13,10 +13,10 @@ type Notif = {
 };
 
 const TIPO = {
-  success: { color: '#00e676', icon: '✓', bg: 'rgba(0,230,118,0.08)', border: 'rgba(0,230,118,0.2)' },
-  danger:  { color: '#ff3366', icon: '!', bg: 'rgba(255,51,102,0.08)', border: 'rgba(255,51,102,0.2)' },
-  info:    { color: '#00d4ff', icon: 'i', bg: 'rgba(0,212,255,0.08)', border: 'rgba(0,212,255,0.2)' },
-  warning: { color: '#f5a623', icon: '⚠', bg: 'rgba(245,166,35,0.08)', border: 'rgba(245,166,35,0.2)' },
+  success: { color: '#00ff88', icon: '✓', bg: 'rgba(0,230,118,0.08)', border: 'rgba(0,230,118,0.2)' },
+  danger:  { color: '#ff4444', icon: '!', bg: 'rgba(255,51,102,0.08)', border: 'rgba(255,51,102,0.2)' },
+  info:    { color: '#00ff88', icon: 'i', bg: 'rgba(0,212,255,0.08)', border: 'rgba(0,212,255,0.2)' },
+  warning: { color: '#ffaa00', icon: '⚠', bg: 'rgba(245,166,35,0.08)', border: 'rgba(245,166,35,0.2)' },
 };
 
 const KEY = 'st_notifs_read';
@@ -88,16 +88,16 @@ export default function NotificacionesPanel({ trades, onClose }: { trades: Trade
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', justifyContent: 'flex-end' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ width: 360, height: '100vh', background: '#080f1e', borderLeft: '1px solid rgba(0,180,255,0.15)', display: 'flex', flexDirection: 'column', animation: 'slideIn 0.2s ease' }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: 360, height: '100vh', background: '#0f0f0f', borderLeft: '1px solid rgba(0,180,255,0.15)', display: 'flex', flexDirection: 'column', animation: 'slideIn 0.2s ease' }}>
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(0,180,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#e8f0fe', fontFamily: "'Inter',sans-serif" }}>Notificaciones</div>
-            {unread > 0 && <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: '#00d4ff', marginTop: 2 }}>{unread} sin leer</div>}
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#ffffff', fontFamily: "'Inter',sans-serif" }}>Notificaciones</div>
+            {unread > 0 && <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: '#00ff88', marginTop: 2 }}>{unread} sin leer</div>}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {unread > 0 && <button onClick={markAll} style={{ fontSize: 11, color: '#8ba0bf', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Inter',sans-serif" }}>Marcar todas como leídas</button>}
-            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: 'none', color: '#8ba0bf', cursor: 'pointer', fontSize: 14 }}>✕</button>
+            {unread > 0 && <button onClick={markAll} style={{ fontSize: 11, color: '#aaaaaa', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Inter',sans-serif" }}>Marcar todas como leídas</button>}
+            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(255,255,255,0.05)', border: 'none', color: '#aaaaaa', cursor: 'pointer', fontSize: 14 }}>✕</button>
           </div>
         </div>
 
@@ -114,11 +114,11 @@ export default function NotificacionesPanel({ trades, onClose }: { trades: Trade
                 {/* Content */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 3 }}>
-                    <div style={{ fontSize: 12, fontWeight: n.leida ? 400 : 600, color: n.leida ? '#8ba0bf' : '#e8f0fe', fontFamily: "'Inter',sans-serif" }}>{n.titulo}</div>
+                    <div style={{ fontSize: 12, fontWeight: n.leida ? 400 : 600, color: n.leida ? '#aaaaaa' : '#ffffff', fontFamily: "'Inter',sans-serif" }}>{n.titulo}</div>
                     {!n.leida && <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.color, flexShrink: 0, marginLeft: 8, marginTop: 3 }} />}
                   </div>
-                  <div style={{ fontSize: 11, color: '#4a6a8a', lineHeight: 1.5, fontFamily: "'Inter',sans-serif" }}>{n.mensaje}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: '#4a6a8a', marginTop: 5 }}>{n.hora}</div>
+                  <div style={{ fontSize: 11, color: '#666666', lineHeight: 1.5, fontFamily: "'Inter',sans-serif" }}>{n.mensaje}</div>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: '#666666', marginTop: 5 }}>{n.hora}</div>
                 </div>
               </div>
             );

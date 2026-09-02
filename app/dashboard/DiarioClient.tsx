@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 
 const G = {
-  bg:'#050a12', card:'#0c1628', card2:'#0f1e38', border:'rgba(0,180,255,0.1)',
-  accent:'#0066dd', cyan:'#00d4ff', green:'#00e676', red:'#ff3366', gold:'#f5a623',
-  purple:'#7c4dff', text:'#e8f0fe', muted:'#4a6a8a', muted2:'#8ba0bf',
+  bg:'#050a12', card:'#1a1a1a', card2:'#202020', border:'rgba(255,255,255,0.06)',
+  accent:'#0066dd', cyan:'#00ff88', green:'#00ff88', red:'#ff4444', gold:'#ffaa00',
+  purple:'#7c4dff', text:'#ffffff', muted:'#666666', muted2:'#aaaaaa',
 };
 
 type DiarioEntry = {
