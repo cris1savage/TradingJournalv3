@@ -4,7 +4,6 @@ import { readData, writeData, getAllAccounts } from '@/lib/db';
 import { Recommendation, Account, Trade } from '@/lib/types';
 
 export async function GET(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const recommendations = await readData<Recommendation[]>('recommendations', []);
@@ -22,7 +21,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
@@ -120,7 +118,6 @@ export async function POST(req: NextRequest) {
 
 // Marcar como resuelto
 export async function PUT(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();

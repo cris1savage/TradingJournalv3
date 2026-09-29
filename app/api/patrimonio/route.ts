@@ -39,12 +39,10 @@ export type PatrimonioData = {
 const DEFAULT: PatrimonioData = { carteras: [], aportaciones: [] };
 
 export async function GET() {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   return NextResponse.json(await readData<PatrimonioData>('patrimonio', DEFAULT));
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await req.json();
   const data = await readData<PatrimonioData>('patrimonio', DEFAULT);
 

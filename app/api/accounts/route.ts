@@ -57,7 +57,6 @@ const DEFAULT_ACCOUNTS: Account[] = [
 ];
 
 export async function GET() {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     let accounts = await getAllAccounts();
@@ -73,7 +72,6 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();

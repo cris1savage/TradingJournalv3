@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
 
 export async function GET(req: Request) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const week = searchParams.get('week') || 'this'; // 'this' | 'next' | 'prev'

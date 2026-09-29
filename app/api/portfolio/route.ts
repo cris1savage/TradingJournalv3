@@ -47,7 +47,6 @@ function calculateMetrics(trades: Trade[]): PerformanceMetrics {
 }
 
 export async function GET(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const accounts = await getAllAccounts() as Account[];

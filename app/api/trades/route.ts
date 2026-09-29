@@ -6,7 +6,6 @@ import { Trade } from '@/lib/types';
 function key(accountId: string) { return `trades_${accountId}`; }
 
 export async function GET(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const accountId = req.nextUrl.searchParams.get('account') || 'propia';
   const mode = req.nextUrl.searchParams.get('mode') || 'single'; // 'single' o 'all'
@@ -28,7 +27,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
@@ -75,7 +73,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
@@ -99,7 +96,6 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();

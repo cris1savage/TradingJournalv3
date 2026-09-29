@@ -47,7 +47,6 @@ function calculateMetrics(trades: Trade[]): PerformanceMetrics {
 }
 
 export async function GET(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const period = (req.nextUrl.searchParams.get('period') || 'weekly') as ReportFrequency;
@@ -62,7 +61,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();

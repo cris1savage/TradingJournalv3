@@ -6,7 +6,6 @@ import { CapitalMovement, Capital, Account } from '@/lib/types';
 function key(accountId: string) { return `capital_${accountId}`; }
 
 export async function GET(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const accountId = req.nextUrl.searchParams.get('account') || 'propia';
@@ -33,7 +32,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
@@ -94,7 +92,6 @@ export async function POST(req: NextRequest) {
 
 // Reinvertir automáticamente basado en performance
 export async function PATCH(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();

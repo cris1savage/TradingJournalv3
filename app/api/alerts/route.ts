@@ -4,7 +4,6 @@ import { readData, writeData, getAllAccounts } from '@/lib/db';
 import { Alert, Account, Trade } from '@/lib/types';
 
 export async function GET(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const mode = req.nextUrl.searchParams.get('mode') || 'active'; // 'active', 'all', 'acknowledged'
@@ -25,7 +24,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
@@ -56,7 +54,6 @@ export async function POST(req: NextRequest) {
 
 // Reconocer alerta
 export async function PUT(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
@@ -82,7 +79,6 @@ export async function PUT(req: NextRequest) {
 
 // Trigger automático de alertas basadas en condiciones
 export async function PATCH(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const accounts = await getAllAccounts() as Account[];

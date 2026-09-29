@@ -33,7 +33,6 @@ function generatePriceData(symbol: string, type: 'crypto' | 'stock' | 'forex'): 
 }
 
 export async function GET(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const symbol = req.nextUrl.searchParams.get('symbol');
@@ -66,7 +65,6 @@ export async function GET(req: NextRequest) {
 
 // Conectar a API real de Binance
 export async function POST(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();

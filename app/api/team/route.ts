@@ -71,7 +71,6 @@ const DEFAULT_TEAM: TeamMember[] = [
 ];
 
 export async function GET(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const mode = req.nextUrl.searchParams.get('mode') || 'all'; // 'all', 'active', 'status'
@@ -111,7 +110,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
@@ -149,7 +147,6 @@ export async function POST(req: NextRequest) {
 
 // Generar reporte de equipo
 export async function PATCH(req: NextRequest) {
-  if (!await isAuthenticated()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const team = await readData<TeamMember[]>('team', DEFAULT_TEAM);
