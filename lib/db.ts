@@ -62,3 +62,57 @@ export async function writeData<T>(key: string, data: T): Promise<void> {
   if (IS_PROD) { await redisSet(key, data); return; }
   fsSet(key + '.json', data);
 }
+
+// ─── HELPER FUNCTIONS ─────────────────────────────────────────────────────────
+export async function getAllAccounts() {
+  return readData('accounts', []);
+}
+
+export async function saveAccounts(accounts: any[]) {
+  return writeData('accounts', accounts);
+}
+
+export async function getAccountTrades(accountId: string) {
+  const allTrades = await readData('trades', []);
+  return allTrades.filter((t: any) => t.accountId === accountId);
+}
+
+export async function getAllTrades() {
+  return readData('trades', []);
+}
+
+export async function saveTrades(trades: any[]) {
+  return writeData('trades', trades);
+}
+
+export async function getPortfolioData() {
+  return readData('portfolio', {});
+}
+
+export async function savePortfolioData(data: any) {
+  return writeData('portfolio', data);
+}
+
+export async function getAlerts() {
+  return readData('alerts', []);
+}
+
+export async function saveAlerts(alerts: any[]) {
+  return writeData('alerts', alerts);
+}
+
+export async function getReports() {
+  return readData('reports', []);
+}
+
+export async function saveReports(reports: any[]) {
+  return writeData('reports', reports);
+}
+
+export async function getPrices() {
+  return readData('prices', {});
+}
+
+export async function savePrices(prices: any) {
+  return writeData('prices', prices);
+}
