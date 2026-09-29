@@ -141,7 +141,7 @@ export default function CapitalManager({ selectedAccount = 'propia' }: CapitalMa
       </div>
 
       {/* Actions */}
-      <div style({
+      <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px',
       }}>
         <button

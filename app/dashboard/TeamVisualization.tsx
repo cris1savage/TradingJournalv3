@@ -160,7 +160,7 @@ export default function TeamVisualization() {
                     <span style={{ color: C.text, fontWeight: 500 }}>
                       {typeof value === 'number' ? value : String(value)}
                     </span>
-                  </span>
+                  </div>
                 ))}
               </div>
 

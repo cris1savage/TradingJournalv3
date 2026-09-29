@@ -52,7 +52,7 @@ export default function AlertsPanel() {
         <h2 style={{ color: C.text, fontSize: 22, fontWeight: 700, margin: 0 }}>
           Alertas del Sistema
         </h2>
-        <div style({ color: C.text2, fontSize: 12 }}>
+        <div style={{ color: C.text2, fontSize: 12 }}>
           {criticalAlerts.length} críticas · {warningAlerts.length} advertencias
         </div>
       </div>
