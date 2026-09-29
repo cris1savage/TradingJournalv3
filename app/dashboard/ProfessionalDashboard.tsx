@@ -5,13 +5,15 @@ import PortfolioDashboard from './PortfolioDashboard';
 import TeamVisualization from './TeamVisualization';
 import AlertsPanel from './AlertsPanel';
 import CapitalManager from './CapitalManager';
+import RecommendationsPanel from './RecommendationsPanel';
+import ReportsPanel from './ReportsPanel';
 
 const C = {
   bg: '#0a0f1e', bg2: '#0d1526', card: '#0f1d35',
   border: 'rgba(255,255,255,0.07)', blue: '#3B82F6', text: '#ffffff', text2: '#94a3b8',
 };
 
-type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts';
+type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports';
 
 export default function ProfessionalDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -38,6 +40,8 @@ export default function ProfessionalDashboard() {
               { id: 'team', label: '👥 Mi Equipo', icon: '🏢' },
               { id: 'capital', label: '💵 Capital', icon: '💸' },
               { id: 'alerts', label: '⚠️ Alertas', icon: '🔔' },
+              { id: 'recommendations', label: '💡 Recomendaciones', icon: '✨' },
+              { id: 'reports', label: '📊 Reportes', icon: '📄' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -99,6 +103,18 @@ export default function ProfessionalDashboard() {
         {activeTab === 'alerts' && (
           <div>
             <AlertsPanel />
+          </div>
+        )}
+
+        {activeTab === 'recommendations' && (
+          <div>
+            <RecommendationsPanel />
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <div>
+            <ReportsPanel />
           </div>
         )}
       </div>
