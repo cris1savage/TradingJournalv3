@@ -17,6 +17,7 @@ import CapitalDeposit from './CapitalDeposit';
 import TradingControlPanel from './TradingControlPanel';
 import CryptoCashFlow from './CryptoCashFlow';
 import AgentsManagement from './AgentsManagement';
+import MetaMaskWallet from './MetaMaskWallet';
 import { SimulationEngine } from './SimulationEngine';
 
 const C = {
@@ -24,7 +25,7 @@ const C = {
   border: 'rgba(255,255,255,0.07)', blue: '#3B82F6', text: '#ffffff', text2: '#94a3b8',
 };
 
-type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports' | 'executive' | 'trading-floor' | 'leaderboard' | 'broker-3d' | 'trading-floor-3d' | 'history' | 'deposit' | 'control' | 'crypto' | 'management';
+type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports' | 'executive' | 'trading-floor' | 'leaderboard' | 'broker-3d' | 'trading-floor-3d' | 'history' | 'deposit' | 'control' | 'crypto' | 'metamask' | 'management';
 
 export default function ProfessionalDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -49,6 +50,7 @@ export default function ProfessionalDashboard() {
               { id: 'overview', label: '📊 Resumen', icon: '📋' },
               { id: 'management', label: '🎯 Gestión Traders', icon: '🎯' },
               { id: 'history', label: '📈 Historial P&L', icon: '📊' },
+              { id: 'metamask', label: '🦊 MetaMask Web3', icon: '💎' },
               { id: 'crypto', label: '₿ Cripto', icon: '💰' },
               { id: 'deposit', label: '💰 Depositar', icon: '💸' },
               { id: 'control', label: '⚙️ Control Trading', icon: '🎛️' },
@@ -166,6 +168,12 @@ export default function ProfessionalDashboard() {
         {activeTab === 'history' && (
           <div>
             <PerformanceHistory />
+          </div>
+        )}
+
+        {activeTab === 'metamask' && (
+          <div>
+            <MetaMaskWallet />
           </div>
         )}
 
