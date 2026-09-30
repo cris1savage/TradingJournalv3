@@ -10,6 +10,7 @@ import ReportsPanel from './ReportsPanel';
 import ExecutiveBoard from './ExecutiveBoard';
 import TradingFloor from './TradingFloor';
 import Leaderboard from './Leaderboard';
+import BrokerCommand3D from './BrokerCommand3D';
 import { SimulationEngine } from './SimulationEngine';
 
 const C = {
@@ -17,7 +18,7 @@ const C = {
   border: 'rgba(255,255,255,0.07)', blue: '#3B82F6', text: '#ffffff', text2: '#94a3b8',
 };
 
-type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports' | 'executive' | 'trading-floor' | 'leaderboard';
+type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports' | 'executive' | 'trading-floor' | 'leaderboard' | 'broker-3d';
 
 export default function ProfessionalDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -40,6 +41,7 @@ export default function ProfessionalDashboard() {
           <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
             {[
               { id: 'overview', label: '📊 Resumen', icon: '📋' },
+              { id: 'broker-3d', label: '🎮 Broker 3D', icon: '🎯' },
               { id: 'executive', label: '🏛️ Control', icon: '⚙️' },
               { id: 'trading-floor', label: '🎯 Piso Trading', icon: '📈' },
               { id: 'team', label: '👥 Equipo Iso', icon: '🏢' },
@@ -141,6 +143,12 @@ export default function ProfessionalDashboard() {
         {activeTab === 'leaderboard' && (
           <div>
             <Leaderboard />
+          </div>
+        )}
+
+        {activeTab === 'broker-3d' && (
+          <div>
+            <BrokerCommand3D />
           </div>
         )}
       </div>
