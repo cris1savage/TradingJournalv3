@@ -12,6 +12,9 @@ import TradingFloor from './TradingFloor';
 import Leaderboard from './Leaderboard';
 import BrokerCommand3D from './BrokerCommand3D';
 import TradingFloor3D from './TradingFloor3D';
+import PerformanceHistory from './PerformanceHistory';
+import CapitalDeposit from './CapitalDeposit';
+import TradingControlPanel from './TradingControlPanel';
 import { SimulationEngine } from './SimulationEngine';
 
 const C = {
@@ -19,7 +22,7 @@ const C = {
   border: 'rgba(255,255,255,0.07)', blue: '#3B82F6', text: '#ffffff', text2: '#94a3b8',
 };
 
-type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports' | 'executive' | 'trading-floor' | 'leaderboard' | 'broker-3d' | 'trading-floor-3d';
+type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports' | 'executive' | 'trading-floor' | 'leaderboard' | 'broker-3d' | 'trading-floor-3d' | 'history' | 'deposit' | 'control';
 
 export default function ProfessionalDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -42,6 +45,9 @@ export default function ProfessionalDashboard() {
           <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
             {[
               { id: 'overview', label: '📊 Resumen', icon: '📋' },
+              { id: 'history', label: '📈 Historial P&L', icon: '📊' },
+              { id: 'deposit', label: '💰 Depositar', icon: '💸' },
+              { id: 'control', label: '⚙️ Control Trading', icon: '🎛️' },
               { id: 'broker-3d', label: '🎮 Broker 3D', icon: '🎯' },
               { id: 'executive', label: '🏛️ Control', icon: '⚙️' },
               { id: 'trading-floor', label: '🎯 Piso Trading', icon: '📈' },
@@ -150,6 +156,24 @@ export default function ProfessionalDashboard() {
         {activeTab === 'broker-3d' && (
           <div>
             <BrokerCommand3D />
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div>
+            <PerformanceHistory />
+          </div>
+        )}
+
+        {activeTab === 'deposit' && (
+          <div>
+            <CapitalDeposit />
+          </div>
+        )}
+
+        {activeTab === 'control' && (
+          <div>
+            <TradingControlPanel />
           </div>
         )}
       </div>
