@@ -7,13 +7,16 @@ import AlertsPanel from './AlertsPanel';
 import CapitalManager from './CapitalManager';
 import RecommendationsPanel from './RecommendationsPanel';
 import ReportsPanel from './ReportsPanel';
+import ExecutiveBoard from './ExecutiveBoard';
+import TradingFloor from './TradingFloor';
+import Leaderboard from './Leaderboard';
 
 const C = {
   bg: '#0a0f1e', bg2: '#0d1526', card: '#0f1d35',
   border: 'rgba(255,255,255,0.07)', blue: '#3B82F6', text: '#ffffff', text2: '#94a3b8',
 };
 
-type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports';
+type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports' | 'executive' | 'trading-floor' | 'leaderboard';
 
 export default function ProfessionalDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -35,13 +38,16 @@ export default function ProfessionalDashboard() {
           <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
             {[
               { id: 'overview', label: '📊 Resumen', icon: '📋' },
-              { id: 'accounts', label: '💼 Mis Cuentas', icon: '📁' },
-              { id: 'portfolio', label: '💰 Portfolio', icon: '📈' },
-              { id: 'team', label: '👥 Mi Equipo', icon: '🏢' },
+              { id: 'executive', label: '🏛️ Control', icon: '⚙️' },
+              { id: 'trading-floor', label: '🎯 Piso Trading', icon: '📈' },
+              { id: 'team', label: '👥 Equipo Iso', icon: '🏢' },
+              { id: 'leaderboard', label: '🏆 Ranking', icon: '⭐' },
+              { id: 'accounts', label: '💼 Cuentas', icon: '📁' },
+              { id: 'portfolio', label: '💰 Portfolio', icon: '📊' },
               { id: 'capital', label: '💵 Capital', icon: '💸' },
               { id: 'alerts', label: '⚠️ Alertas', icon: '🔔' },
-              { id: 'recommendations', label: '💡 Recomendaciones', icon: '✨' },
-              { id: 'reports', label: '📊 Reportes', icon: '📄' },
+              { id: 'recommendations', label: '💡 Ideas', icon: '✨' },
+              { id: 'reports', label: '📄 Reportes', icon: '📋' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -115,6 +121,24 @@ export default function ProfessionalDashboard() {
         {activeTab === 'reports' && (
           <div>
             <ReportsPanel />
+          </div>
+        )}
+
+        {activeTab === 'executive' && (
+          <div>
+            <ExecutiveBoard />
+          </div>
+        )}
+
+        {activeTab === 'trading-floor' && (
+          <div>
+            <TradingFloor />
+          </div>
+        )}
+
+        {activeTab === 'leaderboard' && (
+          <div>
+            <Leaderboard />
           </div>
         )}
       </div>
