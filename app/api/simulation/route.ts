@@ -40,14 +40,14 @@ async function applyRiskControls() {
   updatedTrades = updatedTrades.map(trade => {
     if (trade.status !== 'open') return trade;
 
-    // Stop Loss: -2% y Take Profit: +3%
+    // Stop Loss: -2% y Take Profit: +2% (simétrico y realista)
     const stopLoss = trade.direction === 'LONG'
       ? trade.entryPrice * 0.98
       : trade.entryPrice * 1.02;
 
     const takeProfit = trade.direction === 'LONG'
-      ? trade.entryPrice * 1.03
-      : trade.entryPrice * 0.97;
+      ? trade.entryPrice * 1.02
+      : trade.entryPrice * 0.98;
 
     // Stop Loss hit
     if (trade.direction === 'LONG' && trade.currentPrice <= stopLoss) {
@@ -140,14 +140,14 @@ async function runMarketTick() {
     };
   });
 
-  // 2. Agentes ejecutan trades automáticamente (15% de probabilidad = más realista)
+  // 2. Agentes ejecutan trades automáticamente (5% de probabilidad = más realista, menos frecuente)
   agents.forEach(agent => {
-    if (agent.status === 'active' && Math.random() < 0.15) {
+    if (agent.status === 'active' && Math.random() < 0.05) {
       const symbols = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'BTC/USD', 'ETH/USD', 'AAPL', 'GOOGL', 'MSFT'];
       const symbol = symbols[Math.floor(Math.random() * symbols.length)];
       const direction = Math.random() < 0.5 ? 'LONG' : 'SHORT';
-      const quantity = Math.floor(Math.random() * 5) + 1;
-      const entryPrice = Math.random() * 1000 + 100;
+      const quantity = Math.floor(Math.random() * 3) + 1; // Reducido: 1-3 en lugar de 1-5
+      const entryPrice = Math.random() * 500 + 100; // Precios más realistas: 100-600
 
       const newTrade: LiveTrade = {
         id: `trade_${Date.now()}_${Math.random()}`,
@@ -167,14 +167,14 @@ async function runMarketTick() {
     }
   });
 
-  // 3. Cerrar trades con lógica realista (60% ganan, 40% pierden)
+  // 3. Cerrar trades con lógica realista (45% ganan, 55% pierden - mayoría de traders pierden)
   updatedTrades = updatedTrades.map(trade => {
-    if (trade.status === 'open' && Math.random() < 0.08) { // 8% de probabilidad de cerrar
-      // Forzar resultado: 60% ganancia, 40% pérdida
-      const isWin = Math.random() < 0.6;
+    if (trade.status === 'open' && Math.random() < 0.04) { // 4% de probabilidad de cerrar (trades duran más)
+      // Forzar resultado: 45% ganancia, 55% pérdida (realista - mayoría pierden)
+      const isWin = Math.random() < 0.45;
 
-      if (!isWin && trade.unrealizedPnL > 0) {
-        // Convertir ganancia en pérdida
+      if (!isWin) {
+        // Pérdida realista: -2% (simétrico con ganancia)
         const newPrice = trade.direction === 'LONG'
           ? trade.entryPrice * 0.98
           : trade.entryPrice * 1.02;
@@ -189,8 +189,8 @@ async function runMarketTick() {
           unrealizedPnL: pnlPerUnit * trade.quantity,
           status: 'closed',
         };
-      } else if (isWin && trade.unrealizedPnL <= 0) {
-        // Convertir pérdida en ganancia
+      } else {
+        // Ganancia realista: +2% (simétrico con pérdida)
         const newPrice = trade.direction === 'LONG'
           ? trade.entryPrice * 1.02
           : trade.entryPrice * 0.98;
@@ -206,11 +206,6 @@ async function runMarketTick() {
           status: 'closed',
         };
       }
-
-      return {
-        ...trade,
-        status: 'closed',
-      };
     }
     return trade;
   });

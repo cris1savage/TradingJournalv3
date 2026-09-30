@@ -62,17 +62,17 @@ export async function POST(req: NextRequest) {
           ? trade.entryPrice * 0.98
           : trade.entryPrice * 1.02;
 
-        // Take Profit: +3% desde entrada
+        // Take Profit: +2% desde entrada (simétrico y realista)
         const takeProfit = trade.direction === 'LONG'
-          ? trade.entryPrice * 1.03
-          : trade.entryPrice * 0.97;
+          ? trade.entryPrice * 1.02
+          : trade.entryPrice * 0.98;
 
         // Si riesgo es muy alto, cerrar posición
         if (riskAmount > maxRiskAmount) {
           return {
             ...trade,
             status: 'closed',
-            unrealizedPnL: -Math.abs(trade.entryPrice * trade.quantity * 0.01), // Pérdida del 1%
+            unrealizedPnL: -Math.abs(trade.entryPrice * trade.quantity * 0.02), // Pérdida del 2%
           };
         }
 
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
             ...trade,
             status: 'closed',
             currentPrice: takeProfit,
-            unrealizedPnL: Math.abs(trade.entryPrice * trade.quantity * 0.03),
+            unrealizedPnL: Math.abs(trade.entryPrice * trade.quantity * 0.02),
           };
         }
 
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
             ...trade,
             status: 'closed',
             currentPrice: takeProfit,
-            unrealizedPnL: Math.abs(trade.entryPrice * trade.quantity * 0.03),
+            unrealizedPnL: Math.abs(trade.entryPrice * trade.quantity * 0.02),
           };
         }
 
