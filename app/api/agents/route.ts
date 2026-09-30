@@ -5,7 +5,7 @@ import { VirtualAgent } from '@/lib/types';
 export async function GET(req: NextRequest) {
   try {
     const department = req.nextUrl.searchParams.get('department');
-    const agents = await readData<VirtualAgent[]>('virtual_agents', []);
+    const agents = await readData<VirtualAgent[]>('agents', []);
 
     if (department) {
       return NextResponse.json(agents.filter(a => a.department === department));
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const agents = await readData<VirtualAgent[]>('virtual_agents', []);
+    const agents = await readData<VirtualAgent[]>('agents', []);
 
     const newAgent: VirtualAgent = {
       id: `agent_${Date.now()}`,
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const agents = await readData<VirtualAgent[]>('virtual_agents', []);
+    const agents = await readData<VirtualAgent[]>('agents', []);
 
     const idx = agents.findIndex(a => a.id === body.agentId);
     if (idx === -1) {

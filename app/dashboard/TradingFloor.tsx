@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { LiveTrade, MarketEvent } from '@/lib/types';
+import SimulationMonitor from './SimulationMonitor';
 
 const C = {
   bg: '#0a0f1e', bg2: '#0d1526', bg3: '#111d35', card: '#0f1d35',
@@ -202,6 +203,8 @@ export default function TradingFloor() {
           </div>
         </div>
       </div>
+
+      <SimulationMonitor />
     </div>
   );
 }

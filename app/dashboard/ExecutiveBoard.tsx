@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { BrokerMetrics, VirtualAgent, Department, LiveTrade } from '@/lib/types';
+import LiveStats from './LiveStats';
 
 const C = {
   bg: '#0a0f1e', bg2: '#0d1526', bg3: '#111d35', card: '#0f1d35',
@@ -92,6 +93,8 @@ export default function ExecutiveBoard() {
 
   return (
     <div style={{ padding: '20px 0' }}>
+      <LiveStats />
+
       {/* Header */}
       <div style={{ marginBottom: '30px' }}>
         <h1 style={{ color: C.text, fontSize: 28, fontWeight: 800, margin: '0 0 8px 0' }}>

@@ -10,6 +10,7 @@ import ReportsPanel from './ReportsPanel';
 import ExecutiveBoard from './ExecutiveBoard';
 import TradingFloor from './TradingFloor';
 import Leaderboard from './Leaderboard';
+import { SimulationEngine } from './SimulationEngine';
 
 const C = {
   bg: '#0a0f1e', bg2: '#0d1526', card: '#0f1d35',
@@ -24,6 +25,7 @@ export default function ProfessionalDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
+      <SimulationEngine />
       {/* Header */}
       <div style={{
         background: C.bg2, borderBottom: `1px solid ${C.border}`, padding: '16px 20px',
