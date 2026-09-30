@@ -187,7 +187,7 @@ export default function TradingFloor() {
                     {event.description}
                   </div>
 
-                  <div style{{ color: C.text2, fontSize: 9 }}>
+                  <div style={{ color: C.text2, fontSize: 9 }}>
                     Símbolos: {event.symbols.join(', ')}
                   </div>
                 </div>
