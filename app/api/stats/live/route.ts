@@ -12,7 +12,8 @@ export async function GET(req: NextRequest) {
     const activeTrades = trades.filter(t => t.status === 'open');
     const closedTrades = trades.filter(t => t.status === 'closed');
 
-    const totalPnL = activeTrades.reduce((sum, t) => sum + t.unrealizedPnL, 0);
+    // P&L solo de trades cerrados (no contar unrealized)
+    const totalPnL = closedTrades.reduce((sum, t) => sum + t.unrealizedPnL, 0);
     const winningTrades = closedTrades.filter(t => t.unrealizedPnL > 0).length;
     const winRate = closedTrades.length > 0 ? (winningTrades / closedTrades.length) * 100 : 0;
 

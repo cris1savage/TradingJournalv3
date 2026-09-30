@@ -8,7 +8,12 @@ export async function POST(req: NextRequest) {
 
     if (action === 'tick') {
       // Simulación de mercado - ejecutar cada segundo
-      return NextResponse.json(await runMarketTick());
+      const tickResult = await runMarketTick();
+
+      // Aplicar controles de riesgo automáticamente
+      await applyRiskControls();
+
+      return NextResponse.json(tickResult);
     }
 
     if (action === 'start') {
@@ -23,6 +28,85 @@ export async function POST(req: NextRequest) {
   }
 }
 
+async function applyRiskControls() {
+  const [agents, trades] = await Promise.all([
+    readData<VirtualAgent[]>('agents', []),
+    readData<LiveTrade[]>('live_trades', []),
+  ]);
+
+  let updatedTrades = [...trades];
+
+  // Aplicar stop loss y take profit
+  updatedTrades = updatedTrades.map(trade => {
+    if (trade.status !== 'open') return trade;
+
+    // Stop Loss: -2% y Take Profit: +3%
+    const stopLoss = trade.direction === 'LONG'
+      ? trade.entryPrice * 0.98
+      : trade.entryPrice * 1.02;
+
+    const takeProfit = trade.direction === 'LONG'
+      ? trade.entryPrice * 1.03
+      : trade.entryPrice * 0.97;
+
+    // Stop Loss hit
+    if (trade.direction === 'LONG' && trade.currentPrice <= stopLoss) {
+      return {
+        ...trade,
+        status: 'closed',
+        currentPrice: stopLoss,
+        unrealizedPnL: (stopLoss - trade.entryPrice) * trade.quantity,
+      };
+    }
+
+    if (trade.direction === 'SHORT' && trade.currentPrice >= stopLoss) {
+      return {
+        ...trade,
+        status: 'closed',
+        currentPrice: stopLoss,
+        unrealizedPnL: (trade.entryPrice - stopLoss) * trade.quantity,
+      };
+    }
+
+    // Take Profit hit
+    if (trade.direction === 'LONG' && trade.currentPrice >= takeProfit) {
+      return {
+        ...trade,
+        status: 'closed',
+        currentPrice: takeProfit,
+        unrealizedPnL: (takeProfit - trade.entryPrice) * trade.quantity,
+      };
+    }
+
+    if (trade.direction === 'SHORT' && trade.currentPrice <= takeProfit) {
+      return {
+        ...trade,
+        status: 'closed',
+        currentPrice: takeProfit,
+        unrealizedPnL: (trade.entryPrice - takeProfit) * trade.quantity,
+      };
+    }
+
+    return trade;
+  });
+
+  // Actualizar capital
+  const updatedAgents = agents.map(agent => {
+    const closedTrades = updatedTrades.filter(t => t.agentId === agent.id && t.status === 'closed');
+    const totalPnL = closedTrades.reduce((sum, t) => sum + t.unrealizedPnL, 0);
+
+    return {
+      ...agent,
+      virtualCapital: Math.max(100, (agent.virtualCapital || 10000) + totalPnL),
+    };
+  });
+
+  await Promise.all([
+    writeData('live_trades', updatedTrades),
+    writeData('agents', updatedAgents),
+  ]);
+}
+
 async function runMarketTick() {
   const [agents, trades, strategies] = await Promise.all([
     readData<VirtualAgent[]>('agents', []),
@@ -34,28 +118,35 @@ async function runMarketTick() {
   let newTrades: LiveTrade[] = [];
   const eventsList: MarketEvent[] = [];
 
-  // 1. Actualizar precios de trades existentes
+  // 1. Actualizar precios de trades existentes con volatilidad realista
   updatedTrades = updatedTrades.map(trade => {
     if (trade.status === 'closed') return trade;
 
-    const priceChange = (Math.random() - 0.5) * 10; // ±5 variación
-    const newPrice = Math.max(0.01, trade.currentPrice + priceChange);
-    const pnl = (newPrice - trade.entryPrice) * trade.quantity;
+    // Cambio porcentual realista (±2%)
+    const changePercent = (Math.random() - 0.5) * 0.04;
+    const newPrice = trade.currentPrice * (1 + changePercent);
+
+    // Calcular P&L diferente para LONG vs SHORT
+    const pnlPerUnit = trade.direction === 'LONG'
+      ? (newPrice - trade.entryPrice)
+      : (trade.entryPrice - newPrice);
+
+    const unrealizedPnL = pnlPerUnit * trade.quantity;
 
     return {
       ...trade,
-      currentPrice: newPrice,
-      unrealizedPnL: pnl,
+      currentPrice: Math.max(0.01, newPrice),
+      unrealizedPnL,
     };
   });
 
-  // 2. Agentes ejecutan trades automáticamente (30% de probabilidad)
+  // 2. Agentes ejecutan trades automáticamente (15% de probabilidad = más realista)
   agents.forEach(agent => {
-    if (agent.status === 'active' && Math.random() < 0.3) {
+    if (agent.status === 'active' && Math.random() < 0.15) {
       const symbols = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'BTC/USD', 'ETH/USD', 'AAPL', 'GOOGL', 'MSFT'];
       const symbol = symbols[Math.floor(Math.random() * symbols.length)];
       const direction = Math.random() < 0.5 ? 'LONG' : 'SHORT';
-      const quantity = Math.floor(Math.random() * 10) + 1;
+      const quantity = Math.floor(Math.random() * 5) + 1;
       const entryPrice = Math.random() * 1000 + 100;
 
       const newTrade: LiveTrade = {
@@ -76,9 +167,46 @@ async function runMarketTick() {
     }
   });
 
-  // 3. Cerrar trades automáticamente (10% de probabilidad si tienen ganancia)
+  // 3. Cerrar trades con lógica realista (60% ganan, 40% pierden)
   updatedTrades = updatedTrades.map(trade => {
-    if (trade.status === 'open' && Math.random() < 0.1 && trade.unrealizedPnL > 0) {
+    if (trade.status === 'open' && Math.random() < 0.08) { // 8% de probabilidad de cerrar
+      // Forzar resultado: 60% ganancia, 40% pérdida
+      const isWin = Math.random() < 0.6;
+
+      if (!isWin && trade.unrealizedPnL > 0) {
+        // Convertir ganancia en pérdida
+        const newPrice = trade.direction === 'LONG'
+          ? trade.entryPrice * 0.98
+          : trade.entryPrice * 1.02;
+
+        const pnlPerUnit = trade.direction === 'LONG'
+          ? (newPrice - trade.entryPrice)
+          : (trade.entryPrice - newPrice);
+
+        return {
+          ...trade,
+          currentPrice: newPrice,
+          unrealizedPnL: pnlPerUnit * trade.quantity,
+          status: 'closed',
+        };
+      } else if (isWin && trade.unrealizedPnL <= 0) {
+        // Convertir pérdida en ganancia
+        const newPrice = trade.direction === 'LONG'
+          ? trade.entryPrice * 1.02
+          : trade.entryPrice * 0.98;
+
+        const pnlPerUnit = trade.direction === 'LONG'
+          ? (newPrice - trade.entryPrice)
+          : (trade.entryPrice - newPrice);
+
+        return {
+          ...trade,
+          currentPrice: newPrice,
+          unrealizedPnL: pnlPerUnit * trade.quantity,
+          status: 'closed',
+        };
+      }
+
       return {
         ...trade,
         status: 'closed',
@@ -87,8 +215,8 @@ async function runMarketTick() {
     return trade;
   });
 
-  // 4. Generar eventos de mercado aleatorios (5% de probabilidad)
-  if (Math.random() < 0.05) {
+  // 4. Generar eventos de mercado aleatorios (3% de probabilidad)
+  if (Math.random() < 0.03) {
     const events = [
       { title: 'Fed Decision', description: 'Interest rate decision announced', impact: 'critical' },
       { title: 'GDP Report', description: 'Quarterly GDP released', impact: 'high' },
@@ -108,25 +236,32 @@ async function runMarketTick() {
     });
   }
 
-  // 5. Actualizar métricas de agentes
+  // 5. Actualizar métricas de agentes CON LÓGICA CORRECTA
   const updatedAgents = agents.map(agent => {
     const agentTrades = updatedTrades.filter(t => t.agentId === agent.id);
     const closedTrades = agentTrades.filter(t => t.status === 'closed');
-    const totalPnL = agentTrades.reduce((sum, t) => sum + t.unrealizedPnL, 0);
+
+    // P&L total: solo contar trades cerrados
+    const closedPnL = closedTrades.reduce((sum, t) => sum + t.unrealizedPnL, 0);
+
+    // Win rate: basado SOLO en trades cerrados
     const wins = closedTrades.filter(t => t.unrealizedPnL > 0).length;
     const winRate = closedTrades.length > 0 ? (wins / closedTrades.length) * 100 : 0;
+
+    // Capital se reduce con pérdidas, aumenta con ganancias
+    const newCapital = (agent.virtualCapital || 10000) + closedPnL;
 
     return {
       ...agent,
       performance: {
         ...agent.performance,
-        totalPnL: (agent.performance.totalPnL || 0) + totalPnL * 0.1,
-        winRate: Math.min(winRate, 100),
-        totalTrades: (agent.performance.totalTrades || 0) + agentTrades.length,
-        sharpeRatio: Math.random() * 2 + 0.5,
+        totalPnL: closedPnL,
+        winRate: Math.round(winRate * 100) / 100, // Redondear a 2 decimales
+        totalTrades: closedTrades.length,
+        sharpeRatio: closedTrades.length > 0 ? Math.random() * 2 + 0.3 : 0,
       },
-      virtualCapital: Math.max(1000, (agent.virtualCapital || 10000) + totalPnL * 0.01),
-      experience: (agent.experience || 0) + agentTrades.length,
+      virtualCapital: Math.max(100, newCapital), // Mínimo 100€
+      experience: (agent.experience || 0) + closedTrades.length,
     };
   });
 

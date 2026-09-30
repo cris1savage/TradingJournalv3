@@ -11,6 +11,7 @@ import ExecutiveBoard from './ExecutiveBoard';
 import TradingFloor from './TradingFloor';
 import Leaderboard from './Leaderboard';
 import BrokerCommand3D from './BrokerCommand3D';
+import TradingFloor3D from './TradingFloor3D';
 import { SimulationEngine } from './SimulationEngine';
 
 const C = {
@@ -18,7 +19,7 @@ const C = {
   border: 'rgba(255,255,255,0.07)', blue: '#3B82F6', text: '#ffffff', text2: '#94a3b8',
 };
 
-type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports' | 'executive' | 'trading-floor' | 'leaderboard' | 'broker-3d';
+type TabType = 'overview' | 'accounts' | 'portfolio' | 'team' | 'capital' | 'alerts' | 'recommendations' | 'reports' | 'executive' | 'trading-floor' | 'leaderboard' | 'broker-3d' | 'trading-floor-3d';
 
 export default function ProfessionalDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
