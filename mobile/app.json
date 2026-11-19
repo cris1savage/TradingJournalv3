@@ -43,6 +43,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "owner": "tradingjournal-app",
+    "extra": {
+      "eas": {
+        "projectId": "45c7f1b5-67ea-40eb-9972-30778bae1a82"
+      }
     }
   }
 }
