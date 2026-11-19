@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -23,7 +23,9 @@ function niceError(m: string) {
 
 export default function Login() {
   const { theme: t } = useStore();
-  const [mode, setMode] = useState<Mode>('in');
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const [mode, setMode] = useState<Mode>(params.mode === 'up' ? 'up' : 'in');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -42,17 +44,20 @@ export default function Login() {
 
   const signInOrUp = () => run(async () => {
     if (!EMAIL_RE.test(cleanEmail)) { setMsg({ text: 'Escribe un email válido.' }); return; }
+    if (mode === 'up' && !name.trim()) { setMsg({ text: 'Dinos cómo te llamas.' }); return; }
     if (password.length < 8) { setMsg({ text: 'La contraseña necesita al menos 8 caracteres.' }); return; }
     const creds = { email: cleanEmail, password };
-    const r = mode === 'in' ? await supabase!.auth.signInWithPassword(creds) : await supabase!.auth.signUp(creds);
+    const r = mode === 'in'
+      ? await supabase!.auth.signInWithPassword(creds)
+      : await supabase!.auth.signUp({ ...creds, options: { data: { name: name.trim() } } });
     if (r.error) { setMsg({ text: niceError(r.error.message) }); return; }
     if (mode === 'up' && !r.data.session) {
       setMsg({ ok: true, text: 'Cuenta creada. Te hemos enviado un email para confirmarla: ábrelo y vuelve para iniciar sesión.' });
       go('in');
       return;
     }
+    // Al haber sesión, la app pasa sola a la pantalla principal (rutas protegidas)
     success();
-    router.back();
   });
 
   const sendResetCode = () => run(async () => {
@@ -71,7 +76,6 @@ export default function Login() {
     const u = await supabase!.auth.updateUser({ password });
     if (u.error) { setMsg({ text: niceError(u.error.message) }); return; }
     success();
-    router.back();
   });
 
   if (!supabase) {
@@ -93,6 +97,10 @@ export default function Login() {
           value={mode as 'in' | 'up'}
           onChange={go}
         />
+      )}
+
+      {mode === 'up' && (
+        <Field label="Nombre" value={name} onChangeText={setName} autoCapitalize="words" autoComplete="name" textContentType="name" placeholder="Tu nombre" maxLength={40} />
       )}
 
       <Field
@@ -164,7 +172,7 @@ export default function Login() {
       </View>
 
       <Txt v="small" style={{ textAlign: 'center' }}>
-        Tus datos solo los ves tú: cada usuario tiene su propio espacio aislado en la base de datos. Puedes borrar tus datos o tu cuenta en cualquier momento desde Personalizar.
+        Tus datos solo los ves tú: cada usuario tiene su propio espacio aislado en la base de datos. Puedes borrar tus datos o tu cuenta en cualquier momento desde Perfil.
       </Txt>
     </Sheet>
   );

@@ -18,8 +18,9 @@ export async function authenticate(reason = 'Desbloquea TJ Pro') {
 }
 
 /** Tapa la app con una pantalla de bloqueo cuando el Face ID está activado. */
-export function LockGate({ children }: { children: ReactNode }) {
-  const { prefs, theme: t } = useStore();
+export function LockGate({ children, enabled = true }: { children: ReactNode; enabled?: boolean }) {
+  const { prefs: rawPrefs, theme: t } = useStore();
+  const prefs = { ...rawPrefs, faceId: rawPrefs.faceId && enabled };
   const [locked, setLocked] = useState(prefs.faceId && Platform.OS !== 'web');
   const busy = useRef(false);
   const backgroundAt = useRef<number | null>(null);

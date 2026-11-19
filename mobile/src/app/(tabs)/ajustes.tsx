@@ -1,24 +1,20 @@
-import Constants from 'expo-constants';
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, Switch, View } from 'react-native';
+import { Alert, Pressable, Switch, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
 import { authenticate, canUseBiometrics } from '@/components/lock';
-import { Button, Card, Divider, Field, Row, Screen, Segmented, tap, Txt } from '@/components/ui';
-import { shareCsv } from '@/lib/export';
+import { Card, Divider, Field, Row, Screen, Segmented, tap, Txt } from '@/components/ui';
 import { setDailyReminder } from '@/lib/reminder';
-import { ACCENTS, BACKGROUNDS, withAlpha } from '@/lib/theme';
-import { LEGAL_URL } from '@/lib/links';
+import { ACCENTS, BACKGROUNDS } from '@/lib/theme';
 import type { BgKey } from '@/lib/types';
 import { useStore } from '@/store/store';
 
 export default function Ajustes() {
-  const { accounts, moves, prefs, setPrefs, theme: t, cloudEnabled, session, syncing, refresh, signOut, deleteCloudAccount, deleteCloudData, hasSample, clearSample, wipeLocal } = useStore();
+  const { prefs, setPrefs, theme: t } = useStore();
   const [goal, setGoal] = useState(prefs.monthlyGoal ? String(prefs.monthlyGoal) : '');
 
   return (
-    <Screen title="Personalizar" subtitle="Colores, fondo y tu cuenta">
+    <Screen title="Estilo" subtitle="Colores, seguridad y hábitos">
       <Card style={{ gap: 14 }}>
         <Txt v="h2">Color de acento</Txt>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
@@ -131,73 +127,7 @@ export default function Ajustes() {
         </View>
       </Card>
 
-      <Card style={{ gap: 12 }}>
-        <Row>
-          <Icon name="cloud" size={20} color={session ? t.pos : t.muted} />
-          <Txt v="h2" style={{ flex: 1 }}>Cuenta y sincronización</Txt>
-          {syncing && <ActivityIndicator color={t.accent} />}
-        </Row>
-        {!cloudEnabled ? (
-          <Txt v="small">Modo local: tus datos se guardan solo en este iPhone. La sincronización en la nube se activa en cuanto conectemos la base de datos.</Txt>
-        ) : session ? (
-          <>
-            <Txt v="small">Conectado como <Txt v="small" color={t.text} style={{ fontWeight: '600' }}>{session.user.email}</Txt>. Tus cuentas y movimientos se guardan en la nube.</Txt>
-            <Row>
-              <Button title="Sincronizar" kind="secondary" icon="refresh" onPress={refresh} style={{ flex: 1 }} />
-              <Button title="Cerrar sesión" kind="secondary" onPress={signOut} style={{ flex: 1 }} />
-            </Row>
-            <Button title="Cambiar contraseña" kind="secondary" onPress={() => router.push('/password')} />
-            <Button
-              title="Borrar mis datos de la nube"
-              kind="danger"
-              onPress={() =>
-                Alert.alert('Borrar tus datos', 'Se borrarán para siempre todas tus cuentas y movimientos de la nube. Tu usuario se mantiene para que puedas empezar de cero.', [
-                  { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Borrar datos', style: 'destructive', onPress: async () => { if (await deleteCloudData()) Alert.alert('Datos borrados', 'Tus cuentas y movimientos se han eliminado.'); } },
-                ])
-              }
-            />
-            <Button
-              title="Eliminar mi cuenta"
-              kind="danger"
-              icon="trash"
-              onPress={() =>
-                Alert.alert('Eliminar tu cuenta', 'Se borrarán para siempre tu usuario, tus cuentas y todos tus movimientos de la nube. Esta acción no se puede deshacer.', [
-                  { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Eliminar cuenta', style: 'destructive', onPress: async () => { await deleteCloudAccount(); Alert.alert('Cuenta eliminada', 'Tu cuenta y todos tus datos se han borrado.'); } },
-                ])
-              }
-            />
-          </>
-        ) : (
-          <>
-            <Txt v="small">Inicia sesión para guardar tus datos en la nube y tenerlos en todos tus dispositivos. Lo que ya has creado en el iPhone se sube automáticamente.</Txt>
-            <Button title="Iniciar sesión o crear cuenta" onPress={() => router.push('/login')} />
-          </>
-        )}
-      </Card>
-
-      <Card style={{ gap: 12 }}>
-        <Txt v="h2">Datos</Txt>
-        <Button title="Exportar movimientos (CSV)" kind="secondary" onPress={() => shareCsv(accounts, moves, prefs.cur)} />
-        {hasSample && <Button title="Borrar datos de ejemplo" kind="secondary" onPress={clearSample} />}
-        {!session && (
-          <Button
-            title="Borrar todo del iPhone"
-            kind="danger"
-            onPress={() =>
-              Alert.alert('Borrar todo', 'Se eliminarán todas las cuentas y movimientos guardados en este iPhone.', [
-                { text: 'Cancelar', style: 'cancel' },
-                { text: 'Borrar', style: 'destructive', onPress: wipeLocal },
-              ])
-            }
-          />
-        )}
-        <Button title="Privacidad y soporte" kind="secondary" onPress={() => Linking.openURL(LEGAL_URL)} />
-        <Txt v="small" style={{ textAlign: 'center', marginTop: 4, color: withAlpha(t.muted.length === 7 ? t.muted : '#888888', 0.8) }}>
-          Versión {Constants.expoConfig?.version ?? '1.0.0'}
-        </Txt>
-      </Card>
+      <Txt v="small" style={{ textAlign: 'center', fontSize: 12 }}>Tu cuenta, tus datos y la privacidad están en la pestaña Perfil.</Txt>
     </Screen>
   );
 }

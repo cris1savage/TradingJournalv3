@@ -3,7 +3,6 @@ import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Alert } from 'react-native';
 
-import { sampleData } from '@/lib/sample';
 import { supabase } from '@/lib/supabase';
 import { buildTheme, type Theme } from '@/lib/theme';
 import { syncWidget } from '@/lib/widget-sync';
@@ -13,10 +12,13 @@ import { today, uuid } from '@/lib/format';
 const KEY = 'tj.state.v1';
 
 type Data = { accounts: Account[]; moves: Movement[] };
-type Persisted = Data & { prefs: Prefs };
+/** owner: id del usuario al que pertenece la copia local (para no mezclar datos entre usuarios). */
+type Persisted = Data & { prefs: Prefs; owner?: string | null };
 
 type Store = Data & {
   ready: boolean;
+  /** true cuando ya sabemos si hay sesión (evita parpadeos al abrir). */
+  authReady: boolean;
   prefs: Prefs;
   theme: Theme;
   session: Session | null;
@@ -35,6 +37,7 @@ type Store = Data & {
   signOut: () => Promise<void>;
   deleteCloudAccount: () => Promise<void>;
   deleteCloudData: () => Promise<boolean>;
+  updateProfileName: (name: string) => Promise<boolean>;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -62,7 +65,7 @@ const fromRowMove = (r: Row): Movement => ({
 
 function fail(title: string, e: unknown) {
   const msg = e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : String(e);
-  Alert.alert(title, `${msg}\n\nEl cambio se ha guardado en el iPhone; vuelve a sincronizar desde Personalizar.`);
+  Alert.alert(title, `${msg}\n\nComprueba tu conexión y vuelve a intentarlo; puedes sincronizar desde Perfil.`);
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -70,6 +73,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<Data>({ accounts: [], moves: [] });
   const [prefs, setPrefsState] = useState<Prefs>(DEFAULT_PREFS);
   const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(!supabase);
+  const [owner, setOwner] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const dataRef = useRef(data);
   useEffect(() => {
@@ -85,10 +90,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         saved = raw ? JSON.parse(raw) : null;
       } catch {}
       if (saved?.accounts) {
-        setData({ accounts: saved.accounts, moves: saved.moves ?? [] });
+        // los datos de ejemplo de versiones anteriores no se conservan
+        const accounts = saved.accounts.filter((a) => !a.sample);
+        const ids = new Set(accounts.map((a) => a.id));
+        setData({ accounts, moves: (saved.moves ?? []).filter((m) => !m.sample && ids.has(m.acc)) });
         setPrefsState({ ...DEFAULT_PREFS, ...saved.prefs });
-      } else {
-        setData(sampleData());
+        setOwner(saved.owner ?? null);
       }
       setReady(true);
     })();
@@ -97,9 +104,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // persistencia
   useEffect(() => {
     if (!ready) return;
-    AsyncStorage.setItem(KEY, JSON.stringify({ ...data, prefs })).catch(() => {});
+    AsyncStorage.setItem(KEY, JSON.stringify({ ...data, prefs, owner })).catch(() => {});
     syncWidget(data.accounts, data.moves, prefs);
-  }, [data, prefs, ready]);
+  }, [data, prefs, owner, ready]);
 
   const userId = session?.user.id;
 
@@ -114,26 +121,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setData({ accounts: (a.data ?? []).map(fromRowAccount), moves: (m.data ?? []).map(fromRowMove) });
   }, []);
 
-  // al iniciar sesión: sube lo creado en el iPhone (sin ejemplos) y descarga todo
+  // al iniciar sesión: la nube es la fuente de verdad. La copia local de otro usuario se descarta.
   const syncAfterLogin = useCallback(async (uid: string) => {
     if (!supabase) return;
     setSyncing(true);
+    setOwner((prev) => {
+      if (prev && prev !== uid) setData({ accounts: [], moves: [] });
+      return uid;
+    });
     try {
-      const local = dataRef.current;
-      const accs = local.accounts.filter((a) => !a.sample);
-      const ids = new Set(accs.map((a) => a.id));
-      const moves = local.moves.filter((m) => !m.sample && ids.has(m.acc));
-      if (accs.length) {
-        const r = await supabase.from('accounts').upsert(accs.map((a) => toRowAccount(a, uid)));
-        if (r.error) throw r.error;
-      }
-      if (moves.length) {
-        const r = await supabase.from('movements').upsert(moves.map((m) => toRowMove(m, uid)));
-        if (r.error) throw r.error;
-      }
       await pull();
     } catch (e) {
-      fail('No se pudo sincronizar', e);
+      fail('No se pudieron cargar tus datos', e);
     } finally {
       setSyncing(false);
     }
@@ -143,11 +142,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!supabase || !ready) return;
     supabase.auth.getSession().then(({ data: d }) => {
       setSession(d.session);
+      setAuthReady(true);
       if (d.session) syncAfterLogin(d.session.user.id);
+      else setData({ accounts: [], moves: [] });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       if (event === 'SIGNED_IN' && s) syncAfterLogin(s.user.id);
+      if (event === 'SIGNED_OUT') { setData({ accounts: [], moves: [] }); setOwner(null); }
     });
     return () => sub.subscription.unsubscribe();
   }, [ready, syncAfterLogin]);
@@ -243,14 +245,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return true;
   }, [userId]);
 
+  const updateProfileName = useCallback(async (name: string) => {
+    if (!supabase || !session) return false;
+    const r = await supabase.auth.updateUser({ data: { name: name.trim() } });
+    if (r.error) { fail('No se pudo guardar tu nombre', r.error); return false; }
+    if (r.data.user) setSession((s) => (s ? { ...s, user: r.data.user! } : s));
+    return true;
+  }, [session]);
+
   const value = useMemo<Store>(() => ({
     ...data,
-    ready, prefs, session, syncing,
+    ready, authReady, prefs, session, syncing,
     theme: buildTheme(prefs),
     cloudEnabled: !!supabase,
     hasSample: data.accounts.some((a) => a.sample),
-    setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData,
-  }), [data, ready, prefs, session, syncing, setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData]);
+    setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData, updateProfileName,
+  }), [data, ready, authReady, prefs, session, syncing, setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData, updateProfileName]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

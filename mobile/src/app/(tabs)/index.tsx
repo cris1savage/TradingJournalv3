@@ -20,7 +20,8 @@ const PERIODS: { value: Period; label: string }[] = [
 const PERIOD_TEXT: Record<Period, string> = { '7': 'últimos 7 días', '30': 'últimos 30 días', '90': 'últimos 90 días', '365': 'último año', all: 'desde el inicio' };
 
 export default function Dashboard() {
-  const { accounts, moves, prefs, setPrefs, theme: t, hasSample, clearSample, session, cloudEnabled } = useStore();
+  const { accounts, moves, prefs, setPrefs, theme: t, hasSample, clearSample, session } = useStore();
+  const firstName = ((session?.user.user_metadata?.name as string | undefined) ?? '').split(' ')[0];
   const [accFilter, setAccFilter] = useState('all');
   const [period, setPeriod] = useState<Period>('30');
   const [mode, setMode] = useState<'pnl' | 'bal'>('pnl');
@@ -56,7 +57,7 @@ export default function Dashboard() {
 
   if (!accounts.length) {
     return (
-      <Screen title="Dashboard" right={header}>
+      <Screen title="Dashboard" subtitle={firstName ? `Hola, ${firstName}` : undefined} right={header}>
         <Card style={{ alignItems: 'center', paddingVertical: 40, gap: 10 }}>
           <Txt v="h2">Crea tu primera cuenta</Txt>
           <Txt v="small" style={{ textAlign: 'center', maxWidth: 280 }}>Añade tu broker, cartera o cuenta de fondeo con su capital inicial para empezar a ver tus números.</Txt>
@@ -67,20 +68,12 @@ export default function Dashboard() {
   }
 
   return (
-    <Screen title="Dashboard" subtitle={`Resumen · ${PERIOD_TEXT[period]}`} right={header}>
+    <Screen title="Dashboard" subtitle={`${firstName ? `Hola, ${firstName} · ` : ''}${PERIOD_TEXT[period]}`} right={header}>
       {hasSample && (
         <Card style={{ borderStyle: 'dashed', borderColor: withAlpha(t.accent, 0.5), gap: 10 }}>
           <Txt v="body" style={{ fontWeight: '600' }}>Estás viendo datos de ejemplo</Txt>
           <Txt v="small">Bórralos cuando quieras empezar con tus cuentas reales.</Txt>
           <Button title="Borrar ejemplos y empezar" kind="secondary" onPress={clearSample} />
-        </Card>
-      )}
-
-      {cloudEnabled && !session && (
-        <Card style={{ gap: 10 }}>
-          <Txt v="body" style={{ fontWeight: '600' }}>Guarda tus datos en la nube</Txt>
-          <Txt v="small">Crea tu cuenta gratis para no perder nada y tenerlo en todos tus dispositivos.</Txt>
-          <Button title="Crear cuenta o iniciar sesión" onPress={() => router.push('/login')} />
         </Card>
       )}
 

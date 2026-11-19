@@ -3,35 +3,28 @@ import { Image, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from '@/components/icon';
-import { Button, success, Txt } from '@/components/ui';
+import { Button, Txt } from '@/components/ui';
 import { withAlpha } from '@/lib/theme';
 import { useStore } from '@/store/store';
 
 const FEATURES: { icon: IconName; title: string; text: string }[] = [
   { icon: 'up', title: 'Todas tus cuentas', text: 'Reales, de fondeo y demo, con su broker y su mercado.' },
-  { icon: 'coin', title: 'Tu P&L real', text: 'Win rate, profit factor y rentabilidad sin que los depósitos inflen tus números.' },
+  { icon: 'coin', title: 'Tu P&L real', text: 'Win rate, profit factor, calendario y rachas sin que los depósitos inflen tus números.' },
   { icon: 'check', title: 'Reglas de fondeo', text: 'Avisos de pérdida diaria, drawdown y objetivo para no quemar cuentas.' },
-  { icon: 'cloud', title: 'Tus datos, bajo tu control', text: 'Úsala sin cuenta o sincroniza en la nube. Bórralo todo cuando quieras.' },
+  { icon: 'cloud', title: 'Tu cuenta, en todos tus dispositivos', text: 'Tus datos se guardan en la nube, solo los ves tú y puedes borrarlos cuando quieras.' },
 ];
 
+/** Pantalla de entrada para quien no ha iniciado sesión. */
 export default function Bienvenida() {
-  const { theme: t, setPrefs, clearSample, cloudEnabled } = useStore();
+  const { theme: t } = useStore();
   const insets = useSafeAreaInsets();
-
-  const finish = (mode: 'sample' | 'empty' | 'login') => {
-    if (mode !== 'sample') clearSample();
-    setPrefs({ onboarded: true });
-    success();
-    router.replace('/');
-    if (mode === 'login') setTimeout(() => router.push('/login'), 250);
-  };
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 36, paddingBottom: insets.bottom + 24, paddingHorizontal: 22, gap: 26 }}>
         <View style={{ alignItems: 'center', gap: 14 }}>
           <Image source={require('@/assets/images/icon.png')} style={{ width: 92, height: 92, borderRadius: 22 }} accessibilityIgnoresInvertColors />
-          <Txt v="title" style={{ textAlign: 'center', fontSize: 30 }}>Bienvenido a TJ Pro</Txt>
+          <Txt v="title" style={{ textAlign: 'center', fontSize: 30 }}>TJ Pro</Txt>
           <Txt v="small" style={{ textAlign: 'center', fontSize: 15, maxWidth: 320 }}>Tu diario de trading: capital, resultados y disciplina, en un solo sitio.</Txt>
         </View>
 
@@ -50,9 +43,8 @@ export default function Bienvenida() {
         </View>
 
         <View style={{ gap: 10, marginTop: 6 }}>
-          <Button title="Empezar desde cero" onPress={() => finish('empty')} />
-          <Button title="Ver con datos de ejemplo" kind="secondary" onPress={() => finish('sample')} />
-          {cloudEnabled && <Button title="Ya tengo cuenta" kind="secondary" onPress={() => finish('login')} />}
+          <Button title="Crear cuenta gratis" onPress={() => router.push({ pathname: '/login', params: { mode: 'up' } })} />
+          <Button title="Ya tengo cuenta" kind="secondary" onPress={() => router.push({ pathname: '/login', params: { mode: 'in' } })} />
         </View>
         <Txt v="small" style={{ textAlign: 'center', fontSize: 12 }}>TJ Pro no se conecta a brokers ni es asesoramiento financiero.</Txt>
       </ScrollView>

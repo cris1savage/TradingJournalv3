@@ -1,11 +1,9 @@
-import { Redirect } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 
 import { useStore } from '@/store/store';
 
 export default function TabsLayout() {
-  const { theme: t, prefs } = useStore();
-  if (!prefs.onboarded) return <Redirect href="/bienvenida" />;
+  const { theme: t } = useStore();
   return (
     <NativeTabs
       tintColor={t.accent}
@@ -25,8 +23,12 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>Movimientos</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'arrow.up.arrow.down', selected: 'arrow.up.arrow.down' }} md="swap_vert" />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="perfil">
+        <NativeTabs.Trigger.Label>Perfil</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }} md="account_circle" />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="ajustes">
-        <NativeTabs.Trigger.Label>Personalizar</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Estilo</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'paintpalette', selected: 'paintpalette.fill' }} md="palette" />
       </NativeTabs.Trigger>
     </NativeTabs>
