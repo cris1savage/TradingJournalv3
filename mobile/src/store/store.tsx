@@ -32,6 +32,7 @@ type Store = Data & {
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
   deleteCloudAccount: () => Promise<void>;
+  deleteCloudData: () => Promise<boolean>;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -217,14 +218,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setData({ accounts: [], moves: [] });
   }, []);
 
+  // Borra cuentas y movimientos de la nube, pero mantiene el usuario
+  const deleteCloudData = useCallback(async () => {
+    if (!supabase || !userId) return false;
+    const r = await supabase.from('accounts').delete().eq('user_id', userId);
+    if (r.error) { fail('No se pudieron borrar los datos', r.error); return false; }
+    setData({ accounts: [], moves: [] });
+    return true;
+  }, [userId]);
+
   const value = useMemo<Store>(() => ({
     ...data,
     ready, prefs, session, syncing,
     theme: buildTheme(prefs),
     cloudEnabled: !!supabase,
     hasSample: data.accounts.some((a) => a.sample),
-    setPrefs, saveAccount, deleteAccount, addMove, deleteMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount,
-  }), [data, ready, prefs, session, syncing, setPrefs, saveAccount, deleteAccount, addMove, deleteMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount]);
+    setPrefs, saveAccount, deleteAccount, addMove, deleteMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData,
+  }), [data, ready, prefs, session, syncing, setPrefs, saveAccount, deleteAccount, addMove, deleteMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

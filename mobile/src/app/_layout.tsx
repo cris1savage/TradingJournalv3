@@ -25,6 +25,7 @@ function Root() {
         <Stack.Screen name="cuenta" options={{ presentation: 'modal' }} />
         <Stack.Screen name="movimiento" options={{ presentation: 'modal' }} />
         <Stack.Screen name="login" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="password" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
   );

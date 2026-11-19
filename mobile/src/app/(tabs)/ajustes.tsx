@@ -1,15 +1,16 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { ActivityIndicator, Alert, Pressable, Switch, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, Switch, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
 import { Button, Card, Divider, Row, Screen, Segmented, tap, Txt } from '@/components/ui';
 import { ACCENTS, BACKGROUNDS, withAlpha } from '@/lib/theme';
 import type { BgKey } from '@/lib/types';
+import { LEGAL_URL } from '@/lib/links';
 import { useStore } from '@/store/store';
 
 export default function Ajustes() {
-  const { prefs, setPrefs, theme: t, cloudEnabled, session, syncing, refresh, signOut, deleteCloudAccount, hasSample, clearSample, wipeLocal } = useStore();
+  const { prefs, setPrefs, theme: t, cloudEnabled, session, syncing, refresh, signOut, deleteCloudAccount, deleteCloudData, hasSample, clearSample, wipeLocal } = useStore();
 
   return (
     <Screen title="Personalizar" subtitle="Colores, fondo y tu cuenta">
@@ -91,13 +92,25 @@ export default function Ajustes() {
               <Button title="Sincronizar" kind="secondary" icon="refresh" onPress={refresh} style={{ flex: 1 }} />
               <Button title="Cerrar sesión" kind="secondary" onPress={signOut} style={{ flex: 1 }} />
             </Row>
+            <Button title="Cambiar contraseña" kind="secondary" onPress={() => router.push('/password')} />
+            <Button
+              title="Borrar mis datos de la nube"
+              kind="danger"
+              onPress={() =>
+                Alert.alert('Borrar tus datos', 'Se borrarán para siempre todas tus cuentas y movimientos de la nube. Tu usuario se mantiene para que puedas empezar de cero.', [
+                  { text: 'Cancelar', style: 'cancel' },
+                  { text: 'Borrar datos', style: 'destructive', onPress: async () => { if (await deleteCloudData()) Alert.alert('Datos borrados', 'Tus cuentas y movimientos se han eliminado.'); } },
+                ])
+              }
+            />
             <Button
               title="Eliminar mi cuenta"
               kind="danger"
+              icon="trash"
               onPress={() =>
-                Alert.alert('Eliminar tu cuenta', 'Se borrarán para siempre tu usuario, tus cuentas y todos tus movimientos de la nube.', [
+                Alert.alert('Eliminar tu cuenta', 'Se borrarán para siempre tu usuario, tus cuentas y todos tus movimientos de la nube. Esta acción no se puede deshacer.', [
                   { text: 'Cancelar', style: 'cancel' },
-                  { text: 'Eliminar', style: 'destructive', onPress: deleteCloudAccount },
+                  { text: 'Eliminar cuenta', style: 'destructive', onPress: async () => { await deleteCloudAccount(); Alert.alert('Cuenta eliminada', 'Tu cuenta y todos tus datos se han borrado.'); } },
                 ])
               }
             />
@@ -125,6 +138,7 @@ export default function Ajustes() {
             }
           />
         )}
+        <Button title="Privacidad y soporte" kind="secondary" onPress={() => Linking.openURL(LEGAL_URL)} />
         <Txt v="small" style={{ textAlign: 'center', marginTop: 4, color: withAlpha(t.muted.length === 7 ? t.muted : '#888888', 0.8) }}>
           Versión {Constants.expoConfig?.version ?? '1.0.0'}
         </Txt>

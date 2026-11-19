@@ -1,0 +1,83 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 TJ Pro",
+    "categories": [
+      "FINANCE",
+      "PRODUCTIVITY"
+    ],
+    "release": {
+      "automaticRelease": true
+    },
+    "advisory": {
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "contests": "NONE",
+      "gamblingSimulated": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "matureOrSuggestiveThemes": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "gambling": false,
+      "unrestrictedWebAccess": false,
+      "kidsAgeBand": null,
+      "ageRatingOverride": "NONE",
+      "koreaAgeRatingOverride": "NONE"
+    },
+    "info": {
+      "es-ES": {
+        "title": "TJ Pro: Trading Journal",
+        "subtitle": "Diario de trading y fondeo",
+        "description": "TJ Pro es tu diario de trading en el iPhone: todas tus cuentas, todo tu capital y todos tus resultados, ordenados en un solo sitio.\n\nRegistra cuentas reales, de fondeo (prop firms) y demo, con su broker o cartera y su mercado: Forex, acciones, cripto, futuros, índices, materias primas o ETFs. Apunta cada ganancia, pérdida, comisión, depósito o retiro en segundos y la app hace los cálculos por ti.\n\nDASHBOARD PROFESIONAL\n• Balance total y P&L del periodo con gráfica interactiva: desliza el dedo para ver cada día.\n• Win rate, profit factor y rentabilidad real (los depósitos y retiros no inflan tus números).\n• Capital propio frente a capital de fondeo, separados.\n• Capital por mercado, P&L mensual y P&L por cuenta.\n• Filtros por cuenta y por periodo: 7 días, 30 días, 90 días, 1 año o todo.\n\nCUENTAS Y MOVIMIENTOS\n• Tarjeta por cuenta con balance, P&L, rentabilidad y mini gráfica de 60 días.\n• Historial de movimientos por días, con filtros por cuenta y por tipo.\n\nA TU ESTILO\n• 10 colores de acento y 6 fondos (oscuros y claro).\n• Esquinas, efecto brillo y moneda ($ o €).\n• Modo privado para ocultar importes al hacer capturas.\n\nTUS DATOS, BAJO TU CONTROL\n• Úsala sin registrarte: todo se guarda en tu iPhone.\n• O crea tu cuenta gratis para sincronizar en la nube (servidores en la UE).\n• Restablece tu contraseña, borra tus datos o elimina tu cuenta cuando quieras desde la app.\n• Sin anuncios y sin seguimiento.\n\nTJ Pro no se conecta a brokers, no ejecuta operaciones y no es asesoramiento financiero: es tu herramienta personal de registro y estadística.",
+        "keywords": [
+          "trading",
+          "diario",
+          "journal",
+          "forex",
+          "cripto",
+          "acciones",
+          "fondeo",
+          "prop firm",
+          "ftmo",
+          "pnl",
+          "broker",
+          "cartera",
+          "bolsa"
+        ],
+        "promoText": "Tus cuentas reales y de fondeo, tu P&L y tus estadísticas en un solo sitio. Sin anuncios.",
+        "releaseNotes": "Primera versión de TJ Pro.",
+        "supportUrl": "https://claude.ai/artifact/GqgMuNPY1kjqikn2xwGafx",
+        "privacyPolicyUrl": "https://claude.ai/artifact/GqgMuNPY1kjqikn2xwGafx",
+        "marketingUrl": "https://claude.ai/artifact/GqgMuNPY1kjqikn2xwGafx"
+      },
+      "en-US": {
+        "title": "TJ Pro: Trading Journal",
+        "subtitle": "Trading log for real & funded",
+        "description": "TJ Pro is your trading journal on iPhone: all your accounts, capital and results, organized in one place.\n\nTrack real, prop firm (funded) and demo accounts with their broker or portfolio and market: Forex, stocks, crypto, futures, indices, commodities or ETFs. Log every win, loss, fee, deposit or withdrawal in seconds and the app does the math.\n\nPRO DASHBOARD\n• Total balance and period P&L with an interactive chart.\n• Win rate, profit factor and real return (deposits and withdrawals don't inflate your numbers).\n• Own capital vs. funded capital, kept separate.\n• Capital by market, monthly P&L and P&L per account.\n• Filter by account and period: 7D, 30D, 90D, 1Y or all time.\n\nMAKE IT YOURS\n• 10 accent colors, 6 backgrounds, corner styles, glow effect, $ or €.\n• Privacy mode hides amounts for screenshots.\n\nYOUR DATA, YOUR CONTROL\n• Use it without an account: everything stays on your iPhone.\n• Or create a free account to sync to the cloud (EU servers).\n• Reset your password, delete your data or delete your account anytime in the app.\n• No ads, no tracking.\n\nTJ Pro does not connect to brokers, execute trades or provide financial advice. The app interface is in Spanish.",
+        "keywords": [
+          "trading",
+          "journal",
+          "forex",
+          "crypto",
+          "stocks",
+          "prop firm",
+          "funded",
+          "ftmo",
+          "pnl",
+          "broker",
+          "portfolio",
+          "log"
+        ],
+        "promoText": "Your real and funded accounts, P&L and stats in one place. No ads.",
+        "releaseNotes": "First release of TJ Pro.",
+        "supportUrl": "https://claude.ai/artifact/GqgMuNPY1kjqikn2xwGafx",
+        "privacyPolicyUrl": "https://claude.ai/artifact/GqgMuNPY1kjqikn2xwGafx",
+        "marketingUrl": "https://claude.ai/artifact/GqgMuNPY1kjqikn2xwGafx"
+      }
+    }
+  }
+}
