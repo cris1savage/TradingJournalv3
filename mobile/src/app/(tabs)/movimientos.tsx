@@ -41,7 +41,7 @@ export default function Movimientos() {
   return (
     <Screen
       title="Movimientos"
-      subtitle="Mantén pulsado uno para eliminarlo"
+      subtitle="Toca uno para editarlo · mantén pulsado para borrar"
       refresh={session ? <RefreshControl refreshing={syncing} onRefresh={refresh} tintColor={t.accent} /> : undefined}
       right={<IconButton icon="plus" label="Nuevo movimiento" filled onPress={() => router.push(accounts.length ? '/movimiento' : '/cuenta')} />}>
       <Chips value={acc} onChange={setAcc} options={[{ value: 'all', label: 'Todas las cuentas' }, ...accounts.map((a) => ({ value: a.id, label: a.name, color: a.color }))]} />

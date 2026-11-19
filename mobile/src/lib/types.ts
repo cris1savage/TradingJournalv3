@@ -25,6 +25,10 @@ export type Account = {
   initial: number;
   color: string;
   created: string; // YYYY-MM-DD
+  /** Reglas de fondeo (opcionales, en la moneda de la app) */
+  dailyLossLimit?: number | null;
+  maxDrawdown?: number | null;
+  profitTarget?: number | null;
   sample?: boolean;
 };
 
@@ -47,6 +51,10 @@ export type Prefs = {
   glow: boolean;
   cur: 'USD' | 'EUR';
   privacy: boolean;
+  faceId: boolean;
+  reminderHour: number | null;
+  monthlyGoal: number | null;
+  onboarded: boolean;
 };
 
 export const DEFAULT_PREFS: Prefs = {
@@ -56,6 +64,10 @@ export const DEFAULT_PREFS: Prefs = {
   glow: true,
   cur: 'USD',
   privacy: false,
+  faceId: false,
+  reminderHour: null,
+  monthlyGoal: null,
+  onboarded: false,
 };
 
 export type Period = '7' | '30' | '90' | '365' | 'all';

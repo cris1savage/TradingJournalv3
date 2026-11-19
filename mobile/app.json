@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Trading Journal",
+    "name": "TJ Pro",
     "slug": "trading-journal",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -37,6 +37,37 @@
           "backgroundColor": "#07090E",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 140
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "TJ Pro usa Face ID para proteger tus datos de trading cuando activas el bloqueo."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#3D7BFF"
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "TJBalance",
+              "displayName": "TJ Pro · Balance",
+              "description": "Tu balance total y el P&L de hoy y del mes.",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium"
+                ],
+                "initialLayout": "./src/widgets/BalanceWidget.tsx"
+              }
+            }
+          ]
         }
       ]
     ],

@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { LockGate } from '@/components/lock';
 import { StoreProvider, useStore } from '@/store/store';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -19,6 +20,7 @@ function Root() {
 
   return (
     <ThemeProvider value={navTheme}>
+      <LockGate>
       <StatusBar style={t.scheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.bg } }}>
         <Stack.Screen name="(tabs)" />
@@ -26,7 +28,9 @@ function Root() {
         <Stack.Screen name="movimiento" options={{ presentation: 'modal' }} />
         <Stack.Screen name="login" options={{ presentation: 'modal' }} />
         <Stack.Screen name="password" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="bienvenida" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
       </Stack>
+      </LockGate>
     </ThemeProvider>
   );
 }

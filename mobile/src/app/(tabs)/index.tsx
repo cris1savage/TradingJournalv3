@@ -2,11 +2,14 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { PnlCalendar } from '@/components/calendar';
 import { AreaChart, Donut, Meter, SignedBars } from '@/components/charts';
+import { PropRules } from '@/components/prop-rules';
 import { MoveRow } from '@/components/move-row';
 import { Button, Card, Chips, IconButton, Row, Screen, Segmented, Tag, Txt } from '@/components/ui';
 import { byMarket, monthly, periodStart, pnlByAccount, summarize } from '@/lib/calc';
 import { group, money, MONTHS_SHORT, pct, shortDate } from '@/lib/format';
+import { dailyPnl, monthStart, propRules, streaks } from '@/lib/insights';
 import { CHART_PALETTE, withAlpha } from '@/lib/theme';
 import type { Period } from '@/lib/types';
 import { useStore } from '@/store/store';
@@ -33,6 +36,11 @@ export default function Dashboard() {
     const ids = new Set(accs.map((a) => a.id));
     return moves.filter((m) => ids.has(m.acc)).sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 6);
   }, [accs, moves]);
+
+  const byDay = useMemo(() => dailyPnl(accs, moves), [accs, moves]);
+  const st = useMemo(() => streaks(byDay, start), [byDay, start]);
+  const monthNow = useMemo(() => { const m0 = monthStart(); let v = 0; for (const [d, x] of byDay) if (d >= m0) v += x; return v; }, [byDay]);
+  const funded = useMemo(() => accs.map((a) => ({ a, rules: propRules(a, moves) })).filter((x) => x.rules.length), [accs, moves]);
 
   const fmt = (n: number, o?: { dec?: number; signed?: boolean }) => money(n, prefs, o);
   const values = s.series.map((p) => (mode === 'pnl' ? p.pnl : p.balance));
@@ -109,6 +117,52 @@ export default function Dashboard() {
         <Kpi label="Capital fondeo" value={fmt(s.funded, { dec: 0 })} sub={`PF ${s.profitFactor === Infinity ? '∞' : group(s.profitFactor, 2)}`} />
       </View>
 
+      {prefs.monthlyGoal ? (
+        <Card style={{ gap: 10 }}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Txt v="h2">Meta de {MONTHS_SHORT[new Date().getMonth()]}</Txt>
+            <Txt v="num" style={{ fontSize: 14 }} color={monthNow >= prefs.monthlyGoal ? t.pos : t.muted}>
+              {fmt(monthNow, { dec: 0, signed: true })} / {fmt(prefs.monthlyGoal, { dec: 0 })}
+            </Txt>
+          </Row>
+          <Meter value={(Math.max(0, monthNow) / prefs.monthlyGoal) * 100} color={monthNow >= prefs.monthlyGoal ? t.pos : t.accent} track={t.surface2} />
+          <Txt v="small" style={{ fontSize: 12 }}>
+            {monthNow >= prefs.monthlyGoal ? 'Meta conseguida este mes. Protege lo ganado.' : `Te faltan ${fmt(prefs.monthlyGoal - Math.max(0, monthNow), { dec: 0 })} · ${Math.round((Math.max(0, monthNow) / prefs.monthlyGoal) * 100)} %`}
+          </Txt>
+        </Card>
+      ) : null}
+
+      {funded.length > 0 && (
+        <Card style={{ gap: 14 }}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Txt v="h2">Reglas de fondeo · hoy</Txt>
+            {funded.some((f) => f.rules.some((r) => r.kind === 'risk' && r.used >= 80)) && <Tag label="Atención" color={t.neg} />}
+          </Row>
+          {funded.map(({ a, rules }) => (
+            <View key={a.id} style={{ gap: 8 }}>
+              <Row style={{ gap: 8 }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: a.color }} />
+                <Txt v="body" style={{ fontWeight: '700', fontSize: 14 }}>{a.name}</Txt>
+              </Row>
+              <PropRules rules={rules} />
+            </View>
+          ))}
+        </Card>
+      )}
+
+      <Card style={{ gap: 12 }}>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <Txt v="h2">Rachas y días</Txt>
+          <Txt v="small">{PERIOD_TEXT[period]}</Txt>
+        </Row>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 12 }}>
+          <Stat label="Mejor día" value={st.bestDay ? fmt(st.bestDay.value, { dec: 0, signed: true }) : '—'} sub={st.bestDay ? shortDate(st.bestDay.date) : ''} color={t.pos} />
+          <Stat label="Peor día" value={st.worstDay ? fmt(st.worstDay.value, { dec: 0, signed: true }) : '—'} sub={st.worstDay ? shortDate(st.worstDay.date) : ''} color={t.neg} />
+          <Stat label="Racha actual" value={`${st.currentWin} ${st.currentWin === 1 ? 'día' : 'días'}`} sub={`Récord: ${st.longestWin}`} />
+          <Stat label="Días verdes" value={`${st.greenDays} / ${st.greenDays + st.redDays}`} sub={st.greenDays + st.redDays ? `${Math.round((st.greenDays / (st.greenDays + st.redDays)) * 100)} % positivos` : ''} />
+        </View>
+      </Card>
+
       <Card style={{ gap: 14 }}>
         <Txt v="h2">Capital por mercado</Txt>
         <Row style={{ gap: 18, alignItems: 'center' }}>
@@ -137,6 +191,8 @@ export default function Dashboard() {
         </Row>
         <SignedBars items={months.map((m) => ({ label: MONTHS_SHORT[m.month], value: m.value }))} />
       </Card>
+
+      <PnlCalendar byDay={byDay} />
 
       {accFilter === 'all' && perAcc.length > 1 && (
         <Card style={{ gap: 14 }}>
@@ -173,6 +229,16 @@ export default function Dashboard() {
         {recent.length ? recent.map((m) => <MoveRow key={m.id} m={m} />) : <Txt v="small">Aún no hay movimientos.</Txt>}
       </Card>
     </Screen>
+  );
+}
+
+function Stat({ label, value, sub, color }: { label: string; value: string; sub: string; color?: string }) {
+  return (
+    <View style={{ width: '50%', gap: 2, paddingRight: 8 }}>
+      <Txt v="label">{label}</Txt>
+      <Txt v="num" color={color} style={{ fontSize: 17, fontWeight: '700' }} numberOfLines={1} adjustsFontSizeToFit>{value}</Txt>
+      {sub ? <Txt v="small" style={{ fontSize: 12 }}>{sub}</Txt> : null}
+    </View>
   );
 }
 

@@ -20,16 +20,29 @@ export default function CuentaForm() {
   const [kind, setKind] = useState<Kind>(existing?.kind ?? 'Real');
   const [initial, setInitial] = useState(existing ? String(existing.initial).replace('.', ',') : '');
   const [color, setColor] = useState(existing?.color ?? ACCOUNT_COLORS[accounts.length % ACCOUNT_COLORS.length]);
-  const [errors, setErrors] = useState<{ name?: string; initial?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; initial?: string; rules?: string }>({});
+  const fmtOpt = (n?: number | null) => (n ? String(n).replace('.', ',') : '');
+  const [dailyLoss, setDailyLoss] = useState(fmtOpt(existing?.dailyLossLimit));
+  const [maxDd, setMaxDd] = useState(fmtOpt(existing?.maxDrawdown));
+  const [target, setTarget] = useState(fmtOpt(existing?.profitTarget));
+  const parseOpt = (s: string) => {
+    if (!s.trim()) return null;
+    const v = Number(s.replace(/\./g, '').replace(',', '.'));
+    return isNaN(v) || v <= 0 ? NaN : Math.round(v * 100) / 100;
+  };
 
   const save = async () => {
     const value = Number(initial.replace(/\./g, '').replace(',', '.'));
     const e: typeof errors = {};
     if (!name.trim()) e.name = 'Ponle un nombre a la cuenta.';
     if (!initial.trim() || isNaN(value) || value < 0) e.initial = 'Indica el capital inicial (0 o más).';
+    const rules = kind === 'Fondeo'
+      ? { dailyLossLimit: parseOpt(dailyLoss), maxDrawdown: parseOpt(maxDd), profitTarget: parseOpt(target) }
+      : { dailyLossLimit: null, maxDrawdown: null, profitTarget: null };
+    if (Object.values(rules).some((r) => typeof r === 'number' && isNaN(r))) e.rules = 'Las reglas deben ser importes mayores que 0 (o déjalas vacías).';
     setErrors(e);
     if (Object.keys(e).length) return;
-    await saveAccount({ id: existing?.id, name: name.trim(), broker: broker.trim() || '—', market, kind, initial: Math.round(value * 100) / 100, color });
+    await saveAccount({ id: existing?.id, name: name.trim(), broker: broker.trim() || '—', market, kind, initial: Math.round(value * 100) / 100, color, ...rules });
     success();
     router.back();
   };
@@ -60,6 +73,15 @@ export default function CuentaForm() {
         <Txt v="label">Tipo de cuenta</Txt>
         <Segmented options={KINDS.map((k) => ({ value: k, label: k }))} value={kind} onChange={setKind} />
       </View>
+      {kind === 'Fondeo' && (
+        <View style={{ gap: 12, padding: 14, borderRadius: Math.min(t.r, 16), borderWidth: 1, borderColor: t.border, backgroundColor: t.surface }}>
+          <Txt v="h2">Reglas de la prop firm</Txt>
+          <Txt v="small">Opcional. La app te avisa cuando te acercas a los límites. Importes en tu moneda.</Txt>
+          <Field label="Pérdida diaria máxima" value={dailyLoss} onChangeText={setDailyLoss} placeholder="Ej.: 5.000" keyboardType="decimal-pad" />
+          <Field label="Drawdown máximo (desde el capital inicial)" value={maxDd} onChangeText={setMaxDd} placeholder="Ej.: 10.000" keyboardType="decimal-pad" />
+          <Field label="Objetivo de beneficio" value={target} onChangeText={setTarget} placeholder="Ej.: 10.000" keyboardType="decimal-pad" error={errors.rules} />
+        </View>
+      )}
       <View style={{ gap: 8 }}>
         <Txt v="label">Mercado</Txt>
         <Chips options={MARKETS.map((m) => ({ value: m, label: m }))} value={market} onChange={setMarket} />

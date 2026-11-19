@@ -6,6 +6,7 @@ import { Alert } from 'react-native';
 import { sampleData } from '@/lib/sample';
 import { supabase } from '@/lib/supabase';
 import { buildTheme, type Theme } from '@/lib/theme';
+import { syncWidget } from '@/lib/widget-sync';
 import { DEFAULT_PREFS, type Account, type Movement, type Prefs } from '@/lib/types';
 import { today, uuid } from '@/lib/format';
 
@@ -27,6 +28,7 @@ type Store = Data & {
   deleteAccount: (id: string) => Promise<void>;
   addMove: (m: Omit<Movement, 'id'>) => Promise<void>;
   deleteMove: (id: string) => Promise<void>;
+  updateMove: (m: Movement) => Promise<void>;
   clearSample: () => void;
   wipeLocal: () => void;
   refresh: () => Promise<void>;
@@ -41,6 +43,7 @@ const Ctx = createContext<Store | null>(null);
 const toRowAccount = (a: Account, user: string) => ({
   id: a.id, user_id: user, name: a.name, broker: a.broker, market: a.market, kind: a.kind,
   initial_capital: a.initial, color: a.color, created_at: a.created,
+  daily_loss_limit: a.dailyLossLimit ?? null, max_drawdown: a.maxDrawdown ?? null, profit_target: a.profitTarget ?? null,
 });
 const toRowMove = (m: Movement, user: string) => ({
   id: m.id, user_id: user, account_id: m.acc, date: m.date, type: m.type, amount: m.amount, note: m.note,
@@ -49,6 +52,9 @@ type Row = Record<string, any>;
 const fromRowAccount = (r: Row): Account => ({
   id: r.id, name: r.name, broker: r.broker, market: r.market, kind: r.kind,
   initial: Number(r.initial_capital), color: r.color, created: String(r.created_at).slice(0, 10),
+  dailyLossLimit: r.daily_loss_limit == null ? null : Number(r.daily_loss_limit),
+  maxDrawdown: r.max_drawdown == null ? null : Number(r.max_drawdown),
+  profitTarget: r.profit_target == null ? null : Number(r.profit_target),
 });
 const fromRowMove = (r: Row): Movement => ({
   id: r.id, acc: r.account_id, date: r.date, type: r.type, amount: Number(r.amount), note: r.note ?? '',
@@ -92,6 +98,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return;
     AsyncStorage.setItem(KEY, JSON.stringify({ ...data, prefs })).catch(() => {});
+    syncWidget(data.accounts, data.moves, prefs);
   }, [data, prefs, ready]);
 
   const userId = session?.user.id;
@@ -180,6 +187,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [userId]);
 
+  const updateMove = useCallback(async (m: Movement) => {
+    setData((d) => ({ ...d, moves: d.moves.map((x) => (x.id === m.id ? { ...m, sample: x.sample } : x)) }));
+    const acc = dataRef.current.accounts.find((a) => a.id === m.acc);
+    if (supabase && userId && !acc?.sample) {
+      const r = await supabase.from('movements').upsert(toRowMove(m, userId));
+      if (r.error) fail('No se pudo guardar en la nube', r.error);
+    }
+  }, [userId]);
+
   const deleteMove = useCallback(async (id: string) => {
     setData((d) => ({ ...d, moves: d.moves.filter((m) => m.id !== id) }));
     if (supabase && userId) {
@@ -233,8 +249,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     theme: buildTheme(prefs),
     cloudEnabled: !!supabase,
     hasSample: data.accounts.some((a) => a.sample),
-    setPrefs, saveAccount, deleteAccount, addMove, deleteMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData,
-  }), [data, ready, prefs, session, syncing, setPrefs, saveAccount, deleteAccount, addMove, deleteMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData]);
+    setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData,
+  }), [data, ready, prefs, session, syncing, setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

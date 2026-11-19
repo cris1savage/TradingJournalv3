@@ -4,8 +4,10 @@ import { Pressable, View } from 'react-native';
 
 import { Sparkline } from '@/components/charts';
 import { Icon } from '@/components/icon';
+import { PropRules } from '@/components/prop-rules';
 import { Button, Card, Chips, IconButton, Row, Screen, Tag, Txt } from '@/components/ui';
 import { balanceOf, contributed, sparkline } from '@/lib/calc';
+import { propRules } from '@/lib/insights';
 import { money, pct } from '@/lib/format';
 import { MARKETS, type Account } from '@/lib/types';
 import { useStore } from '@/store/store';
@@ -46,10 +48,10 @@ export default function Cuentas() {
 
 function AccountCard({ a, moves }: { a: Account; moves: ReturnType<typeof useStore>['moves'] }) {
   const { prefs, theme: t } = useStore();
-  const { bal, pnl, ret, spark, count } = useMemo(() => {
+  const { bal, pnl, ret, spark, count, rules } = useMemo(() => {
     const bal = balanceOf(a, moves);
     const dep = contributed(a, moves);
-    return { bal, pnl: bal - dep, ret: dep ? ((bal - dep) / dep) * 100 : 0, spark: sparkline(a, moves), count: moves.filter((m) => m.acc === a.id).length };
+    return { bal, pnl: bal - dep, ret: dep ? ((bal - dep) / dep) * 100 : 0, spark: sparkline(a, moves), count: moves.filter((m) => m.acc === a.id).length, rules: propRules(a, moves) };
   }, [a, moves]);
   const kindColor = a.kind === 'Fondeo' ? t.accent : a.kind === 'Real' ? t.pos : t.warn;
 
@@ -74,6 +76,7 @@ function AccountCard({ a, moves }: { a: Account; moves: ReturnType<typeof useSto
         </View>
       </Row>
       <Sparkline values={spark} color={a.color} />
+      <PropRules rules={rules} />
       <Row style={{ justifyContent: 'space-between' }}>
         <Txt v="small" style={{ fontSize: 12 }}>Inicial {money(a.initial, prefs, { dec: 0 })}</Txt>
         <Txt v="small" style={{ fontSize: 12 }}>{count} movimientos</Txt>

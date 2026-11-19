@@ -1,16 +1,21 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, Switch, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
-import { Button, Card, Divider, Row, Screen, Segmented, tap, Txt } from '@/components/ui';
+import { authenticate, canUseBiometrics } from '@/components/lock';
+import { Button, Card, Divider, Field, Row, Screen, Segmented, tap, Txt } from '@/components/ui';
+import { shareCsv } from '@/lib/export';
+import { setDailyReminder } from '@/lib/reminder';
 import { ACCENTS, BACKGROUNDS, withAlpha } from '@/lib/theme';
-import type { BgKey } from '@/lib/types';
 import { LEGAL_URL } from '@/lib/links';
+import type { BgKey } from '@/lib/types';
 import { useStore } from '@/store/store';
 
 export default function Ajustes() {
-  const { prefs, setPrefs, theme: t, cloudEnabled, session, syncing, refresh, signOut, deleteCloudAccount, deleteCloudData, hasSample, clearSample, wipeLocal } = useStore();
+  const { accounts, moves, prefs, setPrefs, theme: t, cloudEnabled, session, syncing, refresh, signOut, deleteCloudAccount, deleteCloudData, hasSample, clearSample, wipeLocal } = useStore();
+  const [goal, setGoal] = useState(prefs.monthlyGoal ? String(prefs.monthlyGoal) : '');
 
   return (
     <Screen title="Personalizar" subtitle="Colores, fondo y tu cuenta">
@@ -77,6 +82,55 @@ export default function Ajustes() {
         <SwitchRow title="Modo privado" sub="Oculta los importes para hacer capturas" value={prefs.privacy} onChange={(v) => setPrefs({ privacy: v })} />
       </Card>
 
+      <Card style={{ gap: 16 }}>
+        <Txt v="h2">Seguridad y hábitos</Txt>
+        <SwitchRow
+          title="Bloqueo con Face ID"
+          sub="Pide Face ID o el código del iPhone al abrir la app"
+          value={prefs.faceId}
+          onChange={async (v) => {
+            if (!v) { setPrefs({ faceId: false }); return; }
+            if (!(await canUseBiometrics())) { Alert.alert('Face ID no disponible', 'Activa Face ID o un código en los Ajustes del iPhone y vuelve a intentarlo.'); return; }
+            if (await authenticate('Activa el bloqueo de TJ Pro')) setPrefs({ faceId: true });
+          }}
+        />
+        <Divider />
+        <SwitchRow
+          title="Recordatorio diario"
+          sub="Un aviso para que apuntes tus operaciones del día"
+          value={prefs.reminderHour !== null}
+          onChange={async (v) => {
+            const hour = v ? 21 : null;
+            if (await setDailyReminder(hour)) setPrefs({ reminderHour: hour });
+            else Alert.alert('Notificaciones desactivadas', 'Permite las notificaciones de TJ Pro en los Ajustes del iPhone.');
+          }}
+        />
+        {prefs.reminderHour !== null && (
+          <Segmented
+            options={[18, 20, 21, 22].map((h) => ({ value: String(h), label: `${h}:00` }))}
+            value={String(prefs.reminderHour)}
+            onChange={async (v) => { const h = Number(v); if (await setDailyReminder(h)) setPrefs({ reminderHour: h }); }}
+          />
+        )}
+        <Divider />
+        <View style={{ gap: 8 }}>
+          <Txt v="body" style={{ fontWeight: '600' }}>Meta mensual de P&L</Txt>
+          <Txt v="small">Aparece en el Dashboard con tu progreso del mes. Déjala vacía para ocultarla.</Txt>
+          <Field
+            label={`Meta (${prefs.cur === 'EUR' ? '€' : '$'})`}
+            value={goal}
+            onChangeText={setGoal}
+            placeholder="Ej.: 2.000"
+            keyboardType="decimal-pad"
+            returnKeyType="done"
+            onEndEditing={() => {
+              const v = Number(goal.replace(/\./g, '').replace(',', '.'));
+              setPrefs({ monthlyGoal: goal.trim() && !isNaN(v) && v > 0 ? Math.round(v) : null });
+            }}
+          />
+        </View>
+      </Card>
+
       <Card style={{ gap: 12 }}>
         <Row>
           <Icon name="cloud" size={20} color={session ? t.pos : t.muted} />
@@ -125,6 +179,7 @@ export default function Ajustes() {
 
       <Card style={{ gap: 12 }}>
         <Txt v="h2">Datos</Txt>
+        <Button title="Exportar movimientos (CSV)" kind="secondary" onPress={() => shareCsv(accounts, moves, prefs.cur)} />
         {hasSample && <Button title="Borrar datos de ejemplo" kind="secondary" onPress={clearSample} />}
         {!session && (
           <Button
@@ -147,7 +202,7 @@ export default function Ajustes() {
   );
 }
 
-function SwitchRow({ title, sub, value, onChange }: { title: string; sub: string; value: boolean; onChange: (v: boolean) => void }) {
+function SwitchRow({ title, sub, value, onChange }: { title: string; sub: string; value: boolean; onChange: (v: boolean) => void | Promise<void> }) {
   const t = useStore().theme;
   return (
     <Row style={{ justifyContent: 'space-between', gap: 14 }}>

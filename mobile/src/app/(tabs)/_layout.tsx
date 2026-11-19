@@ -1,9 +1,11 @@
+import { Redirect } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 
-import { useTheme } from '@/store/store';
+import { useStore } from '@/store/store';
 
 export default function TabsLayout() {
-  const t = useTheme();
+  const { theme: t, prefs } = useStore();
+  if (!prefs.onboarded) return <Redirect href="/bienvenida" />;
   return (
     <NativeTabs
       tintColor={t.accent}

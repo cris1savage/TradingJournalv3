@@ -53,8 +53,9 @@ export function money(n: number, prefs: Pick<Prefs, 'cur' | 'privacy'>, opts: { 
 
 export function compact(n: number, cur: Prefs['cur']) {
   const a = Math.abs(n);
-  const s = a >= 1e6 ? group(n / 1e6, 1) + 'M' : a >= 1e3 ? group(n / 1e3, a >= 1e4 ? 0 : 1) + 'k' : group(n, 0);
-  return cur === 'EUR' ? `${s} €` : `$${s}`;
+  const s = a >= 1e6 ? group(a / 1e6, 1) + 'M' : a >= 1e3 ? group(a / 1e3, a >= 1e4 ? 0 : 1) + 'k' : group(a, 0);
+  const sign = n < 0 ? '−' : '';
+  return cur === 'EUR' ? `${sign}${s} €` : `${sign}$${s}`;
 }
 
 export function pct(n: number) {

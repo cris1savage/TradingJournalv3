@@ -17,8 +17,13 @@ export function sampleData(): { accounts: Account[]; moves: Movement[] } {
     { name: 'FTMO 100K', broker: 'FTMO · MT5', market: 'Forex', kind: 'Fondeo', initial: 100000, color: '#A78BFA', p: { wr: 0.55, win: 820, loss: 560, freq: 0.4, wk: true } },
     { name: 'Apex 50K', broker: 'Apex · Tradovate', market: 'Futuros', kind: 'Fondeo', initial: 50000, color: '#22D3EE', p: { wr: 0.52, win: 430, loss: 330, freq: 0.45, wk: true } },
   ] as const;
+  const rules: Record<string, Pick<Account, 'dailyLossLimit' | 'maxDrawdown' | 'profitTarget'>> = {
+    'FTMO 100K': { dailyLossLimit: 5000, maxDrawdown: 10000, profitTarget: 10000 },
+    'Apex 50K': { dailyLossLimit: 1500, maxDrawdown: 2500, profitTarget: 3000 },
+  };
   const accounts: Account[] = defs.map((d) => ({
     id: uuid(), name: d.name, broker: d.broker, market: d.market, kind: d.kind, initial: d.initial, color: d.color, created: start, sample: true,
+    ...(rules[d.name] ?? {}),
   }));
   const notes = {
     ganancia: ['Setup A+ en Londres', 'Continuación de tendencia', 'Breakout limpio', 'Rebote en soporte', 'Parcial + BE'],
