@@ -29,17 +29,13 @@ npx expo start
 
 Abre la app **Expo Go** en el iPhone y escanea el QR.
 
-## Conectar Supabase
+## Supabase
 
-1. Aplica `supabase/migrations/0001_init.sql` en el proyecto de Supabase del Trading Journal.
-2. Crea `mobile/.env.local` (no se sube a git):
+Proyecto `trading-journal` (organización `trading-journal`, plan Free, región eu-west-1), separado de Chris Fitness.
+El esquema está en `supabase/migrations/0001_init.sql` (ya aplicado).
 
-```
-EXPO_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
-EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_...
-```
-
-Para las compilaciones de EAS, añade esas dos variables en expo.dev → proyecto → Environment variables (entorno `production`).
+La URL y la clave *publishable* están en `.env` (desarrollo) y en `eas.json` (compilaciones). Esa clave es pública
+por diseño: la seguridad la ponen las políticas RLS, que solo dejan a cada usuario ver y tocar sus propias filas.
 
 ## Publicar en el iPhone (TestFlight / App Store)
 
