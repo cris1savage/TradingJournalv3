@@ -70,8 +70,9 @@ export default function Ajustes() {
           <Segmented options={[{ value: '6', label: 'Rectas' }, { value: '16', label: 'Suaves' }, { value: '26', label: 'Redondas' }]} value={String(prefs.radius)} onChange={(v) => setPrefs({ radius: Number(v) })} />
         </View>
         <View style={{ gap: 8 }}>
-          <Txt v="label">Moneda</Txt>
-          <Segmented options={[{ value: 'USD', label: 'Dólar $' }, { value: 'EUR', label: 'Euro €' }]} value={prefs.cur} onChange={(v) => setPrefs({ cur: v })} />
+          <Txt v="label">Moneda de los totales</Txt>
+          <Segmented options={[{ value: 'USD', label: 'Dólar $' }, { value: 'EUR', label: 'Euro €' }, { value: 'GBP', label: 'Libra £' }]} value={prefs.cur} onChange={(v) => setPrefs({ cur: v })} />
+          <Txt v="small" style={{ fontSize: 12 }}>Es la moneda de tus totales. Cada cuenta guarda su propia moneda y se convierte con el cambio del día{prefs.fx ? ` (${prefs.fx.at})` : ''}.</Txt>
         </View>
         <Divider />
         <SwitchRow title="Efecto brillo" sub="Halo de color en tarjetas, estilo plataforma de fondeo" value={prefs.glow} onChange={(v) => setPrefs({ glow: v })} />

@@ -5,13 +5,15 @@ import { Pressable, View } from 'react-native';
 import { PnlCalendar } from '@/components/calendar';
 import { AreaChart, Donut, Meter, SignedBars } from '@/components/charts';
 import { PropRules } from '@/components/prop-rules';
+import { Icon } from '@/components/icon';
 import { MoveRow } from '@/components/move-row';
 import { Button, Card, Chips, IconButton, Row, Screen, Segmented, Tag, Txt } from '@/components/ui';
 import { byMarket, monthly, periodStart, pnlByAccount, summarize } from '@/lib/calc';
 import { group, money, MONTHS_SHORT, pct, shortDate } from '@/lib/format';
-import { dailyPnl, monthStart, propRules, streaks } from '@/lib/insights';
+import { toDisplay } from '@/lib/fx';
+import { dailyPnl, fundingBusiness, monthStart, propRules, stopAlerts, streaks } from '@/lib/insights';
 import { CHART_PALETTE, withAlpha } from '@/lib/theme';
-import type { Period } from '@/lib/types';
+import { isArchived, type Period } from '@/lib/types';
 import { useStore } from '@/store/store';
 
 const PERIODS: { value: Period; label: string }[] = [
@@ -20,7 +22,14 @@ const PERIODS: { value: Period; label: string }[] = [
 const PERIOD_TEXT: Record<Period, string> = { '7': 'últimos 7 días', '30': 'últimos 30 días', '90': 'últimos 90 días', '365': 'último año', all: 'desde el inicio' };
 
 export default function Dashboard() {
-  const { accounts, moves, prefs, setPrefs, theme: t, hasSample, clearSample, session } = useStore();
+  const { accounts: rawAccounts, moves: rawMoves, prefs, setPrefs, theme: t, hasSample, clearSample, session } = useStore();
+  // Totales en tu moneda (cuentas en €, $ y £ convertidas) y sin las cuentas archivadas
+  const conv = useMemo(() => toDisplay(rawAccounts, rawMoves, prefs.cur, prefs.fx), [rawAccounts, rawMoves, prefs.cur, prefs.fx]);
+  const accounts = useMemo(() => conv.accounts.filter((a) => !isArchived(a)), [conv.accounts]);
+  const moves = conv.moves;
+  const activeRaw = useMemo(() => rawAccounts.filter((a) => !isArchived(a)), [rawAccounts]);
+  const alerts = useMemo(() => stopAlerts(activeRaw, rawMoves), [activeRaw, rawMoves]);
+  const business = useMemo(() => fundingBusiness(conv.accounts, conv.moves), [conv.accounts, conv.moves]);
   const firstName = ((session?.user.user_metadata?.name as string | undefined) ?? '').split(' ')[0];
   const [accFilter, setAccFilter] = useState('all');
   const [period, setPeriod] = useState<Period>('30');
@@ -41,7 +50,11 @@ export default function Dashboard() {
   const byDay = useMemo(() => dailyPnl(accs, moves), [accs, moves]);
   const st = useMemo(() => streaks(byDay, start), [byDay, start]);
   const monthNow = useMemo(() => { const m0 = monthStart(); let v = 0; for (const [d, x] of byDay) if (d >= m0) v += x; return v; }, [byDay]);
-  const funded = useMemo(() => accs.map((a) => ({ a, rules: propRules(a, moves) })).filter((x) => x.rules.length), [accs, moves]);
+  const funded = useMemo(() => {
+    const ids = new Set(accs.map((a) => a.id));
+    return activeRaw.filter((a) => ids.has(a.id)).map((a) => ({ a, rules: propRules(a, rawMoves) })).filter((x) => x.rules.length);
+  }, [accs, activeRaw, rawMoves]);
+  const hasFunded = accounts.some((a) => a.kind === 'Fondeo');
 
   const fmt = (n: number, o?: { dec?: number; signed?: boolean }) => money(n, prefs, o);
   const values = s.series.map((p) => (mode === 'pnl' ? p.pnl : p.balance));
@@ -51,11 +64,12 @@ export default function Dashboard() {
   const header = (
     <>
       <IconButton icon={prefs.privacy ? 'eye-off' : 'eye'} label={prefs.privacy ? 'Mostrar importes' : 'Ocultar importes'} onPress={() => setPrefs({ privacy: !prefs.privacy })} />
+      <IconButton icon="calc" label="Calculadora de lotaje" onPress={() => router.push('/calculadora')} />
       <IconButton icon="plus" label="Nuevo movimiento" filled onPress={() => router.push(accounts.length ? '/movimiento' : '/cuenta')} />
     </>
   );
 
-  if (!accounts.length) {
+  if (!rawAccounts.length) {
     return (
       <Screen title="Dashboard" subtitle={firstName ? `Hola, ${firstName}` : undefined} right={header}>
         <Card style={{ alignItems: 'center', paddingVertical: 40, gap: 10 }}>
@@ -76,6 +90,18 @@ export default function Dashboard() {
           <Button title="Borrar ejemplos y empezar" kind="secondary" onPress={clearSample} />
         </Card>
       )}
+
+      {alerts.map((al) => (
+        <View key={al.account.id + al.text} accessibilityRole="alert" style={{ flexDirection: 'row', gap: 12, padding: 14, borderRadius: Math.min(t.r, 16), backgroundColor: withAlpha(al.severe ? t.neg : t.warn, 0.12), borderWidth: 1, borderColor: withAlpha(al.severe ? t.neg : t.warn, 0.45) }}>
+          <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: withAlpha(al.severe ? t.neg : t.warn, 0.2), alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="alert" size={18} color={al.severe ? t.neg : t.warn} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Txt v="body" style={{ fontWeight: '700' }}>Para por hoy en {al.account.name}</Txt>
+            <Txt v="small">{al.text}</Txt>
+          </View>
+        </View>
+      ))}
 
       <Chips
         value={accFilter}
@@ -106,9 +132,29 @@ export default function Dashboard() {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         <Kpi label="Balance total" value={fmt(s.total, { dec: 0 })} sub={`${accs.length} ${accs.length === 1 ? 'cuenta' : 'cuentas'}`} />
         <Kpi label="Win rate" value={`${group(s.winRate, 1)} %`} sub={`${s.wins} G · ${s.losses} P`} />
-        <Kpi label="Capital propio" value={fmt(s.own, { dec: 0 })} sub="Real y demo" />
-        <Kpi label="Capital fondeo" value={fmt(s.funded, { dec: 0 })} sub={`PF ${s.profitFactor === Infinity ? '∞' : group(s.profitFactor, 2)}`} />
+        <Kpi label="Profit factor" value={s.wins + s.losses === 0 ? '—' : s.profitFactor === Infinity ? 'Sin pérdidas' : group(s.profitFactor, 2)} sub="Ganancias / pérdidas" />
+        <Kpi label={hasFunded ? 'Capital propio' : 'Capital'} value={fmt(s.own, { dec: 0 })} sub="Real y demo" />
+        {hasFunded && <Kpi label="Capital fondeo" value={fmt(s.funded, { dec: 0 })} sub="Cuentas de fondeo" />}
       </View>
+
+      {business.show && (
+        <Card style={{ gap: 12 }}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Txt v="h2">Negocio del fondeo</Txt>
+            <Txt v="small">desde el inicio</Txt>
+          </Row>
+          <View style={{ flexDirection: 'row' }}>
+            <Stat label="Invertido" value={fmt(-business.cost, { dec: 0 })} sub="" color={business.cost ? t.neg : undefined} />
+            <Stat label="Payouts" value={fmt(business.payouts, { dec: 0, signed: true })} sub="" color={business.payouts ? t.pos : undefined} />
+          </View>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Txt v="small">{business.total} {business.total === 1 ? 'cuenta' : 'cuentas'} · {business.approved} {business.approved === 1 ? 'aprobada' : 'aprobadas'} · {business.burned} {business.burned === 1 ? 'quemada' : 'quemadas'}</Txt>
+            <Txt v="num" color={business.net >= 0 ? t.pos : t.neg} style={{ fontSize: 14 }}>
+              {business.roi === null ? fmt(business.net, { dec: 0, signed: true }) : `ROI ${business.roi > 0 ? '+' : ''}${group(business.roi, 0)} %`}
+            </Txt>
+          </Row>
+        </Card>
+      )}
 
       {prefs.monthlyGoal ? (
         <Card style={{ gap: 10 }}>
@@ -137,7 +183,7 @@ export default function Dashboard() {
                 <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: a.color }} />
                 <Txt v="body" style={{ fontWeight: '700', fontSize: 14 }}>{a.name}</Txt>
               </Row>
-              <PropRules rules={rules} />
+              <PropRules rules={rules} currency={a.currency ?? 'USD'} />
             </View>
           ))}
         </Card>
@@ -185,7 +231,7 @@ export default function Dashboard() {
         <SignedBars items={months.map((m) => ({ label: MONTHS_SHORT[m.month], value: m.value }))} />
       </Card>
 
-      <PnlCalendar byDay={byDay} />
+      <PnlCalendar byDay={byDay} onPressDay={(date) => router.push({ pathname: '/dia', params: { date } })} />
 
       {accFilter === 'all' && perAcc.length > 1 && (
         <Card style={{ gap: 14 }}>

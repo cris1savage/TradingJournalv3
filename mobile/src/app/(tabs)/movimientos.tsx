@@ -5,6 +5,7 @@ import { Alert, RefreshControl, View } from 'react-native';
 import { MoveRow } from '@/components/move-row';
 import { Button, Card, Chips, Divider, IconButton, Row, Screen, Txt } from '@/components/ui';
 import { signed } from '@/lib/calc';
+import { convert } from '@/lib/fx';
 import { longDate, money } from '@/lib/format';
 import { MOVE_TYPE_KEYS, MOVE_TYPES, type Movement, type MoveType } from '@/lib/types';
 import { useStore } from '@/store/store';
@@ -21,7 +22,10 @@ export default function Movimientos() {
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)),
     [moves, acc, type],
   );
-  const net = filtered.reduce((s, m) => s + signed(m), 0);
+  // sumas en tu moneda: cada movimiento se convierte desde la moneda de su cuenta
+  const curOf = new Map(accounts.map((a) => [a.id, a.currency ?? 'USD']));
+  const value = (m: (typeof moves)[number]) => convert(m.type === 'payout' ? m.amount : m.type === 'coste' ? -m.amount : signed(m), curOf.get(m.acc), prefs.cur, prefs.fx);
+  const net = filtered.reduce((s, m) => s + value(m), 0);
 
   const groups = useMemo(() => {
     const out: { date: string; items: Movement[] }[] = [];
@@ -43,7 +47,10 @@ export default function Movimientos() {
       title="Movimientos"
       subtitle="Toca uno para editarlo · mantén pulsado para borrar"
       refresh={session ? <RefreshControl refreshing={syncing} onRefresh={refresh} tintColor={t.accent} /> : undefined}
-      right={<IconButton icon="plus" label="Nuevo movimiento" filled onPress={() => router.push(accounts.length ? '/movimiento' : '/cuenta')} />}>
+      right={<>
+        <IconButton icon="file" label="Importar historial de MT5" onPress={() => router.push(accounts.length ? '/importar' : '/cuenta')} />
+        <IconButton icon="plus" label="Nuevo movimiento" filled onPress={() => router.push(accounts.length ? '/movimiento' : '/cuenta')} />
+      </>}>
       <Chips value={acc} onChange={setAcc} options={[{ value: 'all', label: 'Todas las cuentas' }, ...accounts.map((a) => ({ value: a.id, label: a.name, color: a.color }))]} />
       <Chips value={type} onChange={setType} options={[{ value: 'all' as const, label: 'Todos' }, ...MOVE_TYPE_KEYS.map((k) => ({ value: k, label: MOVE_TYPES[k].label }))]} />
 
@@ -62,7 +69,7 @@ export default function Movimientos() {
         </Card>
       ) : (
         groups.map((g) => {
-          const day = g.items.reduce((s, m) => s + signed(m), 0);
+          const day = g.items.reduce((s, m) => s + value(m), 0);
           return (
             <View key={g.date} style={{ gap: 6 }}>
               <Row style={{ justifyContent: 'space-between', paddingHorizontal: 4 }}>

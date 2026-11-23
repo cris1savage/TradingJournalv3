@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "tradingjournal",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#07090E",
+    "backgroundColor": "#000215",
     "ios": {
       "bundleIdentifier": "com.tjpro.tradingjournal",
       "supportsTablet": false,
@@ -18,7 +18,7 @@
     "android": {
       "package": "com.tjpro.tradingjournal",
       "adaptiveIcon": {
-        "backgroundColor": "#07090E",
+        "backgroundColor": "#000215",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -34,9 +34,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#07090E",
+          "backgroundColor": "#000215",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 140
+          "imageWidth": 160
         }
       ],
       [
@@ -69,7 +69,16 @@
             }
           ]
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "TJ Pro usa tus fotos para adjuntar capturas de tus gráficos a tus operaciones.",
+          "cameraPermission": "TJ Pro usa la cámara para hacer fotos de tus gráficos y adjuntarlas a tus operaciones.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-document-picker"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -80,6 +89,13 @@
       "eas": {
         "projectId": "45c7f1b5-67ea-40eb-9972-30778bae1a82"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/45c7f1b5-67ea-40eb-9972-30778bae1a82",
+      "fallbackToCacheTimeout": 0
     }
   }
 }

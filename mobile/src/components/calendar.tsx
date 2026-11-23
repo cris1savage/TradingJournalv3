@@ -13,7 +13,7 @@ const MONTHS_LONG = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Jul
 const DOW = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
 /** Calendario mensual de P&L: verde días positivos, rojo negativos, intensidad según el importe. */
-export function PnlCalendar({ byDay }: { byDay: Map<string, number> }) {
+export function PnlCalendar({ byDay, onPressDay }: { byDay: Map<string, number>; onPressDay?: (date: string) => void }) {
   const { theme: t, prefs } = useStore();
   const now = new Date();
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() });
@@ -55,7 +55,8 @@ export function PnlCalendar({ byDay }: { byDay: Map<string, number> }) {
               const bg = v === null ? t.surface2 : withAlpha(v >= 0 ? (t.scheme === 'light' ? '#0E9F5E' : '#22C97A') : (t.scheme === 'light' ? '#E0364A' : '#FF5D6E'), a);
               const strong = a > 0.55;
               return (
-                <View key={i} accessibilityLabel={`${c.day}: ${v === null ? 'sin operaciones' : money(v, prefs, { signed: true })}`}
+                <Pressable key={i} accessibilityRole="button" accessibilityLabel={`${c.day}: ${v === null ? 'sin operaciones' : money(v, prefs, { signed: true })}. Abrir nota del día`}
+                  onPress={onPressDay ? () => { tap(); onPressDay(c.date); } : undefined}
                   style={{ flex: 1, aspectRatio: 0.82, borderRadius: 8, backgroundColor: bg, padding: 4, justifyContent: 'space-between', borderWidth: c.date === t0 ? 1.5 : 0, borderColor: t.accent }}>
                   <Txt v="small" style={{ fontSize: 10, color: strong ? '#FFFFFF' : t.muted }}>{c.day}</Txt>
                   {v !== null && !prefs.privacy && (
@@ -63,7 +64,7 @@ export function PnlCalendar({ byDay }: { byDay: Map<string, number> }) {
                       {compact(v, prefs.cur)}
                     </Txt>
                   )}
-                </View>
+                </Pressable>
               );
             })}
           </View>

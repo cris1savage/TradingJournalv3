@@ -13,9 +13,10 @@ import { Txt } from './ui';
 export function MoveRow({ m, onLongPress, editable = true }: { m: Movement; onLongPress?: () => void; editable?: boolean }) {
   const { accounts, prefs, theme: t } = useStore();
   const a = accounts.find((x) => x.id === m.acc);
-  const v = signed(m);
-  const icon = m.type === 'ganancia' ? 'up' : m.type === 'perdida' ? 'down' : m.type === 'comision' ? 'coin' : m.type === 'deposito' ? 'in' : 'out';
-  const color = m.type === 'ganancia' ? t.pos : m.type === 'perdida' ? t.neg : m.type === 'comision' ? t.warn : m.type === 'deposito' ? t.accent : t.muted;
+  // Payout se muestra como dinero que entra en tu bolsillo; coste, como gasto
+  const v = m.type === 'payout' ? m.amount : m.type === 'coste' ? -m.amount : signed(m);
+  const icon = m.type === 'ganancia' ? 'up' : m.type === 'perdida' ? 'down' : m.type === 'comision' || m.type === 'coste' ? 'coin' : m.type === 'deposito' ? 'in' : 'out';
+  const color = m.type === 'ganancia' || m.type === 'payout' ? t.pos : m.type === 'perdida' ? t.neg : m.type === 'comision' || m.type === 'coste' ? t.warn : m.type === 'deposito' ? t.accent : t.muted;
   return (
     <Pressable
       accessibilityRole={editable ? 'button' : undefined}
@@ -31,7 +32,7 @@ export function MoveRow({ m, onLongPress, editable = true }: { m: Movement; onLo
         <Txt v="body" numberOfLines={1} style={{ fontWeight: '600' }}>{m.note || MOVE_TYPES[m.type].label}</Txt>
         <Txt v="small" numberOfLines={1}>{shortDate(m.date)} · {a?.name ?? '—'}</Txt>
       </View>
-      <Txt v="num" color={v >= 0 ? t.pos : t.neg}>{money(v, prefs, { dec: 2, signed: true })}</Txt>
+      <Txt v="num" color={v >= 0 ? t.pos : t.neg}>{money(v, { ...prefs, cur: a?.currency ?? 'USD' }, { dec: 2, signed: true })}</Txt>
     </Pressable>
   );
 }

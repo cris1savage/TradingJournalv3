@@ -1,4 +1,4 @@
-import { balanceOf, pnlOf } from './calc';
+import { balanceOf, pnlOf, signed } from './calc';
 import { addDays, dstr, parseDate, today } from './format';
 import type { Account, Movement } from './types';
 
@@ -64,28 +64,86 @@ export type RuleState = {
   limit: number;
   remaining: number;
   kind: 'risk' | 'goal';
+  /** money: importes en la moneda de la cuenta; count: número de trades o días */
+  unit: 'money' | 'count';
 };
 
-/** Estado de las reglas de fondeo de una cuenta. Drawdown estático desde el capital inicial. */
+const isTrade = (m: Movement) => m.type === 'ganancia' || m.type === 'perdida';
+
+/**
+ * Estado de las reglas de una cuenta (importes en su moneda).
+ * Drawdown estático: desde el capital inicial. Trailing: desde el balance máximo alcanzado.
+ */
 export function propRules(a: Account, moves: Movement[]): RuleState[] {
   const out: RuleState[] = [];
   const t = today();
-  const balance = balanceOf(a, moves);
+  const mine = moves.filter((m) => m.acc === a.id);
+  const balance = balanceOf(a, mine);
   if (a.dailyLossLimit) {
     let dayPnl = 0;
-    for (const m of moves) if (m.acc === a.id && m.date === t) dayPnl += pnlOf(m);
+    for (const m of mine) if (m.date === t) dayPnl += pnlOf(m);
     const loss = Math.max(0, -dayPnl);
-    out.push({ label: 'Pérdida diaria', used: (loss / a.dailyLossLimit) * 100, usedAmount: loss, limit: a.dailyLossLimit, remaining: a.dailyLossLimit - loss, kind: 'risk' });
+    out.push({ label: 'Pérdida diaria', used: (loss / a.dailyLossLimit) * 100, usedAmount: loss, limit: a.dailyLossLimit, remaining: a.dailyLossLimit - loss, kind: 'risk', unit: 'money' });
+  }
+  if (a.maxTradesPerDay) {
+    const n = mine.filter((m) => m.date === t && isTrade(m)).length;
+    out.push({ label: 'Trades hoy', used: (n / a.maxTradesPerDay) * 100, usedAmount: n, limit: a.maxTradesPerDay, remaining: a.maxTradesPerDay - n, kind: 'risk', unit: 'count' });
   }
   if (a.maxDrawdown) {
-    const dd = Math.max(0, a.initial - balance);
-    out.push({ label: 'Drawdown máximo', used: (dd / a.maxDrawdown) * 100, usedAmount: dd, limit: a.maxDrawdown, remaining: a.maxDrawdown - dd, kind: 'risk' });
+    let peak = a.initial;
+    if (a.drawdownType === 'trailing') {
+      let bal = a.initial;
+      const sorted = [...mine].sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0));
+      for (const m of sorted) { bal += signed(m); peak = Math.max(peak, bal); }
+    }
+    const dd = Math.max(0, peak - balance);
+    out.push({ label: a.drawdownType === 'trailing' ? 'Drawdown trailing' : 'Drawdown máximo', used: (dd / a.maxDrawdown) * 100, usedAmount: dd, limit: a.maxDrawdown, remaining: a.maxDrawdown - dd, kind: 'risk', unit: 'money' });
   }
   if (a.profitTarget) {
     const gain = Math.max(0, balance - a.initial);
-    out.push({ label: 'Objetivo', used: (gain / a.profitTarget) * 100, usedAmount: gain, limit: a.profitTarget, remaining: Math.max(0, a.profitTarget - gain), kind: 'goal' });
+    out.push({ label: 'Objetivo', used: (gain / a.profitTarget) * 100, usedAmount: gain, limit: a.profitTarget, remaining: Math.max(0, a.profitTarget - gain), kind: 'goal', unit: 'money' });
+  }
+  if (a.minTradingDays) {
+    const days = new Set(mine.filter(isTrade).map((m) => m.date)).size;
+    out.push({ label: 'Días operados', used: (days / a.minTradingDays) * 100, usedAmount: days, limit: a.minTradingDays, remaining: Math.max(0, a.minTradingDays - days), kind: 'goal', unit: 'count' });
   }
   return out;
+}
+
+export type StopAlert = { account: Account; text: string; severe: boolean };
+
+/** Avisos de «para por hoy»: pérdida diaria al 80 % o más, o máximo de trades alcanzado. */
+export function stopAlerts(accounts: Account[], moves: Movement[]): StopAlert[] {
+  const out: StopAlert[] = [];
+  for (const a of accounts) {
+    for (const r of propRules(a, moves)) {
+      if (r.label === 'Pérdida diaria' && r.used >= 80) out.push({ account: a, severe: r.used >= 100, text: r.used >= 100 ? 'Has superado tu pérdida diaria' : `Has usado el ${Math.round(r.used)} % de tu pérdida diaria` });
+      if (r.label === 'Trades hoy' && r.used >= 100) out.push({ account: a, severe: false, text: `Has hecho tus ${r.limit} trades de hoy` });
+      if (r.label.startsWith('Drawdown') && r.used >= 80) out.push({ account: a, severe: r.used >= 100, text: r.used >= 100 ? 'Has superado el drawdown máximo' : `Drawdown al ${Math.round(r.used)} %` });
+    }
+  }
+  return out;
+}
+
+/** Negocio del fondeo: lo invertido en challenges frente a los payouts cobrados (moneda ya convertida). */
+export function fundingBusiness(accounts: Account[], moves: Movement[]) {
+  const funded = new Set(accounts.filter((a) => a.kind === 'Fondeo').map((a) => a.id));
+  let cost = 0, payouts = 0;
+  for (const m of moves) {
+    if (m.type === 'coste') cost += m.amount;
+    if (m.type === 'payout') payouts += m.amount;
+  }
+  const fundedAccounts = accounts.filter((a) => funded.has(a.id));
+  return {
+    cost,
+    payouts,
+    net: payouts - cost,
+    roi: cost ? ((payouts - cost) / cost) * 100 : null,
+    total: fundedAccounts.length,
+    approved: fundedAccounts.filter((a) => a.status === 'aprobada' || a.status === 'activa').length,
+    burned: fundedAccounts.filter((a) => a.status === 'quemada').length,
+    show: fundedAccounts.length > 0 || cost > 0 || payouts > 0,
+  };
 }
 
 export function monthStart() {

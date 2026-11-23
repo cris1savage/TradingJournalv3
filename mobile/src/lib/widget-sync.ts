@@ -1,13 +1,19 @@
 import { Platform } from 'react-native';
 
 import { balanceOf, pnlOf } from './calc';
+import { toDisplay } from './fx';
 import { money, MONTHS_SHORT, today } from './format';
-import type { Account, Movement, Prefs } from './types';
+import { isArchived, type Account, type Movement, type Prefs } from './types';
 
 /** Envía al widget de la pantalla de inicio el resumen actual. No hace nada fuera de iOS o en Expo Go. */
-export function syncWidget(accounts: Account[], moves: Movement[], prefs: Prefs) {
+export function syncWidget(rawAccounts: Account[], rawMoves: Movement[], prefs: Prefs) {
   if (Platform.OS !== 'ios') return;
   try {
+    // mismas cifras que el Dashboard: en tu moneda y sin cuentas archivadas
+    const conv = toDisplay(rawAccounts.filter((a) => !isArchived(a)), rawMoves, prefs.cur, prefs.fx);
+    const accounts = conv.accounts;
+    const ids = new Set(accounts.map((a) => a.id));
+    const moves = conv.moves.filter((m) => ids.has(m.acc));
     // require diferido: el módulo nativo no existe en Expo Go
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const widget = require('@/widgets/BalanceWidget').default;

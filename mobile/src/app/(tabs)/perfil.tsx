@@ -67,6 +67,7 @@ export default function Perfil() {
           {syncing && <ActivityIndicator color={t.accent} />}
         </Row>
         <Txt v="small">Se guardan en la nube (UE) y se sincronizan en todos tus dispositivos. Desliza hacia abajo para actualizar.</Txt>
+        <Button title="Importar historial de MT5" kind="secondary" icon="file" onPress={() => router.push('/importar')} />
         <Button title="Exportar movimientos (CSV)" kind="secondary" onPress={() => shareCsv(accounts, moves, prefs.cur)} />
         <Button title="Privacidad y soporte" kind="secondary" onPress={() => Linking.openURL(LEGAL_URL)} />
       </Card>

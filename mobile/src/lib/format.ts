@@ -41,21 +41,27 @@ export function group(n: number, dec = 0) {
   return (neg ? '−' : '') + g + (dec ? ',' + frac : '');
 }
 
+const SYMBOL: Record<Prefs['cur'], string> = { USD: '$', EUR: '€', GBP: '£' };
+
+/** Importe con símbolo: € detrás (estilo español), $ y £ delante. */
+function withSymbol(g: string, cur: Prefs['cur']) {
+  if (cur === 'EUR') return `${g} €`;
+  const s = g[0] === '−' || g[0] === '+' ? g[0] : '';
+  return `${s}${SYMBOL[cur]}${s ? g.slice(1) : g}`;
+}
+
 export function money(n: number, prefs: Pick<Prefs, 'cur' | 'privacy'>, opts: { dec?: number; signed?: boolean } = {}) {
-  if (prefs.privacy) return prefs.cur === 'EUR' ? '•••• €' : '$••••';
+  if (prefs.privacy) return withSymbol('••••', prefs.cur);
   const dec = opts.dec ?? (Math.abs(n) >= 10000 ? 0 : 2);
   let g = group(n, dec);
   if (opts.signed && n > 0) g = '+' + g;
-  if (prefs.cur === 'EUR') return `${g} €`;
-  const s = g[0] === '−' || g[0] === '+' ? g[0] : '';
-  return `${s}$${s ? g.slice(1) : g}`;
+  return withSymbol(g, prefs.cur);
 }
 
 export function compact(n: number, cur: Prefs['cur']) {
   const a = Math.abs(n);
   const s = a >= 1e6 ? group(a / 1e6, 1) + 'M' : a >= 1e3 ? group(a / 1e3, a >= 1e4 ? 0 : 1) + 'k' : group(a, 0);
-  const sign = n < 0 ? '−' : '';
-  return cur === 'EUR' ? `${sign}${s} €` : `${sign}$${s}`;
+  return withSymbol((n < 0 ? '−' : '') + s, cur);
 }
 
 export function pct(n: number) {

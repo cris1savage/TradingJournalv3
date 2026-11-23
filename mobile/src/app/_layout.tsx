@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Appearance } from 'react-native';
 
 import { LockGate } from '@/components/lock';
 import { StoreProvider, useStore } from '@/store/store';
@@ -14,6 +15,10 @@ function Root() {
   useEffect(() => {
     if (loaded) SplashScreen.hideAsync().catch(() => {});
   }, [loaded]);
+  // iOS sigue el tema de la app (no el del sistema): barra de pestañas, hora, batería y teclados en oscuro o claro
+  useEffect(() => {
+    try { Appearance.setColorScheme(t.scheme); } catch {}
+  }, [t.scheme]);
   if (!loaded) return null;
 
   // Con la nube configurada la app exige cuenta; sin ella (solo en desarrollo) funciona en local.
@@ -31,6 +36,9 @@ function Root() {
             <Stack.Screen name="cuenta" options={{ presentation: 'modal' }} />
             <Stack.Screen name="movimiento" options={{ presentation: 'modal' }} />
             <Stack.Screen name="password" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="calculadora" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="dia" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="importar" options={{ presentation: 'modal' }} />
           </Stack.Protected>
           <Stack.Protected guard={!signedIn} redirectTo="/">
             <Stack.Screen name="bienvenida" />

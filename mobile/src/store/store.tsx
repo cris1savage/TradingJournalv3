@@ -6,12 +6,15 @@ import { Alert } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { buildTheme, type Theme } from '@/lib/theme';
 import { syncWidget } from '@/lib/widget-sync';
-import { DEFAULT_PREFS, type Account, type Movement, type Prefs } from '@/lib/types';
+import { fetchFx } from '@/lib/fx';
+import { DEFAULT_PREFS, type Account, type DayNote, type Movement, type Prefs } from '@/lib/types';
 import { today, uuid } from '@/lib/format';
 
 const KEY = 'tj.state.v1';
 
-type Data = { accounts: Account[]; moves: Movement[] };
+type Data = { accounts: Account[]; moves: Movement[]; notes: DayNote[] };
+const EMPTY: Data = { accounts: [], moves: [], notes: [] };
+const addDaysSafe = (d: string, n: number) => { const x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
 /** owner: id del usuario al que pertenece la copia local (para no mezclar datos entre usuarios). */
 type Persisted = Data & { prefs: Prefs; owner?: string | null };
 
@@ -26,7 +29,8 @@ type Store = Data & {
   syncing: boolean;
   hasSample: boolean;
   setPrefs: (p: Partial<Prefs>) => void;
-  saveAccount: (a: Omit<Account, 'id' | 'created'> & { id?: string }) => Promise<void>;
+  /** Crea o actualiza una cuenta y devuelve su id. */
+  saveAccount: (a: Omit<Account, 'id' | 'created'> & { id?: string }) => Promise<string>;
   deleteAccount: (id: string) => Promise<void>;
   addMove: (m: Omit<Movement, 'id'>) => Promise<void>;
   deleteMove: (id: string) => Promise<void>;
@@ -38,6 +42,9 @@ type Store = Data & {
   deleteCloudAccount: () => Promise<void>;
   deleteCloudData: () => Promise<boolean>;
   updateProfileName: (name: string) => Promise<boolean>;
+  saveNote: (n: DayNote) => Promise<void>;
+  /** Guarda varios movimientos de una vez (un trade copiado en varias cuentas, o una importación). */
+  addMoves: (ms: Omit<Movement, 'id'>[]) => Promise<void>;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -47,6 +54,8 @@ const toRowAccount = (a: Account, user: string) => ({
   id: a.id, user_id: user, name: a.name, broker: a.broker, market: a.market, kind: a.kind,
   initial_capital: a.initial, color: a.color, created_at: a.created,
   daily_loss_limit: a.dailyLossLimit ?? null, max_drawdown: a.maxDrawdown ?? null, profit_target: a.profitTarget ?? null,
+  status: a.status ?? 'activa', currency: a.currency ?? 'USD', drawdown_type: a.drawdownType ?? 'static',
+  risk_per_trade_pct: a.riskPct ?? null, max_trades_per_day: a.maxTradesPerDay ?? null, min_trading_days: a.minTradingDays ?? null,
 });
 const toRowMove = (m: Movement, user: string) => ({
   id: m.id, user_id: user, account_id: m.acc, date: m.date, type: m.type, amount: m.amount, note: m.note,
@@ -58,7 +67,11 @@ const fromRowAccount = (r: Row): Account => ({
   dailyLossLimit: r.daily_loss_limit == null ? null : Number(r.daily_loss_limit),
   maxDrawdown: r.max_drawdown == null ? null : Number(r.max_drawdown),
   profitTarget: r.profit_target == null ? null : Number(r.profit_target),
+  status: r.status ?? 'activa', currency: r.currency ?? 'USD', drawdownType: r.drawdown_type ?? 'static',
+  riskPct: r.risk_per_trade_pct == null ? null : Number(r.risk_per_trade_pct),
+  maxTradesPerDay: r.max_trades_per_day ?? null, minTradingDays: r.min_trading_days ?? null,
 });
+const fromRowNote = (r: Row): DayNote => ({ date: r.date, plan: r.plan ?? '', review: r.review ?? '', mood: r.mood ?? null, followed: r.followed ?? null });
 const fromRowMove = (r: Row): Movement => ({
   id: r.id, acc: r.account_id, date: r.date, type: r.type, amount: Number(r.amount), note: r.note ?? '',
 });
@@ -70,7 +83,7 @@ function fail(title: string, e: unknown) {
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
-  const [data, setData] = useState<Data>({ accounts: [], moves: [] });
+  const [data, setData] = useState<Data>(EMPTY);
   const [prefs, setPrefsState] = useState<Prefs>(DEFAULT_PREFS);
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(!supabase);
@@ -93,13 +106,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // los datos de ejemplo de versiones anteriores no se conservan
         const accounts = saved.accounts.filter((a) => !a.sample);
         const ids = new Set(accounts.map((a) => a.id));
-        setData({ accounts, moves: (saved.moves ?? []).filter((m) => !m.sample && ids.has(m.acc)) });
+        setData({ accounts, moves: (saved.moves ?? []).filter((m) => !m.sample && ids.has(m.acc)), notes: saved.notes ?? [] });
         setPrefsState({ ...DEFAULT_PREFS, ...saved.prefs });
         setOwner(saved.owner ?? null);
       }
       setReady(true);
     })();
   }, []);
+
+  // cambios de divisa: se actualizan una vez al día
+  useEffect(() => {
+    if (!ready) return;
+    const t = today();
+    if (prefs.fx?.at && prefs.fx.at >= addDaysSafe(t, -1)) return;
+    fetchFx().then((fx) => { if (fx) setPrefsState((p) => ({ ...p, fx })); });
+  }, [ready, prefs.fx?.at]);
 
   // persistencia
   useEffect(() => {
@@ -118,7 +139,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ]);
     if (a.error) throw a.error;
     if (m.error) throw m.error;
-    setData({ accounts: (a.data ?? []).map(fromRowAccount), moves: (m.data ?? []).map(fromRowMove) });
+    // las notas son opcionales: si la tabla aún no existe, se ignora el error
+    const n = await supabase.from('day_notes').select('*');
+    setData({ accounts: (a.data ?? []).map(fromRowAccount), moves: (m.data ?? []).map(fromRowMove), notes: n.error ? [] : (n.data ?? []).map(fromRowNote) });
   }, []);
 
   // al iniciar sesión: la nube es la fuente de verdad. La copia local de otro usuario se descarta.
@@ -126,7 +149,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!supabase) return;
     setSyncing(true);
     setOwner((prev) => {
-      if (prev && prev !== uid) setData({ accounts: [], moves: [] });
+      if (prev && prev !== uid) setData(EMPTY);
       return uid;
     });
     try {
@@ -144,12 +167,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSession(d.session);
       setAuthReady(true);
       if (d.session) syncAfterLogin(d.session.user.id);
-      else setData({ accounts: [], moves: [] });
+      else setData(EMPTY);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       if (event === 'SIGNED_IN' && s) syncAfterLogin(s.user.id);
-      if (event === 'SIGNED_OUT') { setData({ accounts: [], moves: [] }); setOwner(null); }
+      if (event === 'SIGNED_OUT') { setData(EMPTY); setOwner(null); }
     });
     return () => sub.subscription.unsubscribe();
   }, [ready, syncAfterLogin]);
@@ -169,10 +192,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const r = await supabase.from('accounts').upsert(toRowAccount(acc, userId));
       if (r.error) fail('No se pudo guardar en la nube', r.error);
     }
+    return acc.id;
   }, [userId]);
 
   const deleteAccount = useCallback(async (id: string) => {
-    setData((d) => ({ accounts: d.accounts.filter((a) => a.id !== id), moves: d.moves.filter((m) => m.acc !== id) }));
+    setData((d) => ({ ...d, accounts: d.accounts.filter((a) => a.id !== id), moves: d.moves.filter((m) => m.acc !== id) }));
     if (supabase && userId) {
       const r = await supabase.from('accounts').delete().eq('id', id);
       if (r.error) fail('No se pudo borrar en la nube', r.error);
@@ -182,10 +206,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addMove = useCallback(async (input: Omit<Movement, 'id'>) => {
     const m: Movement = { ...input, id: uuid() };
     setData((d) => ({ ...d, moves: [...d.moves, m] }));
+    setPrefsState((p) => ({ ...p, lastAcc: m.acc }));
     const acc = dataRef.current.accounts.find((a) => a.id === m.acc);
     if (supabase && userId && !acc?.sample) {
       const r = await supabase.from('movements').insert(toRowMove(m, userId));
       if (r.error) fail('No se pudo guardar en la nube', r.error);
+    }
+  }, [userId]);
+
+  const addMoves = useCallback(async (inputs: Omit<Movement, 'id'>[]) => {
+    if (!inputs.length) return;
+    const ms: Movement[] = inputs.map((x) => ({ ...x, id: uuid() }));
+    setData((d) => ({ ...d, moves: [...d.moves, ...ms] }));
+    if (supabase && userId) {
+      const r = await supabase.from('movements').insert(ms.map((m) => toRowMove(m, userId)));
+      if (r.error) fail('No se pudo guardar en la nube', r.error);
+    }
+    setPrefsState((p) => ({ ...p, lastAcc: inputs[inputs.length - 1].acc }));
+  }, [userId]);
+
+  const saveNote = useCallback(async (n: DayNote) => {
+    setData((d) => ({ ...d, notes: [...d.notes.filter((x) => x.date !== n.date), n] }));
+    if (supabase && userId) {
+      const r = await supabase.from('day_notes').upsert({ user_id: userId, date: n.date, plan: n.plan, review: n.review, mood: n.mood, followed: n.followed, updated_at: new Date().toISOString() });
+      if (r.error) fail('No se pudo guardar la nota', r.error);
     }
   }, [userId]);
 
@@ -210,11 +254,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setData((d) => {
       const accounts = d.accounts.filter((a) => !a.sample);
       const ids = new Set(accounts.map((a) => a.id));
-      return { accounts, moves: d.moves.filter((m) => !m.sample && ids.has(m.acc)) };
+      return { ...d, accounts, moves: d.moves.filter((m) => !m.sample && ids.has(m.acc)) };
     });
   }, []);
 
-  const wipeLocal = useCallback(() => setData({ accounts: [], moves: [] }), []);
+  const wipeLocal = useCallback(() => setData(EMPTY), []);
 
   const refresh = useCallback(async () => {
     if (!supabase || !userId) return;
@@ -225,7 +269,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
-    setData({ accounts: [], moves: [] }); // no dejar datos del usuario en el dispositivo
+    setData(EMPTY); // no dejar datos del usuario en el dispositivo
   }, []);
 
   const deleteCloudAccount = useCallback(async () => {
@@ -233,7 +277,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const r = await supabase.rpc('delete_user');
     if (r.error) { fail('No se pudo eliminar la cuenta', r.error); return; }
     await supabase.auth.signOut();
-    setData({ accounts: [], moves: [] });
+    setData(EMPTY);
   }, []);
 
   // Borra cuentas y movimientos de la nube, pero mantiene el usuario
@@ -241,7 +285,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!supabase || !userId) return false;
     const r = await supabase.from('accounts').delete().eq('user_id', userId);
     if (r.error) { fail('No se pudieron borrar los datos', r.error); return false; }
-    setData({ accounts: [], moves: [] });
+    setData(EMPTY);
     return true;
   }, [userId]);
 
@@ -259,8 +303,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     theme: buildTheme(prefs),
     cloudEnabled: !!supabase,
     hasSample: data.accounts.some((a) => a.sample),
-    setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData, updateProfileName,
-  }), [data, ready, authReady, prefs, session, syncing, setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData, updateProfileName]);
+    setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData, updateProfileName, saveNote, addMoves,
+  }), [data, ready, authReady, prefs, session, syncing, setPrefs, saveAccount, deleteAccount, addMove, deleteMove, updateMove, clearSample, wipeLocal, refresh, signOut, deleteCloudAccount, deleteCloudData, updateProfileName, saveNote, addMoves]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
