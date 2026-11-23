@@ -8,15 +8,18 @@ import { buildTheme, type Theme } from '@/lib/theme';
 import { syncWidget } from '@/lib/widget-sync';
 import { fetchFx } from '@/lib/fx';
 import { DEFAULT_PREFS, type Account, type DayNote, type Movement, type Prefs } from '@/lib/types';
-import { today, uuid } from '@/lib/format';
+import { addDays, today, uuid } from '@/lib/format';
 
 const KEY = 'tj.state.v1';
 
 type Data = { accounts: Account[]; moves: Movement[]; notes: DayNote[] };
 const EMPTY: Data = { accounts: [], moves: [], notes: [] };
-const addDaysSafe = (d: string, n: number) => { const x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+/** Cambios que no se pudieron subir (sin conexión): se reintentan antes de cada descarga. */
+type Pending = { acc: string[]; mov: string[]; note: string[]; delAcc: string[]; delMov: string[] };
+const NO_PENDING: Pending = { acc: [], mov: [], note: [], delAcc: [], delMov: [] };
+const hasPending = (p: Pending) => Object.values(p).some((x) => x.length > 0);
 /** owner: id del usuario al que pertenece la copia local (para no mezclar datos entre usuarios). */
-type Persisted = Data & { prefs: Prefs; owner?: string | null };
+type Persisted = Data & { prefs: Prefs; owner?: string | null; pending?: Pending };
 
 type Store = Data & {
   ready: boolean;
@@ -44,7 +47,7 @@ type Store = Data & {
   updateProfileName: (name: string) => Promise<boolean>;
   saveNote: (n: DayNote) => Promise<void>;
   /** Guarda varios movimientos de una vez (un trade copiado en varias cuentas, o una importación). */
-  addMoves: (ms: Omit<Movement, 'id'>[]) => Promise<void>;
+  addMoves: (ms: Omit<Movement, 'id'>[], opts?: { imported?: boolean }) => Promise<void>;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -52,7 +55,7 @@ const Ctx = createContext<Store | null>(null);
 /* ---- mapeo app <-> tablas de Supabase ---- */
 const toRowAccount = (a: Account, user: string) => ({
   id: a.id, user_id: user, name: a.name, broker: a.broker, market: a.market, kind: a.kind,
-  initial_capital: a.initial, color: a.color, created_at: a.created,
+  initial_capital: a.initial, color: a.color,
   daily_loss_limit: a.dailyLossLimit ?? null, max_drawdown: a.maxDrawdown ?? null, profit_target: a.profitTarget ?? null,
   status: a.status ?? 'activa', currency: a.currency ?? 'USD', drawdown_type: a.drawdownType ?? 'static',
   risk_per_trade_pct: a.riskPct ?? null, max_trades_per_day: a.maxTradesPerDay ?? null, min_trading_days: a.minTradingDays ?? null,
@@ -79,18 +82,49 @@ const fromRowMove = (r: Row): Movement => ({
   id: r.id, acc: r.account_id, date: r.date, type: r.type, amount: Number(r.amount), note: r.note ?? '',
 });
 
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : String(e));
+
 function fail(title: string, e: unknown) {
-  const msg = e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : String(e);
-  Alert.alert(title, `${msg}\n\nComprueba tu conexión y vuelve a intentarlo; puedes sincronizar desde Perfil.`);
+  Alert.alert(title, `${errMsg(e)}\n\nComprueba tu conexión y vuelve a intentarlo.`);
+}
+
+/** Error de la base de datos (dato no válido) frente a error de red: los primeros no se arreglan reintentando. */
+const isDbError = (e: unknown) => {
+  const code = typeof e === 'object' && e && 'code' in e ? String((e as { code: unknown }).code ?? '') : '';
+  return /^[0-9A-Z]{5}$/.test(code) || code.startsWith('PGRST');
+};
+
+let offlineWarned = false;
+/** Sin conexión: se guarda en el iPhone y se sube luego. Solo se avisa una vez por sesión. */
+function queued(e: unknown) {
+  if (isDbError(e)) { fail('No se pudo guardar en la nube', e); return; }
+  if (offlineWarned) return;
+  offlineWarned = true;
+  Alert.alert('Guardado en el iPhone', 'Ahora mismo no hay conexión con la nube. Tus cambios están guardados y se subirán solos cuando vuelvas a tener conexión.');
+}
+
+/** Descarga una tabla entera por páginas (Supabase devuelve como máximo 1000 filas por petición). */
+async function fetchAll(table: string, order: string[]): Promise<Row[]> {
+  const out: Row[] = [];
+  const size = 1000;
+  for (let from = 0; ; from += size) {
+    let q = supabase!.from(table).select('*');
+    for (const o of order) q = q.order(o);
+    const r = await q.range(from, from + size - 1);
+    if (r.error) throw r.error;
+    out.push(...(r.data ?? []));
+    if ((r.data ?? []).length < size) return out;
+  }
 }
 
 /** Pausa tras pérdidas: al llegar a N operaciones perdidas hoy (entre todas las cuentas) se activa la pausa. */
-function withPause(p: Prefs, moves: Movement[]): Prefs {
-  if (!p.lossPause) return p;
+function withLoss(p: Prefs, isLossToday: boolean): Prefs {
+  if (!isLossToday) return p;
   const t = today();
-  if ((p.pausedUntil && p.pausedUntil > t) || p.pauseSkip === t) return p;
-  const lossesToday = moves.filter((m) => m.date === t && m.type === 'perdida').length;
-  return lossesToday >= p.lossPause.losses ? { ...p, pausedUntil: addDaysSafe(t, Math.max(1, p.lossPause.days)) } : p;
+  const n = (p.lossToday?.date === t ? p.lossToday.n : 0) + 1;
+  const next = { ...p, lossToday: { date: t, n } };
+  if (!p.lossPause || (p.pausedUntil && p.pausedUntil > t) || p.pauseSkip === t) return next;
+  return n >= p.lossPause.losses ? { ...next, pausedUntil: addDays(t, Math.max(1, p.lossPause.days)) } : next;
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -101,10 +135,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(!supabase);
   const [owner, setOwner] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [pending, setPendingState] = useState<Pending>(NO_PENDING);
   const dataRef = useRef(data);
+  const pendingRef = useRef<Pending>(NO_PENDING);
+  const sessionRef = useRef<string | null>(null);
+  const ownerRef = useRef<string | null>(null);
   useEffect(() => {
     dataRef.current = data;
   }, [data]);
+  useEffect(() => {
+    ownerRef.current = owner;
+  }, [owner]);
+
+  const setPending = useCallback((f: (p: Pending) => Pending) => {
+    pendingRef.current = f(pendingRef.current);
+    setPendingState(pendingRef.current);
+  }, []);
+  const mark = useCallback((k: keyof Pending, id: string) => setPending((p) => ({ ...p, [k]: p[k].includes(id) ? p[k] : [...p[k], id] })), [setPending]);
+  const unmark = useCallback((k: keyof Pending, ids: string[]) => setPending((p) => ({ ...p, [k]: p[k].filter((x) => !ids.includes(x)) })), [setPending]);
 
   // carga inicial
   useEffect(() => {
@@ -121,6 +169,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setData({ accounts, moves: (saved.moves ?? []).filter((m) => !m.sample && ids.has(m.acc)), notes: saved.notes ?? [] });
         setPrefsState({ ...DEFAULT_PREFS, ...saved.prefs });
         setOwner(saved.owner ?? null);
+        if (saved.pending) { pendingRef.current = { ...NO_PENDING, ...saved.pending }; setPendingState(pendingRef.current); }
       }
       setReady(true);
     })();
@@ -130,64 +179,111 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return;
     const t = today();
-    if (prefs.fx?.at && prefs.fx.at >= addDaysSafe(t, -1)) return;
+    if (prefs.fx?.at && prefs.fx.at >= addDays(t, -1)) return;
     fetchFx().then((fx) => { if (fx) setPrefsState((p) => ({ ...p, fx })); });
   }, [ready, prefs.fx?.at]);
 
   // persistencia
   useEffect(() => {
     if (!ready) return;
-    AsyncStorage.setItem(KEY, JSON.stringify({ ...data, prefs, owner })).catch(() => {});
+    AsyncStorage.setItem(KEY, JSON.stringify({ ...data, prefs, owner, pending })).catch(() => {});
     syncWidget(data.accounts, data.moves, prefs);
-  }, [data, prefs, owner, ready]);
+  }, [data, prefs, owner, pending, ready]);
 
   const userId = session?.user.id;
 
-  const pull = useCallback(async () => {
+  /** Sube lo pendiente. Lanza error si sigue sin haber conexión (así no se pisa nada al descargar). */
+  const flush = useCallback(async (uid: string) => {
+    if (!supabase || !hasPending(pendingRef.current)) return;
+    const p = pendingRef.current, d = dataRef.current;
+    const step = async (k: keyof Pending, run: () => PromiseLike<{ error: unknown }>, ids: string[]) => {
+      if (!ids.length) return;
+      const r = await run();
+      if (r.error && !isDbError(r.error)) throw r.error;
+      if (r.error) fail('Un cambio no se pudo subir a la nube', r.error);
+      unmark(k, ids); // subido, o rechazado por la base de datos (no se arregla reintentando)
+    };
+    const accs = d.accounts.filter((a) => p.acc.includes(a.id));
+    await step('acc', () => supabase!.from('accounts').upsert(accs.map((a) => ({ ...toRowAccount(a, uid), created_at: a.created }))), p.acc);
+    const movs = d.moves.filter((m) => p.mov.includes(m.id));
+    await step('mov', () => supabase!.from('movements').upsert(movs.map((m) => toRowMove(m, uid))), p.mov);
+    const notes = d.notes.filter((n) => p.note.includes(n.date));
+    await step('note', () => supabase!.from('day_notes').upsert(notes.map((n) => ({ user_id: uid, date: n.date, plan: n.plan, review: n.review, mood: n.mood, followed: n.followed, updated_at: new Date().toISOString() }))), p.note);
+    await step('delMov', () => supabase!.from('movements').delete().in('id', p.delMov), p.delMov);
+    await step('delAcc', () => supabase!.from('accounts').delete().in('id', p.delAcc), p.delAcc);
+  }, [unmark]);
+
+  const pull = useCallback(async (uid: string) => {
     if (!supabase) return;
-    const [a, m] = await Promise.all([
-      supabase.from('accounts').select('*').order('created_at'),
-      supabase.from('movements').select('*').order('date'),
-    ]);
-    if (a.error) throw a.error;
-    if (m.error) throw m.error;
-    // las notas son opcionales: si la tabla aún no existe, se ignora el error
-    const n = await supabase.from('day_notes').select('*');
-    setData({ accounts: (a.data ?? []).map(fromRowAccount), moves: (m.data ?? []).map(fromRowMove), notes: n.error ? [] : (n.data ?? []).map(fromRowNote) });
-  }, []);
+    await flush(uid);
+    const [accRows, movRows] = await Promise.all([fetchAll('accounts', ['created_at', 'id']), fetchAll('movements', ['date', 'id'])]);
+    // las notas son opcionales: si fallan, se mantienen las del iPhone
+    let noteRows: Row[] | null = null;
+    try { noteRows = await fetchAll('day_notes', ['date']); } catch {}
+    // si mientras tanto se ha cerrado sesión o ha entrado otro usuario, no se guarda nada
+    if (sessionRef.current !== uid) return;
+    setData((d) => {
+      // lo que se ha apuntado durante la descarga y aún no está subido se conserva
+      const p = pendingRef.current;
+      const accounts = accRows.map(fromRowAccount);
+      const moves = movRows.map(fromRowMove);
+      const aIds = new Set(accounts.map((a) => a.id)), mIds = new Set(moves.map((m) => m.id));
+      return {
+        accounts: [...accounts.filter((a) => !p.delAcc.includes(a.id)), ...d.accounts.filter((a) => p.acc.includes(a.id) && !aIds.has(a.id))],
+        moves: [...moves.filter((m) => !p.delMov.includes(m.id)), ...d.moves.filter((m) => p.mov.includes(m.id) && !mIds.has(m.id))],
+        notes: noteRows ? noteRows.map(fromRowNote) : d.notes,
+      };
+    });
+  }, [flush]);
 
   // al iniciar sesión: la nube es la fuente de verdad. La copia local de otro usuario se descarta.
   const syncAfterLogin = useCallback(async (uid: string) => {
     if (!supabase) return;
     setSyncing(true);
-    setOwner((prev) => {
-      if (prev && prev !== uid) setData(EMPTY);
-      return uid;
-    });
+    if (ownerRef.current && ownerRef.current !== uid) {
+      // otro usuario en este iPhone: se descarta la copia local y sus ajustes personales
+      setData(EMPTY);
+      dataRef.current = EMPTY;
+      setPending(() => NO_PENDING);
+      setPrefsState((p) => ({ ...p, pausedUntil: null, pauseSkip: null, lossToday: null, lastAcc: null, monthlyGoal: null }));
+    }
+    ownerRef.current = uid;
+    setOwner(uid);
     try {
-      await pull();
+      await pull(uid);
     } catch (e) {
       fail('No se pudieron cargar tus datos', e);
     } finally {
       setSyncing(false);
     }
-  }, [pull]);
+  }, [pull, setPending]);
 
   useEffect(() => {
     if (!supabase || !ready) return;
+    let synced: string | null = null;
+    const sync = (uid: string) => { if (synced === uid) return; synced = uid; syncAfterLogin(uid); };
     supabase.auth.getSession().then(({ data: d }) => {
+      sessionRef.current = d.session?.user.id ?? null;
       setSession(d.session);
       setAuthReady(true);
-      if (d.session) syncAfterLogin(d.session.user.id);
-      else setData(EMPTY);
+      // sin sesión (p. ej. sin cobertura al abrir) no se borra nada: solo al cerrar sesión de verdad
+      if (d.session) sync(d.session.user.id);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      sessionRef.current = s?.user.id ?? null;
       setSession(s);
-      if (event === 'SIGNED_IN' && s) syncAfterLogin(s.user.id);
-      if (event === 'SIGNED_OUT') { setData(EMPTY); setOwner(null); }
+      if (s && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) sync(s.user.id);
+      if (event === 'SIGNED_OUT') {
+        synced = null;
+        setData(EMPTY);
+        dataRef.current = EMPTY;
+        setPending(() => NO_PENDING);
+        ownerRef.current = null;
+        setOwner(null);
+      }
     });
     return () => sub.subscription.unsubscribe();
-  }, [ready, syncAfterLogin]);
+  }, [ready, syncAfterLogin, setPending]);
 
   const setPrefs = useCallback((p: Partial<Prefs>) => setPrefsState((old) => ({ ...old, ...p })), []);
 
@@ -201,67 +297,97 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       accounts: existing ? d.accounts.map((a) => (a.id === acc.id ? acc : a)) : [...d.accounts, acc],
     }));
     if (supabase && userId) {
-      const r = await supabase.from('accounts').upsert(toRowAccount(acc, userId));
-      if (r.error) fail('No se pudo guardar en la nube', r.error);
+      mark('acc', acc.id);
+      const row = existing ? toRowAccount(acc, userId) : { ...toRowAccount(acc, userId), created_at: new Date().toISOString() };
+      const r = await supabase.from('accounts').upsert(row);
+      if (r.error) queued(r.error);
+      if (!r.error || isDbError(r.error)) unmark('acc', [acc.id]);
     }
     return acc.id;
-  }, [userId]);
+  }, [userId, mark, unmark]);
 
   const deleteAccount = useCallback(async (id: string) => {
     setData((d) => ({ ...d, accounts: d.accounts.filter((a) => a.id !== id), moves: d.moves.filter((m) => m.acc !== id) }));
     if (supabase && userId) {
+      const movIds = dataRef.current.moves.filter((m) => m.acc === id).map((m) => m.id);
+      unmark('acc', [id]);
+      unmark('mov', movIds);
+      mark('delAcc', id);
       const r = await supabase.from('accounts').delete().eq('id', id);
-      if (r.error) fail('No se pudo borrar en la nube', r.error);
+      if (r.error) queued(r.error);
+      if (!r.error || isDbError(r.error)) unmark('delAcc', [id]);
     }
-  }, [userId]);
+  }, [userId, mark, unmark]);
 
   const addMove = useCallback(async (input: Omit<Movement, 'id'>) => {
     const m: Movement = { ...input, id: uuid() };
     setData((d) => ({ ...d, moves: [...d.moves, m] }));
-    setPrefsState((p) => withPause({ ...p, lastAcc: m.acc }, [...dataRef.current.moves, m]));
+    setPrefsState((p) => withLoss({ ...p, lastAcc: m.acc }, m.type === 'perdida' && m.date === today()));
     const acc = dataRef.current.accounts.find((a) => a.id === m.acc);
     if (supabase && userId && !acc?.sample) {
+      mark('mov', m.id);
       const r = await supabase.from('movements').insert(toRowMove(m, userId));
-      if (r.error) fail('No se pudo guardar en la nube', r.error);
+      if (r.error) queued(r.error);
+      if (!r.error || isDbError(r.error)) unmark('mov', [m.id]);
     }
-  }, [userId]);
+  }, [userId, mark, unmark]);
 
-  const addMoves = useCallback(async (inputs: Omit<Movement, 'id'>[]) => {
+  const addMoves = useCallback(async (inputs: Omit<Movement, 'id'>[], opts?: { imported?: boolean }) => {
     if (!inputs.length) return;
     const ms: Movement[] = inputs.map((x) => ({ ...x, id: uuid() }));
     setData((d) => ({ ...d, moves: [...d.moves, ...ms] }));
+    // un mismo trade copiado en varias cuentas cuenta como una sola pérdida; lo importado no cuenta
+    const loss = !opts?.imported && ms.some((m) => m.type === 'perdida' && m.date === today());
+    setPrefsState((p) => withLoss({ ...p, lastAcc: inputs[inputs.length - 1].acc }, loss));
     if (supabase && userId) {
-      const r = await supabase.from('movements').insert(ms.map((m) => toRowMove(m, userId)));
-      if (r.error) fail('No se pudo guardar en la nube', r.error);
+      const ids = ms.map((m) => m.id);
+      ids.forEach((id) => mark('mov', id));
+      // por lotes, para no mandar miles de filas en una sola petición
+      let failed: unknown = null;
+      for (let i = 0; i < ms.length; i += 500) {
+        const chunk = ms.slice(i, i + 500);
+        const r = await supabase.from('movements').insert(chunk.map((m) => toRowMove(m, userId)));
+        if (r.error) { failed = r.error; if (!isDbError(r.error)) break; }
+        if (!r.error || isDbError(r.error)) unmark('mov', chunk.map((m) => m.id));
+      }
+      if (failed) queued(failed);
     }
-    setPrefsState((p) => withPause({ ...p, lastAcc: inputs[inputs.length - 1].acc }, [...dataRef.current.moves, ...ms]));
-  }, [userId]);
+  }, [userId, mark, unmark]);
 
   const saveNote = useCallback(async (n: DayNote) => {
     setData((d) => ({ ...d, notes: [...d.notes.filter((x) => x.date !== n.date), n] }));
     if (supabase && userId) {
+      mark('note', n.date);
       const r = await supabase.from('day_notes').upsert({ user_id: userId, date: n.date, plan: n.plan, review: n.review, mood: n.mood, followed: n.followed, updated_at: new Date().toISOString() });
-      if (r.error) fail('No se pudo guardar la nota', r.error);
+      if (r.error) queued(r.error);
+      if (!r.error || isDbError(r.error)) unmark('note', [n.date]);
     }
-  }, [userId]);
+  }, [userId, mark, unmark]);
 
   const updateMove = useCallback(async (m: Movement) => {
-    setPrefsState((p) => withPause(p, dataRef.current.moves.map((x) => (x.id === m.id ? m : x))));
+    const before = dataRef.current.moves.find((x) => x.id === m.id);
+    const becameLoss = m.type === 'perdida' && m.date === today() && !(before?.type === 'perdida' && before.date === m.date);
+    setPrefsState((p) => withLoss(p, becameLoss));
     setData((d) => ({ ...d, moves: d.moves.map((x) => (x.id === m.id ? { ...m, sample: x.sample } : x)) }));
     const acc = dataRef.current.accounts.find((a) => a.id === m.acc);
     if (supabase && userId && !acc?.sample) {
+      mark('mov', m.id);
       const r = await supabase.from('movements').upsert(toRowMove(m, userId));
-      if (r.error) fail('No se pudo guardar en la nube', r.error);
+      if (r.error) queued(r.error);
+      if (!r.error || isDbError(r.error)) unmark('mov', [m.id]);
     }
-  }, [userId]);
+  }, [userId, mark, unmark]);
 
   const deleteMove = useCallback(async (id: string) => {
     setData((d) => ({ ...d, moves: d.moves.filter((m) => m.id !== id) }));
     if (supabase && userId) {
+      unmark('mov', [id]);
+      mark('delMov', id);
       const r = await supabase.from('movements').delete().eq('id', id);
-      if (r.error) fail('No se pudo borrar en la nube', r.error);
+      if (r.error) queued(r.error);
+      if (!r.error || isDbError(r.error)) unmark('delMov', [id]);
     }
-  }, [userId]);
+  }, [userId, mark, unmark]);
 
   const clearSample = useCallback(() => {
     setData((d) => {
@@ -276,20 +402,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     if (!supabase || !userId) return;
     setSyncing(true);
-    try { await pull(); } catch (e) { fail('No se pudo actualizar', e); } finally { setSyncing(false); }
+    try { await pull(userId); } catch (e) { fail('No se pudo actualizar', e); } finally { setSyncing(false); }
   }, [pull, userId]);
 
   const signOut = useCallback(async () => {
     if (!supabase) return;
-    await supabase.auth.signOut();
+    if (hasPending(pendingRef.current) && userId) {
+      // último intento de subir lo pendiente antes de borrar la copia del iPhone
+      try { await flush(userId); } catch {}
+    }
+    // 'local' cierra la sesión aunque no haya conexión
+    await supabase.auth.signOut({ scope: 'local' });
     setData(EMPTY); // no dejar datos del usuario en el dispositivo
-  }, []);
+  }, [flush, userId]);
 
   const deleteCloudAccount = useCallback(async () => {
     if (!supabase) return;
     const r = await supabase.rpc('delete_user');
     if (r.error) { fail('No se pudo eliminar la cuenta', r.error); return; }
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     setData(EMPTY);
   }, []);
 
@@ -298,9 +429,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!supabase || !userId) return false;
     const r = await supabase.from('accounts').delete().eq('user_id', userId);
     if (r.error) { fail('No se pudieron borrar los datos', r.error); return false; }
+    const n = await supabase.from('day_notes').delete().eq('user_id', userId);
+    if (n.error) { fail('No se pudieron borrar las notas', n.error); return false; }
+    setPending(() => NO_PENDING);
     setData(EMPTY);
     return true;
-  }, [userId]);
+  }, [userId, setPending]);
 
   const updateProfileName = useCallback(async (name: string) => {
     if (!supabase || !session) return false;

@@ -5,13 +5,13 @@ import { Alert, Pressable, Switch, TextInput, View } from 'react-native';
 import { Icon } from '@/components/icon';
 import { Sheet } from '@/components/sheet';
 import { Button, Chips, Field, success, tap, Txt } from '@/components/ui';
-import { addDays, group, longDate, today } from '@/lib/format';
+import { addDays, group, longDate, parseNumber, today } from '@/lib/format';
 import { withAlpha } from '@/lib/theme';
 import { CURRENCY_SYMBOL, isArchived, MOVE_TYPE_KEYS, MOVE_TYPES, MULTI_TYPES, type MoveType } from '@/lib/types';
 import { useStore } from '@/store/store';
 
 const parseAmount = (s: string) => {
-  const v = Number(s.replace(/\./g, '').replace(',', '.'));
+  const v = parseNumber(s);
   return !s.trim() || isNaN(v) || v <= 0 ? null : Math.round(v * 100) / 100;
 };
 

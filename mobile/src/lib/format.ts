@@ -33,6 +33,26 @@ export function longDate(s: string) {
   return `${days[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+/**
+ * Lee un número escrito a mano, con coma o punto decimal según el teclado del iPhone:
+ * "1.500" y "1.500,50" (España), "250.50" y "1,250.50" (EE. UU.), "0,5" o "0.5".
+ * Devuelve NaN si no es un número.
+ */
+export function parseNumber(input: string): number {
+  const t = input.replace(/\s/g, '');
+  if (!/^-?[\d.,]+$/.test(t)) return NaN;
+  let norm = t;
+  const lastC = t.lastIndexOf(','), lastD = t.lastIndexOf('.');
+  if (lastC >= 0 && lastD >= 0) norm = lastC > lastD ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '');
+  else if (lastC >= 0) norm = (t.match(/,/g) ?? []).length > 1 ? t.replace(/,/g, '') : t.replace(',', '.');
+  else if (lastD >= 0) {
+    const dots = (t.match(/\./g) ?? []).length;
+    // un solo punto seguido de 3 cifras = miles ("1.500"); si no, es el decimal ("250.5", "0.75")
+    if (dots > 1 || /^-?\d{1,3}\.\d{3}$/.test(t)) norm = t.replace(/\./g, '');
+  }
+  return Number(norm);
+}
+
 /** Agrupa miles con punto y decimales con coma (estilo español), siempre. */
 export function group(n: number, dec = 0) {
   const neg = n < 0;

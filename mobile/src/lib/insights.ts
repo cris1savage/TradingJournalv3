@@ -94,7 +94,15 @@ export function propRules(a: Account, moves: Movement[]): RuleState[] {
     if (a.drawdownType === 'trailing') {
       let bal = a.initial;
       const sorted = [...mine].sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0));
-      for (const m of sorted) { bal += signed(m); peak = Math.max(peak, bal); }
+      // depósitos, retiros y payouts mueven el balance y el pico por igual: solo cuenta el trading
+      for (const m of sorted) {
+        bal += signed(m);
+        if (m.type === 'deposito' || m.type === 'retiro' || m.type === 'payout') peak += signed(m);
+        else peak = Math.max(peak, bal);
+      }
+    } else {
+      // estático: el nivel de partida se ajusta con lo que metes o sacas
+      for (const m of mine) if (m.type === 'deposito' || m.type === 'retiro' || m.type === 'payout') peak += signed(m);
     }
     const dd = Math.max(0, peak - balance);
     out.push({ label: a.drawdownType === 'trailing' ? 'Drawdown trailing' : 'Drawdown máximo', used: (dd / a.maxDrawdown) * 100, usedAmount: dd, limit: a.maxDrawdown, remaining: a.maxDrawdown - dd, kind: 'risk', unit: 'money' });

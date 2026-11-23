@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 
 import { Sheet } from '@/components/sheet';
 import { Button, Field, Segmented, success, Txt } from '@/components/ui';
@@ -73,9 +73,11 @@ export default function Login() {
     if (password.length < 8) { setMsg({ text: 'La nueva contraseña necesita al menos 8 caracteres.' }); return; }
     const v = await supabase!.auth.verifyOtp({ email: cleanEmail, token: code.trim(), type: 'recovery' });
     if (v.error) { setMsg({ text: niceError(v.error.message) }); return; }
+    // el código ya ha iniciado sesión y esta pantalla se cierra: los errores se avisan con una alerta
     const u = await supabase!.auth.updateUser({ password });
-    if (u.error) { setMsg({ text: niceError(u.error.message) }); return; }
+    if (u.error) { Alert.alert('No se pudo cambiar la contraseña', `${niceError(u.error.message)}\n\nHas entrado en tu cuenta: cámbiala desde Perfil → Cambiar contraseña.`); return; }
     success();
+    Alert.alert('Contraseña cambiada', 'Ya has entrado con tu nueva contraseña.');
   });
 
   if (!supabase) {

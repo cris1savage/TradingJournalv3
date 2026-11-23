@@ -25,8 +25,9 @@ export default function Importar() {
   // movimientos que ya estaban (por número de posición de MT5) no se duplican
   const { fresh, dupes } = useMemo(() => {
     if (!parsed) return { fresh: [], dupes: 0 };
-    const existing = moves.filter((m) => m.acc === accId).map((m) => m.note);
-    const fresh = parsed.filter((p) => !existing.some((n) => n.includes(p.key)));
+    const keyOf = (note: string) => note.match(/(MT5 (?:#\d+|balance .+))$/)?.[1];
+    const existing = new Set(moves.filter((m) => m.acc === accId).map((m) => keyOf(m.note)).filter(Boolean));
+    const fresh = parsed.filter((p) => !existing.has(p.key));
     return { fresh, dupes: parsed.length - fresh.length };
   }, [parsed, moves, accId]);
 
@@ -66,7 +67,7 @@ export default function Importar() {
   const doImport = async () => {
     if (!acc || !fresh.length) return;
     setBusy(true);
-    await addMoves(fresh.map((m) => ({ acc: acc.id, date: m.date, type: m.type, amount: m.amount, note: m.note })));
+    await addMoves(fresh.map((m) => ({ acc: acc.id, date: m.date, type: m.type, amount: m.amount, note: m.note })), { imported: true });
     setBusy(false);
     success();
     router.back();

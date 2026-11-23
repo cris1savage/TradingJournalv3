@@ -4,7 +4,7 @@ import { Alert, Pressable, Switch, View } from 'react-native';
 import { Icon } from '@/components/icon';
 import { authenticate, canUseBiometrics } from '@/components/lock';
 import { Card, Divider, Field, Row, Screen, Segmented, tap, Txt } from '@/components/ui';
-import { shortDate, today } from '@/lib/format';
+import { parseNumber, shortDate, today } from '@/lib/format';
 import { setDailyReminder } from '@/lib/reminder';
 import { ACCENTS, BACKGROUNDS } from '@/lib/theme';
 import type { BgKey } from '@/lib/types';
@@ -156,7 +156,7 @@ export default function Ajustes() {
             keyboardType="decimal-pad"
             returnKeyType="done"
             onEndEditing={() => {
-              const v = Number(goal.replace(/\./g, '').replace(',', '.'));
+              const v = parseNumber(goal);
               setPrefs({ monthlyGoal: goal.trim() && !isNaN(v) && v > 0 ? Math.round(v) : null });
             }}
           />

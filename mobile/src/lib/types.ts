@@ -99,6 +99,8 @@ export type Prefs = {
   pausedUntil: string | null;
   /** día en que terminaste la pausa a mano: ese día no se vuelve a activar */
   pauseSkip: string | null;
+  /** pérdidas apuntadas hoy (un trade copiado en varias cuentas cuenta como una) */
+  lossToday: { date: string; n: number } | null;
   /** Cambios de divisa (1 USD = x) guardados para funcionar sin conexión */
   fx: { EUR: number; GBP: number; at: string } | null;
 };
@@ -118,6 +120,7 @@ export const DEFAULT_PREFS: Prefs = {
   lossPause: { losses: 2, days: 1 },
   pausedUntil: null,
   pauseSkip: null,
+  lossToday: null,
   fx: null,
 };
 

@@ -5,7 +5,7 @@ import { Sheet } from '@/components/sheet';
 import { Card, Chips, Field, Segmented, Txt } from '@/components/ui';
 import { balanceOf } from '@/lib/calc';
 import { convert } from '@/lib/fx';
-import { group, money } from '@/lib/format';
+import { group, money, parseNumber } from '@/lib/format';
 import { propRules } from '@/lib/insights';
 import { withAlpha } from '@/lib/theme';
 import { isArchived } from '@/lib/types';
@@ -22,7 +22,7 @@ const PRESETS: Record<Instrument, { label: string; unit: string; valuePerLot: nu
 };
 
 const num = (s: string) => {
-  const v = Number(s.replace(/\./g, '').replace(',', '.'));
+  const v = parseNumber(s);
   return isNaN(v) ? 0 : v;
 };
 

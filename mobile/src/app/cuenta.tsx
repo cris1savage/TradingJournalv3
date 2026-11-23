@@ -5,7 +5,7 @@ import { Alert, Pressable, Switch, View } from 'react-native';
 import { Icon } from '@/components/icon';
 import { Sheet } from '@/components/sheet';
 import { Button, Chips, Field, Segmented, success, tap, Txt } from '@/components/ui';
-import { money, today } from '@/lib/format';
+import { money, parseNumber, today } from '@/lib/format';
 import { ACCOUNT_COLORS } from '@/lib/theme';
 import {
   CURRENCIES, CURRENCY_SYMBOL, KINDS, MARKETS, STATUS_LABEL, STATUSES,
@@ -17,7 +17,7 @@ const fmtOpt = (n?: number | null) => (n ? String(n).replace('.', ',') : '');
 /** Número escrito en estilo español (10.000,50). Vacío → null; inválido → NaN. */
 const parseOpt = (s: string) => {
   if (!s.trim()) return null;
-  const v = Number(s.replace(/\./g, '').replace(',', '.'));
+  const v = parseNumber(s);
   return isNaN(v) || v <= 0 ? NaN : Math.round(v * 100) / 100;
 };
 
@@ -59,7 +59,7 @@ export default function CuentaForm() {
   };
 
   const save = async () => {
-    const value = Number(initial.replace(/\./g, '').replace(',', '.'));
+    const value = parseNumber(initial);
     const e: typeof errors = {};
     if (!name.trim()) e.name = 'Ponle un nombre a la cuenta.';
     if (!initial.trim() || isNaN(value) || value < 0) e.initial = 'Indica el capital inicial (0 o más).';
@@ -78,6 +78,9 @@ export default function CuentaForm() {
     if ([...Object.values(rules), costValue].some((r) => typeof r === 'number' && isNaN(r))) e.rules = 'Las reglas deben ser números mayores que 0 (o déjalas vacías).';
     if (rules.riskPct && rules.riskPct > 100) e.rules = 'El riesgo por trade es un porcentaje entre 0 y 100.';
     if (rules.withdrawPct && rules.withdrawPct > 100) e.rules = 'El porcentaje a retirar va de 1 a 100.';
+    if (rules.withdrawTriggerPct && rules.withdrawTriggerPct > 9999) e.rules = 'El % para retirar debe ser menor de 10.000.';
+    if ((rules.maxTradesPerDay != null && rules.maxTradesPerDay < 1) || (rules.minTradingDays != null && rules.minTradingDays < 1)) e.rules = 'Los trades por día y los días mínimos son números enteros de 1 en adelante.';
+    if (wOn && !isFunded && (!rules.withdrawTriggerPct || !rules.withdrawPct)) e.rules = 'Completa los dos porcentajes del plan de retiros o desactívalo.';
     setErrors(e);
     if (Object.keys(e).length) return;
     const clean = {
@@ -182,7 +185,7 @@ export default function CuentaForm() {
                 <View style={{ flex: 1 }}><Field label="Retirar (% benef.)" value={wPct} onChangeText={setWPct} placeholder="50" keyboardType="decimal-pad" /></View>
               </View>
               {(() => {
-                const cap = Number(initial.replace(/\./g, '').replace(',', '.')) || 0;
+                const cap = parseNumber(initial) || 0;
                 const tr = parseOpt(wTrigger), wp = parseOpt(wPct);
                 if (!cap || !tr || !wp || isNaN(tr) || isNaN(wp)) return null;
                 const at = cap * (1 + tr / 100);
