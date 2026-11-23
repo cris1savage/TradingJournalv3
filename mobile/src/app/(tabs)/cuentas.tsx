@@ -2,12 +2,12 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { Sparkline } from '@/components/charts';
+import { Meter, Sparkline } from '@/components/charts';
 import { Icon } from '@/components/icon';
 import { PropRules } from '@/components/prop-rules';
 import { Button, Card, Chips, IconButton, Row, Screen, Tag, Txt } from '@/components/ui';
 import { balanceOf, contributed, sparkline } from '@/lib/calc';
-import { propRules } from '@/lib/insights';
+import { propRules, withdrawalPlan } from '@/lib/insights';
 import { money, pct } from '@/lib/format';
 import { isArchived, STATUS_LABEL, type Account, type Status } from '@/lib/types';
 import { useStore } from '@/store/store';
@@ -61,10 +61,10 @@ function AccountCard({ a, moves }: { a: Account; moves: ReturnType<typeof useSto
   const { prefs: basePrefs, theme: t } = useStore();
   // los importes de cada cuenta se muestran en su propia moneda
   const prefs = { ...basePrefs, cur: a.currency ?? 'USD' };
-  const { bal, pnl, ret, spark, count, rules } = useMemo(() => {
+  const { bal, pnl, ret, spark, count, rules, plan } = useMemo(() => {
     const bal = balanceOf(a, moves);
     const dep = contributed(a, moves);
-    return { bal, pnl: bal - dep, ret: dep ? ((bal - dep) / dep) * 100 : 0, spark: sparkline(a, moves), count: moves.filter((m) => m.acc === a.id).length, rules: propRules(a, moves) };
+    return { bal, pnl: bal - dep, ret: dep ? ((bal - dep) / dep) * 100 : 0, spark: sparkline(a, moves), count: moves.filter((m) => m.acc === a.id).length, rules: propRules(a, moves), plan: withdrawalPlan(a, moves) };
   }, [a, moves]);
   const status: Status = a.status ?? 'activa';
   const statusColor = status === 'quemada' ? t.neg : status === 'retirada' ? t.muted : status === 'challenge' ? t.accent : status === 'aprobada' ? t.warn : t.pos;
@@ -92,6 +92,18 @@ function AccountCard({ a, moves }: { a: Account; moves: ReturnType<typeof useSto
       </Row>
       <Sparkline values={spark} color={a.color} />
       {!archived && <PropRules rules={rules} currency={a.currency ?? 'USD'} />}
+      {!archived && plan && (
+        <View style={{ gap: 5 }}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Txt v="small" style={{ fontSize: 12, color: t.text, fontWeight: '600' }}>Próximo retiro</Txt>
+            <Txt v="small" style={{ fontSize: 12, fontVariant: ['tabular-nums'] }} color={plan.due ? t.pos : t.muted}>
+              {plan.due ? `✓ Retira ${money(plan.amount, prefs, { dec: 0 })}` : `${Math.round(plan.progress)} % · meta ${money(plan.threshold, prefs, { dec: 0 })}`}
+            </Txt>
+          </Row>
+          <Meter value={plan.progress} color={t.pos} track={t.surface2} />
+          {plan.withdrawn > 0 && <Txt v="small" style={{ fontSize: 12 }}>Ya te has llevado {money(plan.withdrawn, prefs, { dec: 0 })} a casa</Txt>}
+        </View>
+      )}
       <Row style={{ justifyContent: 'space-between' }}>
         <Txt v="small" style={{ fontSize: 12 }}>Inicial {money(a.initial, prefs, { dec: 0 })}</Txt>
         <Txt v="small" style={{ fontSize: 12 }}>{count} movimientos</Txt>

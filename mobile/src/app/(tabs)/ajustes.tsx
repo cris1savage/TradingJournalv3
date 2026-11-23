@@ -4,6 +4,7 @@ import { Alert, Pressable, Switch, View } from 'react-native';
 import { Icon } from '@/components/icon';
 import { authenticate, canUseBiometrics } from '@/components/lock';
 import { Card, Divider, Field, Row, Screen, Segmented, tap, Txt } from '@/components/ui';
+import { today } from '@/lib/format';
 import { setDailyReminder } from '@/lib/reminder';
 import { ACCENTS, BACKGROUNDS } from '@/lib/theme';
 import type { BgKey } from '@/lib/types';
@@ -11,6 +12,7 @@ import { useStore } from '@/store/store';
 
 export default function Ajustes() {
   const { prefs, setPrefs, theme: t } = useStore();
+  const paused = !!prefs.pausedUntil && prefs.pausedUntil > today();
   const [goal, setGoal] = useState(prefs.monthlyGoal ? String(prefs.monthlyGoal) : '');
 
   return (
@@ -77,6 +79,39 @@ export default function Ajustes() {
         <Divider />
         <SwitchRow title="Efecto brillo" sub="Halo de color en tarjetas, estilo plataforma de fondeo" value={prefs.glow} onChange={(v) => setPrefs({ glow: v })} />
         <SwitchRow title="Modo privado" sub="Oculta los importes para hacer capturas" value={prefs.privacy} onChange={(v) => setPrefs({ privacy: v })} />
+      </Card>
+
+      <Card style={{ gap: 16 }}>
+        <Txt v="h2">Disciplina</Txt>
+        <SwitchRow
+          title="Pausa tras pérdidas"
+          sub="Si pierdes varias operaciones en un día, la app te para"
+          value={!!prefs.lossPause}
+          onChange={(v) => setPrefs({ lossPause: v ? { losses: 2, days: 1 } : null })}
+        />
+        {prefs.lossPause && (
+          <>
+            <View style={{ gap: 8 }}>
+              <Txt v="label">Pérdidas en un día</Txt>
+              <Segmented options={[2, 3].map((n) => ({ value: String(n), label: `${n} pérdidas` }))} value={String(prefs.lossPause.losses)} onChange={(v) => setPrefs({ lossPause: { ...prefs.lossPause!, losses: Number(v) } })} />
+            </View>
+            <View style={{ gap: 8 }}>
+              <Txt v="label">Duración de la pausa</Txt>
+              <Segmented options={[{ value: '1', label: 'Resto del día' }, { value: '2', label: '2 días' }, { value: '3', label: '3 días' }]} value={String(prefs.lossPause.days)} onChange={(v) => setPrefs({ lossPause: { ...prefs.lossPause!, days: Number(v) } })} />
+            </View>
+          </>
+        )}
+        {paused && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => Alert.alert('¿Terminar la pausa?', 'La pusiste para no operar en caliente. ¿Seguro que estás frío para volver hoy?', [
+              { text: 'Sigo en pausa', style: 'cancel' },
+              { text: 'Terminar pausa', style: 'destructive', onPress: () => setPrefs({ pausedUntil: null, pauseSkip: today() }) },
+            ])}
+            style={{ padding: 12, borderRadius: Math.min(t.r, 14), borderWidth: 1, borderColor: t.border, alignItems: 'center' }}>
+            <Txt v="body" color={t.neg} style={{ fontWeight: '600' }}>Pausa activa · Terminar antes</Txt>
+          </Pressable>
+        )}
       </Card>
 
       <Card style={{ gap: 16 }}>

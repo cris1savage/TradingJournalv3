@@ -55,6 +55,9 @@ export type Account = {
   riskPct?: number | null;
   maxTradesPerDay?: number | null;
   minTradingDays?: number | null;
+  /** Plan de retiros: al subir el balance un X % sobre el capital aportado, retirar un Y % del beneficio */
+  withdrawTriggerPct?: number | null;
+  withdrawPct?: number | null;
   sample?: boolean;
 };
 
@@ -90,6 +93,12 @@ export type Prefs = {
   monthlyGoal: number | null;
   onboarded: boolean;
   lastAcc: string | null;
+  /** Pausa tras pérdidas: con `losses` operaciones perdidas en un día, pausa de `days` días (1 = el resto de hoy) */
+  lossPause: { losses: number; days: number } | null;
+  /** Fecha (exclusiva) hasta la que dura la pausa activa */
+  pausedUntil: string | null;
+  /** día en que terminaste la pausa a mano: ese día no se vuelve a activar */
+  pauseSkip: string | null;
   /** Cambios de divisa (1 USD = x) guardados para funcionar sin conexión */
   fx: { EUR: number; GBP: number; at: string } | null;
 };
@@ -106,6 +115,9 @@ export const DEFAULT_PREFS: Prefs = {
   monthlyGoal: null,
   onboarded: false,
   lastAcc: null,
+  lossPause: { losses: 2, days: 1 },
+  pausedUntil: null,
+  pauseSkip: null,
   fx: null,
 };
 

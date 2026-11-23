@@ -152,3 +152,30 @@ export function monthStart() {
 }
 
 export const yesterday = () => addDays(today(), -1);
+
+export type WithdrawalPlan = {
+  base: number; // capital aportado (inicial + depósitos), sin restar retiros
+  balance: number;
+  threshold: number; // balance al que toca retirar
+  progress: number; // 0..100 hacia el umbral
+  due: boolean;
+  amount: number; // cuánto retirar ahora (0 si aún no toca)
+  withdrawn: number; // total retirado de la cuenta
+};
+
+/**
+ * Plan de retiros de una cuenta: cuando el balance supera el capital aportado en un X %,
+ * se propone retirar un Y % del beneficio. Ej.: 150 € con 100 % / 50 % → al llegar a 300 €, retirar 75 €.
+ */
+export function withdrawalPlan(a: Account, moves: Movement[]): WithdrawalPlan | null {
+  if (!a.withdrawTriggerPct || !a.withdrawPct) return null;
+  const mine = moves.filter((m) => m.acc === a.id);
+  const base = a.initial + mine.filter((m) => m.type === 'deposito').reduce((s, m) => s + m.amount, 0);
+  const withdrawn = mine.filter((m) => m.type === 'retiro' || m.type === 'payout').reduce((s, m) => s + m.amount, 0);
+  const balance = balanceOf(a, mine);
+  const threshold = base * (1 + a.withdrawTriggerPct / 100);
+  const due = base > 0 && balance >= threshold;
+  const profit = Math.max(0, balance - base);
+  const progress = base > 0 ? Math.max(0, Math.min(100, ((balance - base) / (threshold - base)) * 100)) : 0;
+  return { base, balance, threshold, progress, due, amount: due ? Math.floor(profit * a.withdrawPct) / 100 : 0, withdrawn };
+}

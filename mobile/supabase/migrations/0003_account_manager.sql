@@ -9,7 +9,9 @@ alter table public.accounts
     check (drawdown_type in ('static','trailing')),
   add column risk_per_trade_pct numeric(5,2) check (risk_per_trade_pct is null or (risk_per_trade_pct > 0 and risk_per_trade_pct <= 100)),
   add column max_trades_per_day integer check (max_trades_per_day is null or max_trades_per_day > 0),
-  add column min_trading_days integer check (min_trading_days is null or min_trading_days > 0);
+  add column min_trading_days integer check (min_trading_days is null or min_trading_days > 0),
+  add column withdraw_trigger_pct numeric(6,2) check (withdraw_trigger_pct is null or withdraw_trigger_pct > 0),
+  add column withdraw_pct numeric(5,2) check (withdraw_pct is null or (withdraw_pct > 0 and withdraw_pct <= 100));
 
 -- Nuevos tipos de movimiento: payout (cobro de una cuenta de fondeo) y coste (challenge, reset, suscripción)
 alter table public.movements drop constraint if exists movements_type_check;

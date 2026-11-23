@@ -9,9 +9,9 @@ import { Icon } from '@/components/icon';
 import { MoveRow } from '@/components/move-row';
 import { Button, Card, Chips, IconButton, Row, Screen, Segmented, Tag, Txt } from '@/components/ui';
 import { byMarket, monthly, periodStart, pnlByAccount, summarize } from '@/lib/calc';
-import { group, money, MONTHS_SHORT, pct, shortDate } from '@/lib/format';
+import { addDays, group, longDate, money, MONTHS_SHORT, pct, shortDate, today } from '@/lib/format';
 import { toDisplay } from '@/lib/fx';
-import { dailyPnl, fundingBusiness, monthStart, propRules, stopAlerts, streaks } from '@/lib/insights';
+import { dailyPnl, fundingBusiness, monthStart, propRules, stopAlerts, streaks, withdrawalPlan } from '@/lib/insights';
 import { CHART_PALETTE, withAlpha } from '@/lib/theme';
 import { isArchived, type Period } from '@/lib/types';
 import { useStore } from '@/store/store';
@@ -22,13 +22,18 @@ const PERIODS: { value: Period; label: string }[] = [
 const PERIOD_TEXT: Record<Period, string> = { '7': 'últimos 7 días', '30': 'últimos 30 días', '90': 'últimos 90 días', '365': 'último año', all: 'desde el inicio' };
 
 export default function Dashboard() {
-  const { accounts: rawAccounts, moves: rawMoves, prefs, setPrefs, theme: t, hasSample, clearSample, session } = useStore();
+  const { accounts: rawAccounts, moves: rawMoves, prefs, setPrefs, theme: t, hasSample, clearSample, session, addMove } = useStore();
   // Totales en tu moneda (cuentas en €, $ y £ convertidas) y sin las cuentas archivadas
   const conv = useMemo(() => toDisplay(rawAccounts, rawMoves, prefs.cur, prefs.fx), [rawAccounts, rawMoves, prefs.cur, prefs.fx]);
   const accounts = useMemo(() => conv.accounts.filter((a) => !isArchived(a)), [conv.accounts]);
   const moves = conv.moves;
   const activeRaw = useMemo(() => rawAccounts.filter((a) => !isArchived(a)), [rawAccounts]);
   const alerts = useMemo(() => stopAlerts(activeRaw, rawMoves), [activeRaw, rawMoves]);
+  const payouts = useMemo(
+    () => activeRaw.map((a) => ({ a, plan: withdrawalPlan(a, rawMoves) })).filter((x) => x.plan?.due && x.plan.amount > 0),
+    [activeRaw, rawMoves],
+  );
+  const paused = !!prefs.pausedUntil && prefs.pausedUntil > today();
   const business = useMemo(() => fundingBusiness(conv.accounts, conv.moves), [conv.accounts, conv.moves]);
   const firstName = ((session?.user.user_metadata?.name as string | undefined) ?? '').split(' ')[0];
   const [accFilter, setAccFilter] = useState('all');
@@ -90,6 +95,40 @@ export default function Dashboard() {
           <Button title="Borrar ejemplos y empezar" kind="secondary" onPress={clearSample} />
         </Card>
       )}
+
+      {paused && (
+        <View accessibilityRole="alert" style={{ gap: 6, padding: 16, borderRadius: Math.min(t.r, 16), backgroundColor: withAlpha(t.neg, 0.12), borderWidth: 1, borderColor: withAlpha(t.neg, 0.45) }}>
+          <Row style={{ gap: 10 }}>
+            <Icon name="alert" size={18} color={t.neg} />
+            <Txt v="body" style={{ fontWeight: '700', flex: 1 }}>Pausa activa</Txt>
+          </Row>
+          <Txt v="small" color={t.text}>
+            Has llegado a {prefs.lossPause?.losses ?? 2} pérdidas en un día. Cierra la plataforma: vuelves {prefs.pausedUntil === addDays(today(), 1) ? 'mañana' : `el ${longDate(prefs.pausedUntil!).toLowerCase()}`}. Proteger la cuenta también es ganar.
+          </Txt>
+        </View>
+      )}
+
+      {payouts.map(({ a, plan }) => {
+        const m = (n: number) => money(n, { ...prefs, cur: a.currency ?? 'USD' }, { dec: 0 });
+        return (
+          <Card key={'w' + a.id} lift style={{ gap: 10, borderColor: withAlpha(t.pos, 0.5) }}>
+            <Row style={{ gap: 10 }}>
+              <Icon name="check" size={18} color={t.pos} />
+              <Txt v="body" style={{ fontWeight: '700', flex: 1 }}>Toca retirar de {a.name}</Txt>
+            </Row>
+            <Txt v="small" color={t.text}>
+              Has llegado a {m(plan!.balance)} (tu meta era {m(plan!.threshold)}). Según tu plan, retira {m(plan!.amount)} ({a.withdrawPct} % del beneficio) y sigue operando con el resto.
+            </Txt>
+            <Button
+              title={`Apuntar retiro de ${m(plan!.amount)}`}
+              icon="check"
+              onPress={async () => {
+                await addMove({ acc: a.id, type: 'retiro', amount: plan!.amount, note: 'Retiro del plan', date: today() });
+              }}
+            />
+          </Card>
+        );
+      })}
 
       {alerts.map((al) => (
         <View key={al.account.id + al.text} accessibilityRole="alert" style={{ flexDirection: 'row', gap: 12, padding: 14, borderRadius: Math.min(t.r, 16), backgroundColor: withAlpha(al.severe ? t.neg : t.warn, 0.12), borderWidth: 1, borderColor: withAlpha(al.severe ? t.neg : t.warn, 0.45) }}>

@@ -56,6 +56,7 @@ const toRowAccount = (a: Account, user: string) => ({
   daily_loss_limit: a.dailyLossLimit ?? null, max_drawdown: a.maxDrawdown ?? null, profit_target: a.profitTarget ?? null,
   status: a.status ?? 'activa', currency: a.currency ?? 'USD', drawdown_type: a.drawdownType ?? 'static',
   risk_per_trade_pct: a.riskPct ?? null, max_trades_per_day: a.maxTradesPerDay ?? null, min_trading_days: a.minTradingDays ?? null,
+  withdraw_trigger_pct: a.withdrawTriggerPct ?? null, withdraw_pct: a.withdrawPct ?? null,
 });
 const toRowMove = (m: Movement, user: string) => ({
   id: m.id, user_id: user, account_id: m.acc, date: m.date, type: m.type, amount: m.amount, note: m.note,
@@ -70,6 +71,8 @@ const fromRowAccount = (r: Row): Account => ({
   status: r.status ?? 'activa', currency: r.currency ?? 'USD', drawdownType: r.drawdown_type ?? 'static',
   riskPct: r.risk_per_trade_pct == null ? null : Number(r.risk_per_trade_pct),
   maxTradesPerDay: r.max_trades_per_day ?? null, minTradingDays: r.min_trading_days ?? null,
+  withdrawTriggerPct: r.withdraw_trigger_pct == null ? null : Number(r.withdraw_trigger_pct),
+  withdrawPct: r.withdraw_pct == null ? null : Number(r.withdraw_pct),
 });
 const fromRowNote = (r: Row): DayNote => ({ date: r.date, plan: r.plan ?? '', review: r.review ?? '', mood: r.mood ?? null, followed: r.followed ?? null });
 const fromRowMove = (r: Row): Movement => ({
@@ -79,6 +82,15 @@ const fromRowMove = (r: Row): Movement => ({
 function fail(title: string, e: unknown) {
   const msg = e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : String(e);
   Alert.alert(title, `${msg}\n\nComprueba tu conexión y vuelve a intentarlo; puedes sincronizar desde Perfil.`);
+}
+
+/** Pausa tras pérdidas: al llegar a N operaciones perdidas hoy (entre todas las cuentas) se activa la pausa. */
+function withPause(p: Prefs, moves: Movement[]): Prefs {
+  if (!p.lossPause) return p;
+  const t = today();
+  if ((p.pausedUntil && p.pausedUntil > t) || p.pauseSkip === t) return p;
+  const lossesToday = moves.filter((m) => m.date === t && m.type === 'perdida').length;
+  return lossesToday >= p.lossPause.losses ? { ...p, pausedUntil: addDaysSafe(t, Math.max(1, p.lossPause.days)) } : p;
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -206,7 +218,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addMove = useCallback(async (input: Omit<Movement, 'id'>) => {
     const m: Movement = { ...input, id: uuid() };
     setData((d) => ({ ...d, moves: [...d.moves, m] }));
-    setPrefsState((p) => ({ ...p, lastAcc: m.acc }));
+    setPrefsState((p) => withPause({ ...p, lastAcc: m.acc }, [...dataRef.current.moves, m]));
     const acc = dataRef.current.accounts.find((a) => a.id === m.acc);
     if (supabase && userId && !acc?.sample) {
       const r = await supabase.from('movements').insert(toRowMove(m, userId));
@@ -222,7 +234,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const r = await supabase.from('movements').insert(ms.map((m) => toRowMove(m, userId)));
       if (r.error) fail('No se pudo guardar en la nube', r.error);
     }
-    setPrefsState((p) => ({ ...p, lastAcc: inputs[inputs.length - 1].acc }));
+    setPrefsState((p) => withPause({ ...p, lastAcc: inputs[inputs.length - 1].acc }, [...dataRef.current.moves, ...ms]));
   }, [userId]);
 
   const saveNote = useCallback(async (n: DayNote) => {
@@ -234,6 +246,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [userId]);
 
   const updateMove = useCallback(async (m: Movement) => {
+    setPrefsState((p) => withPause(p, dataRef.current.moves.map((x) => (x.id === m.id ? m : x))));
     setData((d) => ({ ...d, moves: d.moves.map((x) => (x.id === m.id ? { ...m, sample: x.sample } : x)) }));
     const acc = dataRef.current.accounts.find((a) => a.id === m.acc);
     if (supabase && userId && !acc?.sample) {

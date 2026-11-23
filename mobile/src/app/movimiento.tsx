@@ -32,6 +32,9 @@ export default function MovimientoForm() {
   const [multi, setMulti] = useState(false);
   const [picked, setPicked] = useState<Record<string, boolean>>(firstAcc ? { [firstAcc]: true } : {});
   const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const [reason, setReason] = useState('');
+  // pausa tras pérdidas: para apuntar una operación nueva hay que escribir por qué
+  const paused = !existing && !!prefs.pausedUntil && prefs.pausedUntil > today() && (type === 'ganancia' || type === 'perdida') && date >= today();
 
   const canMulti = !existing && MULTI_TYPES.includes(type) && usable.length > 1;
   const isMulti = multi && canMulti;
@@ -40,6 +43,7 @@ export default function MovimientoForm() {
     k === 'ganancia' || k === 'payout' ? t.pos : k === 'perdida' ? t.neg : k === 'comision' || k === 'coste' ? t.warn : k === 'deposito' ? t.accent : t.muted;
 
   const save = async () => {
+    if (paused && reason.trim().length < 10) { setError('Estás en pausa. Escribe por qué operas hoy (mínimo 10 letras) o vuelve cuando acabe.'); return; }
     if (isMulti) {
       const chosen = usable.filter((a) => picked[a.id]);
       if (!chosen.length) { setError('Elige al menos una cuenta.'); return; }
@@ -53,7 +57,7 @@ export default function MovimientoForm() {
     const v = parseAmount(amount);
     if (v === null) { setError('Escribe un importe mayor que 0. Va siempre en positivo: el tipo decide si suma o resta.'); return; }
     if (!acc) { setError('Elige una cuenta.'); return; }
-    const data = { acc, type, amount: v, note: note.trim(), date };
+    const data = { acc, type, amount: v, note: (paused ? `[En pausa: ${reason.trim()}] ${note.trim()}` : note.trim()).trim().slice(0, 200), date };
     if (existing) await updateMove({ ...existing, ...data });
     else await addMove(data);
     success();
@@ -171,6 +175,13 @@ export default function MovimientoForm() {
         <Chips value={date} onChange={setDate} options={quick.map((d) => ({ value: d, label: shortLabel(d) }))} />
       </View>
 
+      {paused && (
+        <View style={{ gap: 10, padding: 14, borderRadius: Math.min(t.r, 16), backgroundColor: withAlpha(t.neg, 0.12), borderWidth: 1, borderColor: withAlpha(t.neg, 0.45) }}>
+          <Txt v="body" style={{ fontWeight: '700' }}>Estás en pausa hasta el {longDate(prefs.pausedUntil!).toLowerCase()}</Txt>
+          <Txt v="small" color={t.text}>Lo pactaste contigo en frío. Si de verdad has operado, apúntalo, pero escribe antes el motivo: quedará en la nota.</Txt>
+          <Field label="¿Por qué has operado en pausa?" value={reason} onChangeText={setReason} placeholder="Sé sincero contigo" maxLength={80} />
+        </View>
+      )}
       <Field label="Nota (opcional)" value={note} onChangeText={setNote} placeholder="Ej.: XAUUSD breakout Londres" maxLength={80} returnKeyType="done" onSubmitEditing={save} />
 
       <Button

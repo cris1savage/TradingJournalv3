@@ -1,11 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Pressable, Switch, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
 import { Sheet } from '@/components/sheet';
 import { Button, Chips, Field, Segmented, success, tap, Txt } from '@/components/ui';
-import { today } from '@/lib/format';
+import { money, today } from '@/lib/format';
 import { ACCOUNT_COLORS } from '@/lib/theme';
 import {
   CURRENCIES, CURRENCY_SYMBOL, KINDS, MARKETS, STATUS_LABEL, STATUSES,
@@ -42,6 +42,10 @@ export default function CuentaForm() {
   const [ddType, setDdType] = useState<'static' | 'trailing'>(existing?.drawdownType ?? 'static');
   const [minDays, setMinDays] = useState(fmtOpt(existing?.minTradingDays));
   const [cost, setCost] = useState('');
+  // plan de retiros: por defecto en cuentas reales nuevas (al duplicar, retirar la mitad del beneficio)
+  const [wOn, setWOn] = useState(existing ? !!existing.withdrawTriggerPct : true);
+  const [wTrigger, setWTrigger] = useState(fmtOpt(existing?.withdrawTriggerPct ?? 100));
+  const [wPct, setWPct] = useState(fmtOpt(existing?.withdrawPct ?? 50));
   const [errors, setErrors] = useState<{ name?: string; initial?: string; rules?: string }>({});
 
   const sym = CURRENCY_SYMBOL[currency];
@@ -67,10 +71,13 @@ export default function CuentaForm() {
       maxDrawdown: isFunded ? parseOpt(maxDd) : null,
       drawdownType: ddType,
       minTradingDays: isFunded ? parseOpt(minDays) : null,
+      withdrawTriggerPct: wOn && !isFunded ? parseOpt(wTrigger) : null,
+      withdrawPct: wOn && !isFunded ? parseOpt(wPct) : null,
     };
     const costValue = isFunded && !existing ? parseOpt(cost) : null;
     if ([...Object.values(rules), costValue].some((r) => typeof r === 'number' && isNaN(r))) e.rules = 'Las reglas deben ser números mayores que 0 (o déjalas vacías).';
     if (rules.riskPct && rules.riskPct > 100) e.rules = 'El riesgo por trade es un porcentaje entre 0 y 100.';
+    if (rules.withdrawPct && rules.withdrawPct > 100) e.rules = 'El porcentaje a retirar va de 1 a 100.';
     setErrors(e);
     if (Object.keys(e).length) return;
     const clean = {
@@ -158,6 +165,35 @@ export default function CuentaForm() {
         )}
         {errors.rules ? <Txt v="small" color={t.neg}>{errors.rules}</Txt> : null}
       </View>
+
+      {!isFunded && (
+        <View style={box}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Txt v="h2">Plan de retiros</Txt>
+              <Txt v="small">Para llevarte dinero a casa sin vaciar la cuenta.</Txt>
+            </View>
+            <Switch value={wOn} onValueChange={(v) => { tap(); setWOn(v); }} trackColor={{ true: t.accent, false: t.surface2 }} accessibilityLabel="Plan de retiros" />
+          </View>
+          {wOn && (
+            <>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}><Field label="Cuando gane (%)" value={wTrigger} onChangeText={setWTrigger} placeholder="100" keyboardType="decimal-pad" /></View>
+                <View style={{ flex: 1 }}><Field label="Retiro (% del beneficio)" value={wPct} onChangeText={setWPct} placeholder="50" keyboardType="decimal-pad" /></View>
+              </View>
+              {(() => {
+                const cap = Number(initial.replace(/\./g, '').replace(',', '.')) || 0;
+                const tr = parseOpt(wTrigger), wp = parseOpt(wPct);
+                if (!cap || !tr || !wp || isNaN(tr) || isNaN(wp)) return null;
+                const at = cap * (1 + tr / 100);
+                const amt = (at - cap) * (wp / 100);
+                const m = (n: number) => money(n, { ...prefs, cur: currency }, { dec: 0 });
+                return <Txt v="small" style={{ fontSize: 12 }}>Ejemplo: con {m(cap)}, al llegar a {m(at)} te avisará de retirar {m(amt)} y seguirás operando con {m(at - amt)}.</Txt>;
+              })()}
+            </>
+          )}
+        </View>
+      )}
 
       <View style={{ gap: 8 }}>
         <Txt v="label">Mercado</Txt>
