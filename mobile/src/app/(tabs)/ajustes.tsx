@@ -4,7 +4,7 @@ import { Alert, Pressable, Switch, View } from 'react-native';
 import { Icon } from '@/components/icon';
 import { authenticate, canUseBiometrics } from '@/components/lock';
 import { Card, Divider, Field, Row, Screen, Segmented, tap, Txt } from '@/components/ui';
-import { today } from '@/lib/format';
+import { shortDate, today } from '@/lib/format';
 import { setDailyReminder } from '@/lib/reminder';
 import { ACCENTS, BACKGROUNDS } from '@/lib/theme';
 import type { BgKey } from '@/lib/types';
@@ -74,7 +74,7 @@ export default function Ajustes() {
         <View style={{ gap: 8 }}>
           <Txt v="label">Moneda de los totales</Txt>
           <Segmented options={[{ value: 'USD', label: 'Dólar $' }, { value: 'EUR', label: 'Euro €' }, { value: 'GBP', label: 'Libra £' }]} value={prefs.cur} onChange={(v) => setPrefs({ cur: v })} />
-          <Txt v="small" style={{ fontSize: 12 }}>Es la moneda de tus totales. Cada cuenta guarda su propia moneda y se convierte con el cambio del día{prefs.fx ? ` (${prefs.fx.at})` : ''}.</Txt>
+          <Txt v="small" style={{ fontSize: 12 }}>Es la moneda de tus totales. Cada cuenta guarda su propia moneda y se convierte con el cambio del día{prefs.fx ? ` (${shortDate(prefs.fx.at)})` : ''}.</Txt>
         </View>
         <Divider />
         <SwitchRow title="Efecto brillo" sub="Halo de color en tarjetas, estilo plataforma de fondeo" value={prefs.glow} onChange={(v) => setPrefs({ glow: v })} />

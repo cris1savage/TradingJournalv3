@@ -130,7 +130,7 @@ export default function Dashboard() {
         );
       })}
 
-      {alerts.map((al) => (
+      {!paused && alerts.map((al) => (
         <View key={al.account.id + al.text} accessibilityRole="alert" style={{ flexDirection: 'row', gap: 12, padding: 14, borderRadius: Math.min(t.r, 16), backgroundColor: withAlpha(al.severe ? t.neg : t.warn, 0.12), borderWidth: 1, borderColor: withAlpha(al.severe ? t.neg : t.warn, 0.45) }}>
           <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: withAlpha(al.severe ? t.neg : t.warn, 0.2), alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="alert" size={18} color={al.severe ? t.neg : t.warn} />

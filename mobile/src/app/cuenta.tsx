@@ -179,7 +179,7 @@ export default function CuentaForm() {
             <>
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 1 }}><Field label="Cuando gane (%)" value={wTrigger} onChangeText={setWTrigger} placeholder="100" keyboardType="decimal-pad" /></View>
-                <View style={{ flex: 1 }}><Field label="Retiro (% del beneficio)" value={wPct} onChangeText={setWPct} placeholder="50" keyboardType="decimal-pad" /></View>
+                <View style={{ flex: 1 }}><Field label="Retirar (% benef.)" value={wPct} onChangeText={setWPct} placeholder="50" keyboardType="decimal-pad" /></View>
               </View>
               {(() => {
                 const cap = Number(initial.replace(/\./g, '').replace(',', '.')) || 0;
