@@ -77,7 +77,38 @@ export type Movement = {
   amount: number; // siempre positivo; el tipo decide el signo
   note: string;
   sample?: boolean;
+  /* detalles opcionales del trade */
+  symbol?: string | null;
+  side?: Side | null;
+  lots?: number | null;
+  entry?: number | null;
+  exit?: number | null;
+  sl?: number | null;
+  tp?: number | null;
+  /** lo que arriesgabas en el trade (para calcular el R) */
+  risk?: number | null;
+  setup?: string | null;
+  emotion?: Emotion | null;
+  followedPlan?: boolean | null;
+  rating?: number | null;
+  /** ruta de la foto en la nube (<usuario>/<movimiento>.jpg) */
+  shot?: string | null;
+  /** foto en el iPhone pendiente de subir */
+  shotLocal?: string | null;
 };
+
+export type Side = 'long' | 'short';
+export const EMOTIONS = ['tranquilo', 'seguro', 'dudas', 'fomo', 'venganza', 'miedo'] as const;
+export type Emotion = (typeof EMOTIONS)[number];
+export const EMOTION_LABEL: Record<Emotion, string> = {
+  tranquilo: 'Tranquilo', seguro: 'Seguro', dudas: 'Con dudas', fomo: 'FOMO', venganza: 'Venganza', miedo: 'Miedo',
+};
+/** Emociones que suelen acabar mal: se marcan en rojo */
+export const BAD_EMOTIONS: Emotion[] = ['fomo', 'venganza', 'miedo'];
+/** Un trade con detalles (ganancia o pérdida) */
+export const isTradeMove = (m: Pick<Movement, 'type'>) => m.type === 'ganancia' || m.type === 'perdida';
+/** R múltiple: resultado / riesgo */
+export const rMultiple = (m: Movement) => (m.risk && isTradeMove(m) ? (m.type === 'ganancia' ? m.amount : -m.amount) / m.risk : null);
 
 export type BgKey = 'medianoche' | 'oled' | 'grafito' | 'abismo' | 'bosque' | 'claro';
 

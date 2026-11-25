@@ -34,7 +34,7 @@ export default function Perfil() {
       refresh={<RefreshControl refreshing={syncing} onRefresh={refresh} tintColor={t.accent} />}>
       <Card lift style={{ alignItems: 'center', gap: 10, paddingVertical: 24 }}>
         <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: withAlpha(t.accent, 0.18), borderWidth: 2, borderColor: t.accent, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: t.text, fontSize: 28, fontWeight: '800' }}>{initials}</Text>
+          <Text maxFontSizeMultiplier={1.15} style={{ color: t.text, fontSize: 26, fontWeight: '800' }}>{initials}</Text>
         </View>
         <Txt v="h2" style={{ fontSize: 20 }}>{savedName || 'Trader'}</Txt>
         <Txt v="small">{email}</Txt>

@@ -4,10 +4,12 @@ import { Alert, Pressable, Switch, TextInput, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
 import { Sheet } from '@/components/sheet';
+import { detailsOf, parseDetails, TradeDetails, type Details } from '@/components/trade-details';
 import { Button, Chips, Field, success, tap, Txt } from '@/components/ui';
 import { addDays, group, longDate, parseNumber, today } from '@/lib/format';
+import { keepLocal } from '@/lib/shots';
 import { withAlpha } from '@/lib/theme';
-import { CURRENCY_SYMBOL, isArchived, MOVE_TYPE_KEYS, MOVE_TYPES, MULTI_TYPES, type MoveType } from '@/lib/types';
+import { CURRENCY_SYMBOL, isArchived, isTradeMove, MOVE_TYPE_KEYS, MOVE_TYPES, MULTI_TYPES, type Movement, type MoveType } from '@/lib/types';
 import { useStore } from '@/store/store';
 
 const parseAmount = (s: string) => {
@@ -33,6 +35,7 @@ export default function MovimientoForm() {
   const [picked, setPicked] = useState<Record<string, boolean>>(firstAcc ? { [firstAcc]: true } : {});
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [reason, setReason] = useState('');
+  const [det, setDet] = useState<Details>(() => detailsOf(existing));
   // pausa tras pérdidas: para apuntar una operación nueva hay que escribir por qué
   const paused = !existing && !!prefs.pausedUntil && prefs.pausedUntil > today() && (type === 'ganancia' || type === 'perdida') && date >= today();
 
@@ -42,6 +45,15 @@ export default function MovimientoForm() {
   const typeColor = (k: MoveType) =>
     k === 'ganancia' || k === 'payout' ? t.pos : k === 'perdida' ? t.neg : k === 'comision' || k === 'coste' ? t.warn : k === 'deposito' ? t.accent : t.muted;
 
+  /** Detalles del trade listos para guardar (solo en ganancias y pérdidas). */
+  const tradeFields = (): Partial<Movement> | null => {
+    const empty: Partial<Movement> = { symbol: null, side: null, lots: null, entry: null, exit: null, sl: null, tp: null, risk: null, setup: null, emotion: null, followedPlan: null, rating: null, shot: null, shotLocal: null };
+    if (!isTradeMove({ type })) return empty;
+    const r = parseDetails(det);
+    if (r.error) { setError(r.error); return null; }
+    return r.fields!;
+  };
+
   const save = async () => {
     if (paused && reason.trim().length < 10) { setError('Estás en pausa. Escribe por qué operas hoy (mínimo 10 letras) o vuelve cuando acabe.'); return; }
     if (isMulti) {
@@ -49,7 +61,10 @@ export default function MovimientoForm() {
       if (!chosen.length) { setError('Elige al menos una cuenta.'); return; }
       const rows = chosen.map((a) => ({ a, v: parseAmount(amounts[a.id] ?? amount) }));
       if (rows.some((r) => r.v === null)) { setError('Pon un importe mayor que 0 en cada cuenta elegida (siempre en positivo).'); return; }
-      await addMoves(rows.map(({ a, v }) => ({ acc: a.id, type, amount: v!, note: note.trim(), date })));
+      const f = tradeFields();
+      if (!f) return;
+      // cada cuenta guarda su propia copia de la foto
+      await addMoves(rows.map(({ a, v }) => ({ acc: a.id, type, amount: v!, note: note.trim(), date, ...f, lots: null, risk: null, shotLocal: f.shotLocal ? keepLocal(f.shotLocal, a.id) : null })));
       success();
       router.back();
       return;
@@ -57,7 +72,10 @@ export default function MovimientoForm() {
     const v = parseAmount(amount);
     if (v === null) { setError('Escribe un importe mayor que 0. Va siempre en positivo: el tipo decide si suma o resta.'); return; }
     if (!acc) { setError('Elige una cuenta.'); return; }
-    const data = { acc, type, amount: v, note: (paused ? `[En pausa: ${reason.trim()}] ${note.trim()}` : note.trim()).trim().slice(0, 200), date };
+    const f = tradeFields();
+    if (!f) return;
+    if (f.shotLocal && f.shotLocal !== existing?.shotLocal) f.shotLocal = keepLocal(f.shotLocal, existing?.id ?? 'nuevo');
+    const data = { ...f, acc, type, amount: v, note: (paused ? `[En pausa: ${reason.trim()}] ${note.trim()}` : note.trim()).trim().slice(0, 200), date };
     if (existing) await updateMove({ ...existing, ...data });
     else await addMove(data);
     success();
@@ -121,8 +139,8 @@ export default function MovimientoForm() {
         placeholder="250,00"
         keyboardType="decimal-pad"
         autoFocus={!existing}
-        error={error}
-        style={{ height: 64, fontSize: 30, fontWeight: '700', fontVariant: ['tabular-nums'], color: typeColor(type) }}
+        error={error ? ' ' : undefined}
+        style={{ height: 58, fontSize: 26, fontWeight: '700', fontVariant: ['tabular-nums'], color: typeColor(type) }}
       />
 
       {isMulti ? (
@@ -156,6 +174,7 @@ export default function MovimientoForm() {
                     placeholderTextColor={t.muted}
                     keyboardType="decimal-pad"
                     keyboardAppearance={t.scheme}
+                    maxFontSizeMultiplier={1.15}
                     style={{ width: 110, height: 40, borderRadius: 10, backgroundColor: t.surface2, borderWidth: 1, borderColor: t.border, color: typeColor(type), textAlign: 'right', paddingHorizontal: 10, fontWeight: '700', fontVariant: ['tabular-nums'] }}
                   />
                 )}
@@ -182,8 +201,12 @@ export default function MovimientoForm() {
           <Field label="¿Por qué has operado en pausa?" value={reason} onChangeText={setReason} placeholder="Sé sincero contigo" maxLength={80} />
         </View>
       )}
+      {isTradeMove({ type }) && (
+        <TradeDetails value={det} onChange={(d) => { setDet(d); setError(undefined); }} amount={parseAmount(amount)} isWin={type === 'ganancia'} currencySymbol={symOf(acc)} />
+      )}
       <Field label="Nota (opcional)" value={note} onChangeText={setNote} placeholder="Ej.: XAUUSD breakout Londres" maxLength={80} returnKeyType="done" onSubmitEditing={save} />
 
+      {error ? <Txt v="small" color={t.neg} style={{ textAlign: 'center' }}>{error}</Txt> : null}
       <Button
         title={existing ? 'Guardar cambios' : isMulti ? `Guardar en ${usable.filter((a) => picked[a.id]).length} cuentas` : `Guardar ${MOVE_TYPES[type].label.toLowerCase()}`}
         onPress={save}

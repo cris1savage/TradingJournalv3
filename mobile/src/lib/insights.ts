@@ -1,6 +1,6 @@
 import { balanceOf, pnlOf, signed } from './calc';
 import { addDays, dstr, parseDate, today } from './format';
-import type { Account, Movement } from './types';
+import { isTradeMove, rMultiple, type Account, type Movement } from './types';
 
 /** P&L por día (solo movimientos de trading) de las cuentas indicadas. */
 export function dailyPnl(accounts: Account[], moves: Movement[]) {
@@ -186,4 +186,46 @@ export function withdrawalPlan(a: Account, moves: Movement[]): WithdrawalPlan | 
   const profit = Math.max(0, balance - base);
   const progress = base > 0 ? Math.max(0, Math.min(100, ((balance - base) / (threshold - base)) * 100)) : 0;
   return { base, balance, threshold, progress, due, amount: due ? Math.floor(profit * a.withdrawPct) / 100 : 0, withdrawn };
+}
+
+export type EdgeRow = { key: string; trades: number; pnl: number; winRate: number; avgR: number | null };
+export type Edge = {
+  trades: number; // trades con algún detalle
+  bySymbol: EdgeRow[];
+  bySetup: EdgeRow[];
+  byEmotion: EdgeRow[];
+  plan: { yes: EdgeRow | null; no: EdgeRow | null };
+  avgR: number | null;
+  bySide: { long: EdgeRow | null; short: EdgeRow | null };
+};
+
+/** Qué te funciona y qué no: resultados por símbolo, setup, emoción, dirección y si seguiste el plan. */
+export function edgeStats(moves: Movement[], ids: Set<string>, from: string | null): Edge {
+  const trades = moves.filter((m) => ids.has(m.acc) && isTradeMove(m) && (!from || m.date >= from));
+  const detailed = trades.filter((m) => m.symbol || m.setup || m.emotion || m.followedPlan != null || m.side || m.risk);
+  const row = (key: string, list: Movement[]): EdgeRow => {
+    const pnl = list.reduce((s, m) => s + pnlOf(m), 0);
+    const wins = list.filter((m) => m.type === 'ganancia').length;
+    const rs = list.map(rMultiple).filter((r): r is number => r !== null);
+    return { key, trades: list.length, pnl, winRate: list.length ? (wins / list.length) * 100 : 0, avgR: rs.length ? rs.reduce((a, b) => a + b, 0) / rs.length : null };
+  };
+  const group = (get: (m: Movement) => string | null | undefined) => {
+    const g = new Map<string, Movement[]>();
+    for (const m of detailed) { const k = get(m); if (k) g.set(k, [...(g.get(k) ?? []), m]); }
+    return [...g.entries()].map(([k, l]) => row(k, l)).sort((a, b) => b.pnl - a.pnl);
+  };
+  const yes = detailed.filter((m) => m.followedPlan === true);
+  const no = detailed.filter((m) => m.followedPlan === false);
+  const long = detailed.filter((m) => m.side === 'long');
+  const short = detailed.filter((m) => m.side === 'short');
+  const rs = detailed.map(rMultiple).filter((r): r is number => r !== null);
+  return {
+    trades: detailed.length,
+    bySymbol: group((m) => m.symbol),
+    bySetup: group((m) => m.setup),
+    byEmotion: group((m) => m.emotion),
+    plan: { yes: yes.length ? row('si', yes) : null, no: no.length ? row('no', no) : null },
+    avgR: rs.length ? rs.reduce((a, b) => a + b, 0) / rs.length : null,
+    bySide: { long: long.length ? row('long', long) : null, short: short.length ? row('short', short) : null },
+  };
 }

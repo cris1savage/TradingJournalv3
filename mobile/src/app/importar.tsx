@@ -67,7 +67,7 @@ export default function Importar() {
   const doImport = async () => {
     if (!acc || !fresh.length) return;
     setBusy(true);
-    await addMoves(fresh.map((m) => ({ acc: acc.id, date: m.date, type: m.type, amount: m.amount, note: m.note })), { imported: true });
+    await addMoves(fresh.map((m) => ({ acc: acc.id, date: m.date, type: m.type, amount: m.amount, note: m.note, symbol: m.symbol ?? null, side: m.side ?? null, lots: m.lots ?? null, entry: m.entry ?? null, exit: m.exit ?? null })), { imported: true });
     setBusy(false);
     success();
     router.back();

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { PnlCalendar } from '@/components/calendar';
+import { EdgeCard } from '@/components/edge';
 import { AreaChart, Donut, Meter, SignedBars } from '@/components/charts';
 import { PropRules } from '@/components/prop-rules';
 import { Icon } from '@/components/icon';
@@ -11,7 +12,7 @@ import { Button, Card, Chips, IconButton, Row, Screen, Segmented, Tag, Txt } fro
 import { byMarket, monthly, periodStart, pnlByAccount, summarize } from '@/lib/calc';
 import { addDays, group, longDate, money, MONTHS_SHORT, pct, shortDate, today } from '@/lib/format';
 import { toDisplay } from '@/lib/fx';
-import { dailyPnl, fundingBusiness, monthStart, propRules, stopAlerts, streaks, withdrawalPlan } from '@/lib/insights';
+import { dailyPnl, edgeStats, fundingBusiness, monthStart, propRules, stopAlerts, streaks, withdrawalPlan } from '@/lib/insights';
 import { CHART_PALETTE, withAlpha } from '@/lib/theme';
 import { isArchived, type Period } from '@/lib/types';
 import { useStore } from '@/store/store';
@@ -54,6 +55,7 @@ export default function Dashboard() {
 
   const byDay = useMemo(() => dailyPnl(accs, moves), [accs, moves]);
   const st = useMemo(() => streaks(byDay, start), [byDay, start]);
+  const edge = useMemo(() => edgeStats(moves, new Set(accs.map((a) => a.id)), start), [moves, accs, start]);
   const monthNow = useMemo(() => { const m0 = monthStart(); let v = 0; for (const [d, x] of byDay) if (d >= m0) v += x; return v; }, [byDay]);
   const funded = useMemo(() => {
     const ids = new Set(accs.map((a) => a.id));
@@ -227,6 +229,8 @@ export default function Dashboard() {
           ))}
         </Card>
       )}
+
+      {s.wins + s.losses > 0 && <EdgeCard edge={edge} fmt={fmt} />}
 
       <Card style={{ gap: 12 }}>
         <Row style={{ justifyContent: 'space-between' }}>

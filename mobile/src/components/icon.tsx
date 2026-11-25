@@ -1,11 +1,38 @@
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { Platform } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 export type IconName =
   | 'plus' | 'eye' | 'eye-off' | 'up' | 'down' | 'coin' | 'in' | 'out' | 'trash' | 'chevron' | 'close' | 'cloud' | 'check' | 'refresh'
-  | 'calc' | 'alert' | 'file' | 'note';
+  | 'calc' | 'alert' | 'file' | 'note' | 'camera' | 'image' | 'star';
+
+/** En iPhone se usan los símbolos nativos de Apple (SF Symbols); en el resto, los de trazo propios. */
+const SF: Record<IconName, string> = {
+  plus: 'plus', eye: 'eye', 'eye-off': 'eye.slash', up: 'chart.line.uptrend.xyaxis', down: 'chart.line.downtrend.xyaxis',
+  coin: 'dollarsign', in: 'arrow.down.to.line', out: 'arrow.up.to.line', trash: 'trash', chevron: 'chevron.right', close: 'xmark',
+  cloud: 'icloud', check: 'checkmark', refresh: 'arrow.clockwise', calc: 'plus.forwardslash.minus', alert: 'exclamationmark.circle',
+  file: 'doc.text', note: 'note.text', camera: 'camera', image: 'photo', star: 'star',
+};
 
 /** Iconos de trazo propios: se ven igual en iOS y Android y heredan el color del tema. */
-export function Icon({ name, size = 20, color, stroke = 2 }: { name: IconName; size?: number; color: string; stroke?: number }) {
+export function Icon({ name, size = 20, color, stroke = 2, filled }: { name: IconName; size?: number; color: string; stroke?: number; filled?: boolean }) {
+  const drawn = <DrawnIcon name={name} size={size} color={color} stroke={stroke} filled={filled} />;
+  if (Platform.OS !== 'ios') return drawn;
+  const sf = (filled ? `${SF[name]}.fill` : SF[name]) as SymbolViewProps['name'];
+  return (
+    <SymbolView
+      name={sf}
+      size={Math.round(size * 0.92)}
+      tintColor={color}
+      weight={stroke >= 3 ? 'bold' : stroke <= 1.6 ? 'regular' : 'medium'}
+      resizeMode="scaleAspectFit"
+      style={{ width: size, height: size }}
+      fallback={drawn}
+    />
+  );
+}
+
+function DrawnIcon({ name, size, color, stroke, filled }: { name: IconName; size: number; color: string; stroke: number; filled?: boolean }) {
   const p = { stroke: color, strokeWidth: stroke, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -26,6 +53,9 @@ export function Icon({ name, size = 20, color, stroke = 2 }: { name: IconName; s
       {name === 'alert' && (<><Circle cx="12" cy="12" r="9" {...p} /><Path d="M12 7.5v5.5M12 16.5h.01" {...p} /></>)}
       {name === 'file' && (<><Path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" {...p} /><Path d="M14 3v5h5M9 13h6M9 17h4" {...p} /></>)}
       {name === 'note' && (<><Path d="M5 4h14v16H5z" {...p} /><Path d="M9 9h6M9 13h6M9 17h3" {...p} /></>)}
+      {name === 'camera' && (<><Path d="M4 8h3l2-3h6l2 3h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z" {...p} /><Circle cx="12" cy="13" r="3.5" {...p} /></>)}
+      {name === 'image' && (<><Path d="M4 5h16v14H4z" {...p} /><Path d="M4 16l5-5 4 4 3-3 4 4" {...p} /><Circle cx="15.5" cy="9" r="1.5" {...p} /></>)}
+      {name === 'star' && <Path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" {...p} fill={filled ? color : 'none'} />}
       {name === 'refresh' && <Path d="M20 11a8 8 0 00-14.6-4.5M4 4v4h4M4 13a8 8 0 0014.6 4.5M20 20v-4h-4" {...p} />}
     </Svg>
   );

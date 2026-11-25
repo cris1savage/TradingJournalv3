@@ -5,7 +5,7 @@
  */
 import type { MoveType } from './types';
 
-export type ImportedMove = { key: string; date: string; type: MoveType; amount: number; note: string };
+export type ImportedMove = { key: string; date: string; type: MoveType; amount: number; note: string; symbol?: string; side?: 'long' | 'short'; lots?: number | null; entry?: number | null; exit?: number | null };
 
 /** Decodifica los bytes del archivo: UTF-16 (LE/BE, con o sin BOM) o UTF-8. */
 export function decodeReport(bytes: Uint8Array): string {
@@ -100,7 +100,15 @@ export function parseMt5Report(html: string): ParseResult {
       if (seen.has(key) || net === 0) continue;
       seen.add(key);
       positions++;
-      moves.push({ key, date: close, type: net >= 0 ? 'ganancia' : 'perdida', amount: Math.abs(net), note: `${c[2]} ${c[3].toLowerCase() === 'buy' ? 'compra' : 'venta'} · ${key}` });
+      const lots = parseNum(c[4]);
+      const entry = parseNum(c[5]);
+      const exit = parseNum(c[9]);
+      moves.push({
+        key, date: close, type: net >= 0 ? 'ganancia' : 'perdida', amount: Math.abs(net),
+        note: `${c[2]} ${c[3].toLowerCase() === 'buy' ? 'compra' : 'venta'} · ${key}`,
+        symbol: c[2].slice(0, 20) || undefined, side: c[3].toLowerCase() === 'buy' ? 'long' : 'short',
+        lots: lots && lots > 0 ? lots : null, entry: entry && entry > 0 ? entry : null, exit: exit && exit > 0 ? exit : null,
+      });
       continue;
     }
     // Operación de balance en la tabla de transacciones: Time | Deal | Symbol | Type=balance | … | Profit | Balance | Comment

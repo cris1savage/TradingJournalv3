@@ -83,7 +83,7 @@ function AccountCard({ a, moves }: { a: Account; moves: ReturnType<typeof useSto
       <Row style={{ justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <View>
           <Txt v="label">Balance</Txt>
-          <Txt v="num" style={{ fontSize: 26, fontWeight: '700', letterSpacing: -0.6, marginTop: 2 }}>{money(bal, prefs, { dec: 2 })}</Txt>
+          <Txt v="num" style={{ fontSize: 23, fontWeight: '700', letterSpacing: -0.6, marginTop: 2 }}>{money(bal, prefs, { dec: 2 })}</Txt>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
           <Txt v="num" color={pnl >= 0 ? t.pos : t.neg}>{money(pnl, prefs, { dec: 2, signed: true })}</Txt>

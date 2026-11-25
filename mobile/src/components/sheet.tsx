@@ -14,7 +14,7 @@ export function Sheet({ title, children }: { title: string; children: ReactNode 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: t.bg }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'ios' ? 18 : insets.top + 12, paddingBottom: 8 }}>
-        <Txt v="title" style={{ flex: 1, fontSize: 26 }}>{title}</Txt>
+        <Txt v="title" style={{ flex: 1, fontSize: 24 }}>{title}</Txt>
         <IconButton icon="close" label="Cerrar" onPress={() => router.back()} />
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, gap: 18, paddingBottom: insets.bottom + 32 }}>

@@ -88,7 +88,7 @@ export default function Calculadora() {
       {result && (
         <Card lift style={{ alignItems: 'center', gap: 6, paddingVertical: 22 }}>
           <Txt v="label">Tamaño de posición</Txt>
-          <Txt v="bigNum" style={{ fontSize: 46 }}>{group(result.lots, 2)} <Txt v="h2" color={t.muted}>lotes</Txt></Txt>
+          <Txt v="bigNum" style={{ fontSize: 40 }}>{group(result.lots, 2)} <Txt v="h2" color={t.muted}>lotes</Txt></Txt>
           <Txt v="small" style={{ textAlign: 'center' }}>
             Arriesgas {money(result.realRisk, p, { dec: 0 })} de {money(result.balance, p, { dec: 0 })}
           </Txt>

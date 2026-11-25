@@ -44,7 +44,7 @@ export function toDisplay(accounts: Account[], moves: Movement[], to: Currency, 
     }),
     moves: moves.map((m) => {
       const from = curOf.get(m.acc) ?? 'USD';
-      return from === to ? m : { ...m, amount: convert(m.amount, from, to, fx) };
+      return from === to ? m : { ...m, amount: convert(m.amount, from, to, fx), risk: c(m.risk, from) };
     }),
   };
 }

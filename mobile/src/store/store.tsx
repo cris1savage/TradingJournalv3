@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { buildTheme, type Theme } from '@/lib/theme';
 import { syncWidget } from '@/lib/widget-sync';
 import { fetchFx } from '@/lib/fx';
+import { dropLocal, removeAllShots, removeShots, uploadShot } from '@/lib/shots';
 import { DEFAULT_PREFS, type Account, type DayNote, type Movement, type Prefs } from '@/lib/types';
 import { addDays, today, uuid } from '@/lib/format';
 
@@ -63,7 +64,11 @@ const toRowAccount = (a: Account, user: string) => ({
 });
 const toRowMove = (m: Movement, user: string) => ({
   id: m.id, user_id: user, account_id: m.acc, date: m.date, type: m.type, amount: m.amount, note: m.note,
+  symbol: m.symbol || null, side: m.side ?? null, lots: m.lots ?? null, entry_price: m.entry ?? null, exit_price: m.exit ?? null,
+  stop_loss: m.sl ?? null, take_profit: m.tp ?? null, risk_amount: m.risk ?? null, setup: m.setup || null, emotion: m.emotion ?? null,
+  followed_plan: m.followedPlan ?? null, rating: m.rating ?? null, shot_path: m.shot ?? null,
 });
+const num = (v: unknown) => (v == null ? null : Number(v));
 type Row = Record<string, any>;
 const fromRowAccount = (r: Row): Account => ({
   id: r.id, name: r.name, broker: r.broker, market: r.market, kind: r.kind,
@@ -80,6 +85,9 @@ const fromRowAccount = (r: Row): Account => ({
 const fromRowNote = (r: Row): DayNote => ({ date: r.date, plan: r.plan ?? '', review: r.review ?? '', mood: r.mood ?? null, followed: r.followed ?? null });
 const fromRowMove = (r: Row): Movement => ({
   id: r.id, acc: r.account_id, date: r.date, type: r.type, amount: Number(r.amount), note: r.note ?? '',
+  symbol: r.symbol ?? null, side: r.side ?? null, lots: num(r.lots), entry: num(r.entry_price), exit: num(r.exit_price),
+  sl: num(r.stop_loss), tp: num(r.take_profit), risk: num(r.risk_amount), setup: r.setup ?? null, emotion: r.emotion ?? null,
+  followedPlan: r.followed_plan ?? null, rating: r.rating ?? null, shot: r.shot_path ?? null,
 });
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : String(e));
@@ -151,6 +159,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     pendingRef.current = f(pendingRef.current);
     setPendingState(pendingRef.current);
   }, []);
+  /** Si el movimiento trae una foto del iPhone, la sube y devuelve el movimiento con su ruta en la nube. */
+  const attachShot = useCallback(async (m: Movement, uid: string): Promise<Movement> => {
+    if (!m.shotLocal) return m;
+    try {
+      const path = await uploadShot(uid, m.id, m.shotLocal);
+      dropLocal(m.shotLocal);
+      const done = { ...m, shot: path, shotLocal: null };
+      setData((d) => ({ ...d, moves: d.moves.map((x) => (x.id === m.id ? { ...x, shot: path, shotLocal: null } : x)) }));
+      return done;
+    } catch {
+      return m; // sin conexión: se sube en la próxima sincronización
+    }
+  }, []);
+
   const mark = useCallback((k: keyof Pending, id: string) => setPending((p) => ({ ...p, [k]: p[k].includes(id) ? p[k] : [...p[k], id] })), [setPending]);
   const unmark = useCallback((k: keyof Pending, ids: string[]) => setPending((p) => ({ ...p, [k]: p[k].filter((x) => !ids.includes(x)) })), [setPending]);
 
@@ -205,13 +227,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
     const accs = d.accounts.filter((a) => p.acc.includes(a.id));
     await step('acc', () => supabase!.from('accounts').upsert(accs.map((a) => ({ ...toRowAccount(a, uid), created_at: a.created }))), p.acc);
-    const movs = d.moves.filter((m) => p.mov.includes(m.id));
+    const movs: Movement[] = [];
+    for (const m of d.moves.filter((x) => p.mov.includes(x.id))) {
+      const done = await attachShot(m, uid);
+      if (done.shotLocal) throw new Error('Sin conexión para subir la foto');
+      movs.push(done);
+    }
     await step('mov', () => supabase!.from('movements').upsert(movs.map((m) => toRowMove(m, uid))), p.mov);
     const notes = d.notes.filter((n) => p.note.includes(n.date));
     await step('note', () => supabase!.from('day_notes').upsert(notes.map((n) => ({ user_id: uid, date: n.date, plan: n.plan, review: n.review, mood: n.mood, followed: n.followed, updated_at: new Date().toISOString() }))), p.note);
     await step('delMov', () => supabase!.from('movements').delete().in('id', p.delMov), p.delMov);
     await step('delAcc', () => supabase!.from('accounts').delete().in('id', p.delAcc), p.delAcc);
-  }, [unmark]);
+  }, [unmark, attachShot]);
 
   const pull = useCallback(async (uid: string) => {
     if (!supabase) return;
@@ -309,7 +336,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const deleteAccount = useCallback(async (id: string) => {
     setData((d) => ({ ...d, accounts: d.accounts.filter((a) => a.id !== id), moves: d.moves.filter((m) => m.acc !== id) }));
     if (supabase && userId) {
-      const movIds = dataRef.current.moves.filter((m) => m.acc === id).map((m) => m.id);
+      const accMoves = dataRef.current.moves.filter((m) => m.acc === id);
+      const movIds = accMoves.map((m) => m.id);
+      accMoves.forEach((m) => dropLocal(m.shotLocal));
+      removeShots(accMoves.map((m) => m.shot)).catch(() => {});
       unmark('acc', [id]);
       unmark('mov', movIds);
       mark('delAcc', id);
@@ -326,11 +356,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const acc = dataRef.current.accounts.find((a) => a.id === m.acc);
     if (supabase && userId && !acc?.sample) {
       mark('mov', m.id);
-      const r = await supabase.from('movements').insert(toRowMove(m, userId));
+      const up = await attachShot(m, userId);
+      if (up.shotLocal) { queued(new Error('offline')); return; }
+      const r = await supabase.from('movements').insert(toRowMove(up, userId));
       if (r.error) queued(r.error);
       if (!r.error || isDbError(r.error)) unmark('mov', [m.id]);
     }
-  }, [userId, mark, unmark]);
+  }, [userId, mark, unmark, attachShot]);
 
   const addMoves = useCallback(async (inputs: Omit<Movement, 'id'>[], opts?: { imported?: boolean }) => {
     if (!inputs.length) return;
@@ -372,13 +404,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const acc = dataRef.current.accounts.find((a) => a.id === m.acc);
     if (supabase && userId && !acc?.sample) {
       mark('mov', m.id);
-      const r = await supabase.from('movements').upsert(toRowMove(m, userId));
+      // foto quitada o cambiada: se borra la anterior de la nube
+      if (before?.shot && (!m.shot || m.shotLocal)) removeShots([before.shot]).catch(() => {});
+      const up = await attachShot(m, userId);
+      if (up.shotLocal) { queued(new Error('offline')); return; }
+      const r = await supabase.from('movements').upsert(toRowMove(up, userId));
       if (r.error) queued(r.error);
       if (!r.error || isDbError(r.error)) unmark('mov', [m.id]);
     }
-  }, [userId, mark, unmark]);
+  }, [userId, mark, unmark, attachShot]);
 
   const deleteMove = useCallback(async (id: string) => {
+    const gone = dataRef.current.moves.find((m) => m.id === id);
+    dropLocal(gone?.shotLocal);
+    if (gone?.shot) removeShots([gone.shot]).catch(() => {});
     setData((d) => ({ ...d, moves: d.moves.filter((m) => m.id !== id) }));
     if (supabase && userId) {
       unmark('mov', [id]);
@@ -418,17 +457,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const deleteCloudAccount = useCallback(async () => {
     if (!supabase) return;
+    // las fotos no se borran solas con la cuenta: primero se borran del almacén
+    if (userId) { try { await removeAllShots(userId); } catch {} }
+    dataRef.current.moves.forEach((m) => dropLocal(m.shotLocal));
     const r = await supabase.rpc('delete_user');
     if (r.error) { fail('No se pudo eliminar la cuenta', r.error); return; }
     await supabase.auth.signOut({ scope: 'local' });
     setData(EMPTY);
-  }, []);
+  }, [userId]);
 
   // Borra cuentas y movimientos de la nube, pero mantiene el usuario
   const deleteCloudData = useCallback(async () => {
     if (!supabase || !userId) return false;
     const r = await supabase.from('accounts').delete().eq('user_id', userId);
     if (r.error) { fail('No se pudieron borrar los datos', r.error); return false; }
+    try { await removeAllShots(userId); } catch {}
+    dataRef.current.moves.forEach((m) => dropLocal(m.shotLocal));
     const n = await supabase.from('day_notes').delete().eq('user_id', userId);
     if (n.error) { fail('No se pudieron borrar las notas', n.error); return false; }
     setPending(() => NO_PENDING);
