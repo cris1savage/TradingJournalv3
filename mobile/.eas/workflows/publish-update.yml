@@ -1,0 +1,13 @@
+name: Publicar actualización
+
+jobs:
+  publish_update:
+    name: Actualización para la App Store (canal production)
+    type: update
+    environment: production
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: https://thlgqoamdjzshibelysb.supabase.co
+      EXPO_PUBLIC_SUPABASE_KEY: sb_publishable_RpnjP4xgRRuwLHYouXYsFw_5MU4s7EO
+    params:
+      channel: production
+      platform: ios
