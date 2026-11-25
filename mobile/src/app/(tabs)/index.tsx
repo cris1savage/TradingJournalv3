@@ -213,7 +213,7 @@ export default function Dashboard() {
       {funded.length > 0 && (
         <Card style={{ gap: 14 }}>
           <Row style={{ justifyContent: 'space-between' }}>
-            <Txt v="h2">Reglas de fondeo · hoy</Txt>
+            <Txt v="h2">Tus reglas · hoy</Txt>
             {funded.some((f) => f.rules.some((r) => r.kind === 'risk' && r.used >= 80)) && <Tag label="Atención" color={t.neg} />}
           </Row>
           {funded.map(({ a, rules }) => (

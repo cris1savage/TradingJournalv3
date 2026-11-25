@@ -8,7 +8,7 @@ import { useStore } from '@/store/store';
 import { Meter } from './charts';
 import { Row, Txt } from './ui';
 
-/** Barras de reglas de fondeo: verde/neutro, ámbar al 50 %, rojo al 80 %. */
+/** Barras de reglas de cada cuenta: verde/neutro, ámbar al 50 %, rojo al 80 %. */
 export function PropRules({ rules, currency }: { rules: RuleState[]; currency: Currency }) {
   const { theme: t, prefs } = useStore();
   if (!rules.length) return null;
@@ -18,7 +18,7 @@ export function PropRules({ rules, currency }: { rules: RuleState[]; currency: C
         const color = r.kind === 'goal' ? (r.used >= 100 ? t.pos : t.accent) : r.used >= 80 ? t.neg : r.used >= 50 ? t.warn : t.pos;
         const amt = (n: number) => (r.unit === 'count' ? String(Math.max(0, Math.round(n))) : money(n, { ...prefs, cur: currency }, { dec: 0 }));
         const tail = r.unit === 'count'
-          ? r.kind === 'goal' && r.used >= 100 ? `${r.usedAmount} de ${r.limit} · Cumplido` : `${r.usedAmount} de ${r.limit}`
+          ? r.kind === 'goal' && r.used >= 100 ? `${r.usedAmount} · mínimo ${r.limit}` : `${r.usedAmount} de ${r.limit}`
           : r.kind === 'goal'
             ? r.used >= 100 ? 'Conseguido' : `Faltan ${amt(r.remaining)}`
             : r.remaining <= 0 ? 'Límite superado' : `Quedan ${amt(r.remaining)}`;

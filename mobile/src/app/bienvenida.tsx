@@ -10,7 +10,8 @@ import { useStore } from '@/store/store';
 const FEATURES: { icon: IconName; title: string; text: string }[] = [
   { icon: 'up', title: 'Todas tus cuentas', text: 'Reales, de fondeo y demo, con su broker y su mercado.' },
   { icon: 'coin', title: 'Tu P&L real', text: 'Win rate, profit factor, calendario y rachas sin que los depósitos inflen tus números.' },
-  { icon: 'check', title: 'Reglas de fondeo', text: 'Avisos de pérdida diaria, drawdown y objetivo para no quemar cuentas.' },
+  { icon: 'check', title: 'Reglas en cada cuenta', text: 'Pérdida diaria, riesgo por trade, drawdown y objetivo para no quemar cuentas.' },
+  { icon: 'alert', title: 'Disciplina', text: 'Pausa tras pérdidas y un plan de retiros para llevarte beneficios a casa.' },
   { icon: 'cloud', title: 'Tu cuenta, en todos tus dispositivos', text: 'Tus datos se guardan en la nube, solo los ves tú y puedes borrarlos cuando quieras.' },
 ];
 

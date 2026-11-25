@@ -4,16 +4,16 @@ import { Alert, Pressable, Switch, View } from 'react-native';
 import { Icon } from '@/components/icon';
 import { authenticate, canUseBiometrics } from '@/components/lock';
 import { Card, Divider, Field, Row, Screen, Segmented, tap, Txt } from '@/components/ui';
-import { parseNumber, shortDate, today } from '@/lib/format';
+import { group, parseNumber, shortDate, today } from '@/lib/format';
 import { setDailyReminder } from '@/lib/reminder';
 import { ACCENTS, BACKGROUNDS } from '@/lib/theme';
-import type { BgKey } from '@/lib/types';
+import { CURRENCY_SYMBOL, type BgKey } from '@/lib/types';
 import { useStore } from '@/store/store';
 
 export default function Ajustes() {
   const { prefs, setPrefs, theme: t } = useStore();
   const paused = !!prefs.pausedUntil && prefs.pausedUntil > today();
-  const [goal, setGoal] = useState(prefs.monthlyGoal ? String(prefs.monthlyGoal) : '');
+  const [goal, setGoal] = useState(prefs.monthlyGoal ? group(prefs.monthlyGoal) : '');
 
   return (
     <Screen title="Estilo" subtitle="Colores, seguridad y hábitos">
@@ -149,7 +149,7 @@ export default function Ajustes() {
           <Txt v="body" style={{ fontWeight: '600' }}>Meta mensual de P&L</Txt>
           <Txt v="small">Aparece en el Dashboard con tu progreso del mes. Déjala vacía para ocultarla.</Txt>
           <Field
-            label={`Meta (${prefs.cur === 'EUR' ? '€' : '$'})`}
+            label={`Meta (${CURRENCY_SYMBOL[prefs.cur]})`}
             value={goal}
             onChangeText={setGoal}
             placeholder="Ej.: 2.000"
